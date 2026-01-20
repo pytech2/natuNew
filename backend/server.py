@@ -543,7 +543,7 @@ async def get_employee_map_properties(
     if hide_completed:
         query["status"] = {"$nin": ["Completed", "Approved"]}
     
-    # Ultra-minimal projection for speed
+    # Full projection for detailed popup view
     projection = {
         "_id": 0,
         "id": 1,
@@ -555,7 +555,12 @@ async def get_employee_map_properties(
         "property_id": 1,
         "owner_name": 1,
         "colony": 1,
-        "mobile": 1
+        "ward": 1,
+        "mobile": 1,
+        "category": 1,
+        "total_area": 1,
+        "amount": 1,
+        "address": 1
     }
     
     # Sort: pending first, then by serial - NO LIMIT
