@@ -4164,6 +4164,154 @@ async def split_bills_by_specific_employees(
         "files": generated_files
     }
 
+# ============== GENERATED PDFs MANAGEMENT ==============
+
+class GeneratedPdfRecord(BaseModel):
+    colony: str
+    filename: str
+    download_url: str
+    pdf_type: str  # "arranged_bills", "survey_report", "property_list"
+    total_records: int
+    file_size: Optional[int] = None
+
+@api_router.post("/admin/generated-pdfs/save")
+async def save_generated_pdf(
+    colony: str = Form(...),
+    filename: str = Form(...),
+    download_url: str = Form(...),
+    pdf_type: str = Form("arranged_bills"),
+    total_records: int = Form(0),
+    current_user: dict = Depends(get_current_user)
+):
+    """Save a generated PDF record to database for later download"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get file size if exists
+    file_path = UPLOAD_DIR / filename
+    file_size = file_path.stat().st_size if file_path.exists() else 0
+    
+    pdf_doc = {
+        "id": str(uuid.uuid4()),
+        "colony": colony,
+        "filename": filename,
+        "download_url": download_url,
+        "pdf_type": pdf_type,
+        "total_records": total_records,
+        "file_size": file_size,
+        "created_by": current_user["id"],
+        "created_by_name": current_user["name"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.generated_pdfs.insert_one(pdf_doc)
+    
+    return {
+        "message": "PDF record saved",
+        "id": pdf_doc["id"],
+        "filename": filename
+    }
+
+@api_router.get("/admin/generated-pdfs")
+async def list_generated_pdfs(
+    colony: Optional[str] = None,
+    pdf_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """List all generated PDFs, optionally filtered by colony"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if colony and colony.strip():
+        query["colony"] = {"$regex": f"^{colony}$", "$options": "i"}
+    if pdf_type and pdf_type.strip():
+        query["pdf_type"] = pdf_type
+    
+    pdfs = await db.generated_pdfs.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Check which files still exist
+    for pdf in pdfs:
+        file_path = UPLOAD_DIR / pdf["filename"]
+        pdf["file_exists"] = file_path.exists()
+        if pdf["file_exists"] and not pdf.get("file_size"):
+            pdf["file_size"] = file_path.stat().st_size
+    
+    return {"pdfs": pdfs, "total": len(pdfs)}
+
+@api_router.get("/admin/generated-pdfs/by-colony")
+async def get_pdfs_by_colony(current_user: dict = Depends(get_current_user)):
+    """Get grouped list of generated PDFs by colony"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    pipeline = [
+        {"$match": {}},
+        {"$sort": {"created_at": -1}},
+        {"$group": {
+            "_id": "$colony",
+            "latest_pdf": {"$first": "$$ROOT"},
+            "total_pdfs": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    result = await db.generated_pdfs.aggregate(pipeline).to_list(None)
+    
+    colonies_with_pdfs = []
+    for r in result:
+        pdf = r["latest_pdf"]
+        file_path = UPLOAD_DIR / pdf["filename"]
+        colonies_with_pdfs.append({
+            "colony": r["_id"],
+            "total_pdfs": r["total_pdfs"],
+            "latest_filename": pdf["filename"],
+            "latest_download_url": pdf["download_url"],
+            "latest_created_at": pdf["created_at"],
+            "latest_total_records": pdf.get("total_records", 0),
+            "file_exists": file_path.exists()
+        })
+    
+    return {"colonies": colonies_with_pdfs}
+
+@api_router.delete("/admin/generated-pdfs/{pdf_id}")
+async def delete_generated_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a generated PDF record and optionally the file"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    pdf = await db.generated_pdfs.find_one({"id": pdf_id}, {"_id": 0})
+    if not pdf:
+        raise HTTPException(status_code=404, detail="PDF record not found")
+    
+    # Delete file if exists
+    file_path = UPLOAD_DIR / pdf["filename"]
+    if file_path.exists():
+        file_path.unlink()
+    
+    await db.generated_pdfs.delete_one({"id": pdf_id})
+    
+    return {"message": "PDF record deleted", "filename": pdf["filename"]}
+
+@api_router.get("/admin/generated-pdfs/download/{filename}")
+async def download_generated_pdf(filename: str, current_user: dict = Depends(get_current_user)):
+    """Download a previously generated PDF file"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type='application/pdf',
+        filename=filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
 # ============== INITIALIZATION ==============
 
 @api_router.get("/")
