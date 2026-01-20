@@ -324,7 +324,7 @@ export default function PropertyMap() {
   };
 
   const clearFilters = () => {
-    setFilters({ colony: '', category: '', search: '' });
+    setFilters({ colony: '', category: '', status: '', search: '' });
     setShowMap(false);
     setProperties([]);
     setFilteredProperties([]);
