@@ -408,7 +408,7 @@ export default function Properties() {
             </Marker>
           ))}
           
-          {/* Popup for selected property */}
+          {/* Popup for selected property - Detailed Card View */}
           {selectedProperty && (
             <Popup
               latitude={selectedProperty.latitude}
@@ -417,36 +417,98 @@ export default function Properties() {
               onClose={() => setSelectedProperty(null)}
               closeButton={true}
               closeOnClick={false}
-              maxWidth="300px"
+              maxWidth="320px"
             >
-              <div className="p-2 min-w-[200px]">
-                <div className="text-xl font-bold text-amber-600">
-                  #{selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}
+              <div className="min-w-[280px]">
+                {/* Header with Bill Serial Number */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-xs text-amber-700 font-medium">BILL SERIAL NUMBER</div>
+                      <div className="text-3xl font-bold text-red-500">
+                        {selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Property ID</div>
+                      <div className="text-sm font-semibold text-blue-600">{selectedProperty.property_id}</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-blue-600 font-mono">{selectedProperty.property_id}</div>
-                <div className="font-semibold text-base mt-2 text-gray-900">{selectedProperty.owner_name}</div>
-                <div className="text-sm text-gray-600">{selectedProperty.colony}</div>
-                {selectedProperty.mobile && (
-                  <div className="text-sm mt-1">
-                    <a href={`tel:${selectedProperty.mobile}`} className="text-blue-600 underline">
-                      📱 {selectedProperty.mobile}
-                    </a>
+                
+                {/* Property Details Grid */}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="text-xs text-gray-500">Owner</div>
+                    <div className="font-semibold text-gray-900">{selectedProperty.owner_name || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Mobile</div>
+                    {selectedProperty.mobile ? (
+                      <a href={`tel:${selectedProperty.mobile}`} className="font-semibold text-blue-600 underline">
+                        {selectedProperty.mobile}
+                      </a>
+                    ) : (
+                      <div className="text-gray-400">-</div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Colony</div>
+                    <div className="font-medium text-gray-800">{selectedProperty.colony || selectedProperty.ward || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Category</div>
+                    <div className="font-medium text-gray-800">{selectedProperty.category || 'Residential'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Total Area</div>
+                    <div className="font-medium text-gray-800">{selectedProperty.total_area || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Total Amount</div>
+                    <div className="font-bold text-red-600">₹{selectedProperty.amount || '0'}</div>
+                  </div>
+                </div>
+                
+                {/* Address */}
+                {selectedProperty.address && (
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="text-xs text-gray-500">Address</div>
+                    <div className="text-sm text-gray-800">{selectedProperty.address}</div>
                   </div>
                 )}
-                {selectedProperty.distance && (
-                  <div className="text-sm text-emerald-600 font-medium mt-1">
-                    📍 {formatDistance(selectedProperty.distance)} away
+                
+                {/* GPS & Distance */}
+                <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-blue-500">GPS Coordinates</div>
+                    <div className="text-xs font-mono text-gray-600">
+                      {selectedProperty.latitude?.toFixed(6)}, {selectedProperty.longitude?.toFixed(6)}
+                    </div>
                   </div>
-                )}
-                <div className={`text-sm mt-1 font-medium ${
-                  selectedProperty.status === 'Pending' ? 'text-red-600' : 
-                  selectedProperty.status === 'In Progress' ? 'text-yellow-600' : 'text-green-600'
-                }`}>
-                  Status: {selectedProperty.status}
+                  {selectedProperty.distance && (
+                    <div className="text-right">
+                      <div className="text-xs text-emerald-600">Distance</div>
+                      <div className="font-bold text-emerald-700">{formatDistance(selectedProperty.distance)}</div>
+                    </div>
+                  )}
                 </div>
+                
+                {/* Status Badge */}
+                <div className="mt-2">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    selectedProperty.status === 'Pending' ? 'bg-red-100 text-red-700' : 
+                    selectedProperty.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' : 
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {selectedProperty.status}
+                  </span>
+                </div>
+                
+                {/* Action Buttons */}
                 <div className="flex gap-2 mt-3">
                   <button 
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
                     onClick={() => {
                       localStorage.setItem('surveyor_map_position', JSON.stringify({
                         lat: selectedProperty.latitude,
@@ -456,13 +518,15 @@ export default function Properties() {
                       }));
                       navigate(`/employee/survey/${selectedProperty.id}`);
                     }}
+                    data-testid="survey-btn"
                   >
                     <FileText className="w-4 h-4" />
                     Survey
                   </button>
                   <button 
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2.5 rounded-lg"
                     onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.latitude},${selectedProperty.longitude}`, '_blank')}
+                    data-testid="navigate-btn"
                   >
                     <Navigation className="w-4 h-4" />
                   </button>
