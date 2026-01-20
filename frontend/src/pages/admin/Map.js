@@ -188,6 +188,7 @@ export default function PropertyMap() {
   const [filters, setFilters] = useState({
     colony: '',
     category: '',
+    status: '', // NEW: Status filter (Pending, Completed, Rejected)
     search: ''
   });
 
