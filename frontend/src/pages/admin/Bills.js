@@ -583,21 +583,99 @@ export default function BillsPage() {
           </div>
         </div>
 
-        {/* Filters & Actions */}
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Select
-                value={filters.batch_id}
-                onValueChange={(value) => setFilters({ ...filters, batch_id: value })}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select Batch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value=" ">All Batches</SelectItem>
-                  {batches.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+        {/* Two Column Layout - Download Panel + Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
+          {/* LEFT SIDE - Download Generated PDFs */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4 border-2 border-green-200 bg-gradient-to-b from-green-50 to-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-heading flex items-center gap-2 text-green-700">
+                  <Download className="w-5 h-5" />
+                  Download PDFs
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Previously generated files
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 max-h-[60vh] overflow-y-auto">
+                {loadingPdfs ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-green-600" />
+                  </div>
+                ) : generatedPdfs.length === 0 ? (
+                  <div className="text-center py-4 text-slate-400">
+                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">No PDFs generated yet</p>
+                    <p className="text-xs">Generate PDFs to see them here</p>
+                  </div>
+                ) : (
+                  <>
+                    {generatedPdfs.map((pdf, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-2 rounded-lg border transition-all ${
+                          pdf.file_exists 
+                            ? 'bg-white border-green-200 hover:border-green-400 hover:shadow cursor-pointer' 
+                            : 'bg-gray-50 border-gray-200 opacity-50'
+                        }`}
+                        onClick={() => pdf.file_exists && handleDownloadPreviousPdf(pdf.latest_filename)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded ${pdf.file_exists ? 'bg-green-100' : 'bg-gray-100'}`}>
+                            <FileText className={`w-4 h-4 ${pdf.file_exists ? 'text-green-600' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm text-slate-900 truncate">{pdf.colony}</h4>
+                            <p className="text-[10px] text-slate-500">
+                              {pdf.latest_total_records} bills • {new Date(pdf.latest_created_at).toLocaleDateString('en-IN')}
+                            </p>
+                          </div>
+                          {pdf.file_exists ? (
+                            <Download className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <span className="text-[10px] text-red-400">Missing</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-slate-400 pt-2 border-t">
+                      {generatedPdfs.length} colonies • Click to download
+                    </p>
+                  </>
+                )}
+                
+                {/* Refresh Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchGeneratedPdfs}
+                  className="w-full mt-2"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Refresh List
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT SIDE - Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Filters & Actions */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Select
+                    value={filters.batch_id}
+                    onValueChange={(value) => setFilters({ ...filters, batch_id: value })}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select Batch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All Batches</SelectItem>
+                      {batches.map(b => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
