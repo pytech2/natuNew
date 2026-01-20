@@ -170,6 +170,47 @@ export default function BillsPage() {
     }
   };
 
+  // Fetch previously generated PDFs grouped by colony
+  const fetchGeneratedPdfs = async () => {
+    setLoadingPdfs(true);
+    try {
+      const response = await axios.get(`${API_URL}/admin/generated-pdfs/by-colony`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGeneratedPdfs(response.data.colonies || []);
+    } catch (error) {
+      console.error('Failed to fetch generated PDFs:', error);
+    } finally {
+      setLoadingPdfs(false);
+    }
+  };
+
+  // Download a previously generated PDF
+  const handleDownloadPreviousPdf = async (filename) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/admin/generated-pdfs/download/${filename}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to download PDF');
+    }
+  };
+
   const fetchBills = async () => {
     setLoading(true);
     try {
