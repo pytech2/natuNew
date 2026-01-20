@@ -299,6 +299,11 @@ export default function PropertyMap() {
       filtered = filtered.filter(p => p.category === filters.category);
     }
     
+    // NEW: Status filter for Pending, Completed, Rejected, etc.
+    if (filters.status) {
+      filtered = filtered.filter(p => p.status === filters.status);
+    }
+    
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(p => 
