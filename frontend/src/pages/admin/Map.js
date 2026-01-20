@@ -610,7 +610,7 @@ export default function PropertyMap() {
             {/* Filters */}
             <Card>
               <CardContent className="py-4">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-500">Colony/Area</Label>
                     <Select 
@@ -622,81 +622,103 @@ export default function PropertyMap() {
                       </SelectTrigger>
                       <SelectContent>
                         {colonies.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
               
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Category</Label>
-                <Select 
-                  value={filters.category} 
-                  onValueChange={(v) => setFilters({ ...filters, category: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=" ">All Categories</SelectItem>
-                    {categories.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500">Category</Label>
+                    <Select 
+                      value={filters.category} 
+                      onValueChange={(v) => setFilters({ ...filters, category: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All Categories</SelectItem>
+                        {categories.map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* NEW: Status Filter */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500">Survey Status</Label>
+                    <Select 
+                      value={filters.status} 
+                      onValueChange={(v) => setFilters({ ...filters, status: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All Status</SelectItem>
+                        <SelectItem value="Pending">🔴 Pending Survey</SelectItem>
+                        <SelectItem value="Completed">🟡 Completed Survey</SelectItem>
+                        <SelectItem value="Approved">🟢 Approved</SelectItem>
+                        <SelectItem value="Rejected">🟠 Rejected</SelectItem>
+                        <SelectItem value="In Progress">🟡 In Progress</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
               
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="Property ID, Name, Mobile..."
-                    value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    className="pl-10"
-                  />
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500">Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="ID, Name, Mobile..."
+                        value={filters.search}
+                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+              
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500">Map Type</Label>
+                    <Select value={mapType} onValueChange={setMapType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="satellite">Satellite</SelectItem>
+                        <SelectItem value="street">Street Map</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+              
+                  <Button variant="outline" onClick={clearFilters} size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Clear
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-500">Map Type</Label>
-                <Select value={mapType} onValueChange={setMapType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="satellite">Satellite</SelectItem>
-                    <SelectItem value="street">Street Map</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button variant="outline" onClick={clearFilters}>
-                <Filter className="w-4 h-4 mr-2" />
-                Clear Filters
-              </Button>
-            </div>
             
-            <div className="mt-3 flex items-center justify-between text-sm">
-              <p className="text-slate-500">
-                Showing <span className="font-semibold text-slate-900">{filteredProperties.length}</span> properties on map
-              </p>
-              <div className="flex gap-4 text-xs">
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div> Residential
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-amber-500"></div> Commercial
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div> Vacant Plot
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-purple-500"></div> Mix Use
-                </span>
-              </div>
-            </div>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <p className="text-slate-500">
+                    Showing <span className="font-semibold text-slate-900">{filteredProperties.length}</span> properties on map
+                  </p>
+                  {/* Status Legend */}
+                  <div className="flex gap-3 text-xs">
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div> Pending
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div> Completed
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div> Approved
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-orange-500"></div> Rejected
+                    </span>
+                  </div>
+                </div>
 
             {/* Action Buttons */}
             <div className="mt-4 pt-4 border-t flex flex-wrap items-center gap-3">
