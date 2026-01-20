@@ -157,3 +157,28 @@ a[href*="emergent.sh"] {
 .leaflet-popup {
     z-index: 700 !important;
 }
+
+/* Compact popup for admin map */
+.compact-popup .leaflet-popup-content-wrapper {
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.compact-popup .leaflet-popup-content {
+    margin: 6px;
+    width: auto !important;
+    min-width: 160px;
+    max-width: 220px;
+}
+
+.compact-popup .leaflet-popup-close-button {
+    top: 4px;
+    right: 6px;
+    font-size: 16px;
+    color: #666;
+}
+
+.compact-popup .leaflet-popup-tip {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
