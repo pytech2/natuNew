@@ -1554,6 +1554,9 @@ async def download_properties_pdf(
     pdf_filename = f"properties_{colony_name}_{timestamp}.pdf"
     pdf_path = UPLOAD_DIR / pdf_filename
     
+    # Ensure uploads directory exists
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    
     # Create PDF document
     doc = SimpleDocTemplate(str(pdf_path), pagesize=A4)
     styles = getSampleStyleSheet()
@@ -1605,11 +1608,35 @@ async def download_properties_pdf(
     elements.append(table)
     doc.build(elements)
     
+    # Verify file was created
+    if not pdf_path.exists():
+        raise HTTPException(status_code=500, detail="PDF generation failed")
+    
     return {
         "message": f"Generated PDF with {len(properties)} properties",
         "filename": pdf_filename,
         "download_url": f"/api/uploads/{pdf_filename}"
     }
+
+# Direct PDF download endpoint - More reliable for VPS
+@api_router.get("/admin/properties/download-pdf/{filename}")
+async def get_pdf_file(filename: str, current_user: dict = Depends(get_current_user)):
+    """Direct download of generated PDF file"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type='application/pdf',
+        filename=filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
 
 @api_router.get("/admin/wards")
 async def list_wards(current_user: dict = Depends(get_current_user)):
