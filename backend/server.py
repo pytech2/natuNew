@@ -128,6 +128,12 @@ async def create_indexes():
         await db.batches.create_index("id", unique=True, background=True)
         await db.batches.create_index("status", background=True)
         
+        # Generated PDFs collection - for storing generated PDF records
+        await db.generated_pdfs.create_index("id", unique=True, background=True)
+        await db.generated_pdfs.create_index("colony", background=True)
+        await db.generated_pdfs.create_index("created_at", background=True)
+        await db.generated_pdfs.create_index("pdf_type", background=True)
+        
         logging.info("MongoDB indexes created successfully")
     except Exception as e:
         logging.warning(f"Index creation warning (may already exist): {e}")
