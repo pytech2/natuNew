@@ -387,8 +387,26 @@ export default function PropertyMap() {
       toast.success('PDF generated successfully');
       setPdfDialog(false);
       
-      // Download the file
-      window.open(`${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`, '_blank');
+      // Download using authenticated endpoint with blob
+      const filename = response.data.filename;
+      const downloadResponse = await axios.get(
+        `${API_URL}/admin/properties/download-pdf/${filename}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to generate PDF');
     } finally {
