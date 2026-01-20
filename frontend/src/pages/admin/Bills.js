@@ -338,12 +338,39 @@ export default function BillsPage() {
       toast.success(response.data.message);
       setGenerateDialog(false);
       
+      // Save to database for future downloads
+      if (response.data.filename && response.data.download_url) {
+        try {
+          const saveFormData = new FormData();
+          saveFormData.append('colony', filters.colony || 'All');
+          saveFormData.append('filename', response.data.filename);
+          saveFormData.append('download_url', response.data.download_url);
+          saveFormData.append('pdf_type', 'arranged_bills');
+          saveFormData.append('total_records', response.data.total_bills || 0);
+          
+          await axios.post(`${API_URL}/admin/generated-pdfs/save`, saveFormData, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          
+          // Refresh generated PDFs list
+          fetchGeneratedPdfs();
+        } catch (saveError) {
+          console.error('Failed to save PDF record:', saveError);
+        }
+      }
+      
       // Auto download using blob for reliable VPS download
       if (response.data.download_url) {
         try {
           const downloadResponse = await axios.get(
-            `${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`,
-            { responseType: 'blob' }
+            `${API_URL}/admin/generated-pdfs/download/${response.data.filename}`,
+            { 
+              headers: { Authorization: `Bearer ${token}` },
+              responseType: 'blob' 
+            }
           );
           
           const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
