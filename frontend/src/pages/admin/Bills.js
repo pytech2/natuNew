@@ -418,6 +418,30 @@ export default function BillsPage() {
 
       toast.success(response.data.message);
       setGeneratedFiles(response.data.files);
+      
+      // Save each generated file to database for future downloads
+      if (response.data.files && response.data.files.length > 0) {
+        for (const file of response.data.files) {
+          try {
+            const saveFormData = new FormData();
+            saveFormData.append('colony', `${filters.colony || 'All'} - ${file.employee_name}`);
+            saveFormData.append('filename', file.filename);
+            saveFormData.append('download_url', file.download_url);
+            saveFormData.append('pdf_type', 'split_by_employee');
+            saveFormData.append('total_records', file.bill_count || 0);
+            
+            await axios.post(`${API_URL}/admin/generated-pdfs/save`, saveFormData, {
+              headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+          } catch (saveError) {
+            console.error('Failed to save PDF record:', saveError);
+          }
+        }
+        fetchGeneratedPdfs(); // Refresh the list
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to split PDF');
     } finally {
