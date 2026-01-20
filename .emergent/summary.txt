@@ -3,164 +3,103 @@
 **PRODUCT REQUIREMENTS:**
 - **Roles:** Super Admin, Surveyor, Supervisor, MC Officer with specific permissions.
 - **Admin Workflow:** Login, upload property data, manage users, assign properties, process PDF bills with data extraction and GPS-based route optimization, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., N42) and managing duplicate data.
-- **Surveyor Workflow:** Login, view assigned properties on a fullscreen, auto-rotating satellite map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. The map view must be fast, stable, and clean, without extra lists or buttons.
-- **Map UI:** Map markers should be simple, circular pins. The map experience for surveyors should be fullscreen and optimized for mobile fieldwork.
-- **Performance:** The application must be extremely fast and handle 20+ concurrent surveyors working at the same time, especially map loading and form submissions.
-- **Data Integrity:** All uploaded files (photos, signatures, PDFs) must be stored reliably in the database (not the local filesystem). Duplicate properties should be manageable, with options to delete them without losing survey data.
+- **Surveyor Workflow:** Login, view assigned properties on a fullscreen, auto-rotating satellite map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. The map view must be fast, stable, and clean, without extra lists or buttons. A search bar is needed to find properties on the map.
+- **Map UI:** The surveyor map must be fast, load all assigned properties without limits, and support smooth, 360-degree rotation using two-finger touch gestures.
+- **Data Processing:**
+    - During PDF upload, automatically skip properties identified as vacant plots.
+    - When generating PDFs for surveyors, include an option to print the property's map serial number (e.g., N7, N62) directly onto the bill for easy matching in the field. PDF file size should be optimized.
+- **Performance:** The application must be extremely fast and handle 20+ concurrent surveyors, especially map loading and form submissions.
+- **Data Integrity:** All uploaded files must be stored reliably.
 
-**User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., app slow hai, map rotate karna hai).
+**User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., app slow hai, map rotate karna hai, pdf size chhota karo).
 
 **what currently exists?**
 A full-stack application with a FastAPI backend, React frontend, and MongoDB.
-- **Backend:** A monolithic  file that has been heavily optimized for performance. It now includes Gzip compression, LRU caching for frequent API calls, an increased DB connection pool, and GridFS integration for all file storage. It handles RBAC, property management, and data processing.
-- **Frontend:** The application supports all user roles with tailored UIs.
-    - **Surveyor:** A completely overhauled, fullscreen, mobile-first map experience () using Google Satellite view, with device compass-based rotation, state persistence via  for stability, and no clutter.
-    - **Admin:** Advanced property management tools () to delete entire colonies or just duplicate entries (while preserving surveyed properties). The admin map () now requires colony selection first to improve load times. All image uploads now include client-side compression.
+- **Backend ():** A monolithic but optimized server handling all logic. It now includes logic to skip vacant plots during PDF processing, print serial numbers on generated PDFs with optimized file sizes, and an endpoint to serve all assigned properties to a surveyor without any limit.
+- **Frontend:**
+    - **Surveyor:** The map interface () has been completely rebuilt using **MapLibre GL** to provide a fast, watermark-free satellite map with native 360-degree two-finger rotation. It also includes a search bar to find properties by ID, name, or serial number.
+    - **Admin:** The Bills page () now has UI options to Skip Vacant Plots during property import and Print Serial Number when generating PDFs. The Submissions page () UI has been cleaned up to remove redundant fields from the edit/view dialogs.
 
 **Last working item**:
-- **Last item agent was working:** The user requested that the property map should not show duplicate properties or properties that have already been surveyed. The agent was updating the backend map endpoints to filter out this data.
-- **Status:** IN PROGRESS
+- **Last item agent was working:** Resolving a critical  failure. The user is unable to save their work to GitHub because large PDF files were previously committed to the repository, exceeding GitHub's file size limits.
+- **Status:** USER VERIFICATION PENDING
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The agent should verify that the admin map correctly filters out completed properties when a Hide Completed checkbox is toggled. It should also verify that the surveyor map no longer shows properties with a Completed status by default.
-- **User Testing Done:** N
+- **Which testing method agent to use?** Manual verification by the user attempting to Save to Github.
+- **User Testing Done:** N (The user's last attempt to push failed even after the agent's initial fix).
 
 **All Pending/In progress Issue list**:
-- **Issue 1:** Hide duplicate and completed properties from map views. (P0)
-- **Issue 2:** The GPS-based serial number algorithm () still requires final user verification. (P1)
-- **Issue 3:** The user's Hostinger VPS deployment remains fragile and a recurring point of failure. (P2)
+- **Issue 1:** Git push fails due to large files in repository history. (P0 - BLOCKER)
+- **Issue 2:** Hide duplicate and completed properties from map views. (P1)
+- **Issue 3:** The GPS-based serial number algorithm () still requires final user verification. (P2)
 - **Issue 4:** A user story to restrict access to completed colonies has not been started. (P3)
+- **Issue 5:** The user's Hostinger VPS deployment remains fragile. (P3)
 
 **Issues Detail:**
-- **Issue 1: Hide duplicate and completed properties from map views**
-    - **Attempted fixes:** The agent modified the backend map endpoints ( and  in ) to add logic that uses a BASH=/bin/bash
-BASHOPTS=checkwinsize:cmdhist:complete_fullquote:extquote:force_fignore:globasciiranges:globskipdots:hostcomplete:interactive_comments:patsub_replacement:progcomp:promptvars:sourcepath
-BASH_ALIASES=()
-BASH_ARGC=()
-BASH_ARGV=()
-BASH_CMDS=()
-BASH_EXECUTION_STRING=$'mkdir -p /app/.emergent && echo "<analysis>**original_problem_statement:** The user wants a full-stack web application for a company named **NSTU India Private Limited** to manage property tax notice distribution and surveys. The application requires different user roles (Admin, Surveyor, Supervisor, MC Officer), bulk data upload via Excel and PDF, property assignment, a surveyor mobile interface for data collection (including photos with GPS watermarks), and an admin dashboard for progress tracking, review/approval, and data export.\n\n**PRODUCT REQUIREMENTS:**\n- **Roles:** Super Admin, Surveyor, Supervisor, MC Officer with specific permissions.\n- **Admin Workflow:** Login, upload property data, manage users, assign properties, process PDF bills with data extraction and GPS-based route optimization, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., "N42") and managing duplicate data.\n- **Surveyor Workflow:** Login, view assigned properties on a fullscreen, auto-rotating satellite map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. The map view must be fast, stable, and clean, without extra lists or buttons.\n- **Map UI:** Map markers should be simple, circular pins. The map experience for surveyors should be fullscreen and optimized for mobile fieldwork.\n- **Performance:** The application must be extremely fast and handle 20+ concurrent surveyors working at the same time, especially map loading and form submissions.\n- **Data Integrity:** All uploaded files (photos, signatures, PDFs) must be stored reliably in the database (not the local filesystem). Duplicate properties should be manageable, with options to delete them without losing survey data.\n\n**User\'s preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., "app slow hai," "map rotate karna hai").\n\n**what currently exists?**\nA full-stack application with a FastAPI backend, React frontend, and MongoDB.\n- **Backend:** A monolithic `server.py` file that has been heavily optimized for performance. It now includes Gzip compression, LRU caching for frequent API calls, an increased DB connection pool, and GridFS integration for all file storage. It handles RBAC, property management, and data processing.\n- **Frontend:** The application supports all user roles with tailored UIs.\n    - **Surveyor:** A completely overhauled, fullscreen, mobile-first map experience (`Properties.js`) using Google Satellite view, with device compass-based rotation, state persistence via `localStorage` for stability, and no clutter.\n    - **Admin:** Advanced property management tools (`Properties.js`) to delete entire colonies or just duplicate entries (while preserving surveyed properties). The admin map (`Map.js`) now requires colony selection first to improve load times. All image uploads now include client-side compression.\n\n**Last working item**:\n- **Last item agent was working:** The user requested that the property map should not show duplicate properties or properties that have already been surveyed. The agent was updating the backend map endpoints to filter out this data.\n- **Status:** IN PROGRESS\n- **Agent Testing Done:** N\n- **Which testing method agent to use?** Frontend testing agent. The agent should verify that the admin map correctly filters out completed properties when a "Hide Completed" checkbox is toggled. It should also verify that the surveyor map no longer shows properties with a "Completed" status by default.\n- **User Testing Done:** N\n\n**All Pending/In progress Issue list**:\n- **Issue 1:** Hide duplicate and completed properties from map views. (P0)\n- **Issue 2:** The GPS-based serial number algorithm (`NX`) still requires final user verification. (P1)\n- **Issue 3:** The user\'s Hostinger VPS deployment remains fragile and a recurring point of failure. (P2)\n- **Issue 4:** A user story to restrict access to "completed" colonies has not been started. (P3)\n\n**Issues Detail:**\n- **Issue 1: Hide duplicate and completed properties from map views**\n    - **Attempted fixes:** The agent modified the backend map endpoints (`get_map_properties` and `get_employee_map_properties` in `server.py`) to add logic that uses a `set` to remove properties with duplicate IDs and adds a `submission_status` field to the API response.\n    - **Next debug checklist:**\n        1.  Implement a "Hide Completed" checkbox in the admin map UI (`frontend/src/pages/admin/Map.js`).\n        2.  Wire the checkbox to filter properties based on the `submission_status` field from the API.\n        3.  Verify that the surveyor map (`frontend/src/pages/employee/Properties.js`) no longer shows properties with a "Completed" status by default.\n        4.  Ensure map performance is not negatively impacted.\n    - **Status:** IN PROGRESS\n    - **Is recurring issue?** N\n    - **Should Test frontend/backend/both after fix?** Frontend\n    - **Blocked on other issue:** None\n\n- **Issue 2: GPS-based Serial Number Algorithm (`N-X`)**\n    - **Attempted fixes:** The algorithm was rewritten to find the nearest property with a valid serial number using GPS coordinates to determine the \'X\' in \'NX\'.\n    - **Next debug checklist:**\n        1.  Process a batch of properties where some are missing a serial number and are physically near numbered properties.\n        2.  Verify in the database/UI that the new `bill_sr_no` is correctly formatted as `NX` (e.g., `N42`).\n    - **Status:** USER VERIFICATION PENDING\n    - **Is recurring issue?** Y\n    - **Should Test frontend/backend/both after fix?** Backend\n    - **Blocked on other issue:** None\n\n**In progress Task List**:\n- None.\n\n**Upcoming and Future Tasks**\n- **Upcoming Tasks:**\n    - **Backend Refactoring (P1):** Decompose the monolithic `backend/server.py` into a modular structure using FastAPI routers.\n- **Future Tasks:**\n    - Implement "Completed Colony" access restrictions.\n    - Offline support for the surveyor\'s mobile interface.\n    - Add a feature to download all split-employee PDFs as a single ZIP file.\n    - Add a UI feature to remove a single employee from a property assigned to multiple people.\n    - Add a shortcut to open the survey form by clicking a map marker.\n\n**Completed work in this session**\n- **Performance Overhaul:**\n    - Integrated backend caching (`lru-dict`) for key API endpoints (`/map/colonies`, `/map/properties`).\n    - Enabled Gzip compression and increased the MongoDB connection pool size to 50.\n    - Optimized map endpoints to return minimal data, drastically reducing load times.\n    - Ran concurrency tests simulating up to 20 users, achieving response times under 0.6 seconds.\n- **GridFS File Storage Migration:**\n    - Moved all file uploads (survey photos, attendance selfies, PDFs) from the local filesystem to MongoDB GridFS.\n    - Created a unified `GET /api/file/{file_id}` endpoint for serving all files from the database.\n    - Implemented a legacy `GET /api/uploads/{filename}` endpoint for backward compatibility.\n- **Image Upload & Performance Fixes:**\n    - Added client-side image compression on both surveyor (`Survey.js`) and admin (`Submissions.js`) pages to reduce upload sizes before sending to the server.\n    - Increased the FastAPI request body size limit to handle larger files.\n    - Provided Nginx configuration (`client_max_body_size`) to fix "413 Request Entity Too Large" errors on the user\'s VPS.\n- **Surveyor Map UX Overhaul (`frontend/src/pages/employee/Properties.js`):**\n    - Changed the UI to be a fullscreen, satellite-view map by default.\n    - Integrated map rotation based on the device\'s compass heading.\n    - Removed the property list below the map for a cleaner, focused view.\n    - Implemented map state persistence (center/zoom) in `localStorage` to ensure the map remains stable and in the same position after a surveyor submits a form and returns to the map.\n- **Admin Map UX Improvements (`frontend/src/pages/admin/Map.js`):**\n    - Implemented a "Select Colony First" screen to prevent performance issues from loading all properties at once.\n    - Created a new fast endpoint (`GET /api/submission/by-property/{property_id}`) to fetch survey data for a single property when a map marker is clicked.\n- **Property & Data Management Features:**\n    - Added an option in the "Add to Properties" dialog (`frontend/src/pages/admin/Bills.js`) to allow adding all bills, disabling the default duplicate-skipping logic.\n    - Implemented "Delete Colony" and "Delete Duplicates" features in Property Management (`frontend/src/pages/admin/Properties.js`), with logic to protect properties that have already been surveyed.\n\n**Earlier issues found/mentioned but not fixed**\n- **Issue 1: Root cause of VPS deployment failures.**\n    - **Debug checklist:** Investigate `npm` vs. `yarn` conflicts, Node.js version mismatches, or resource limitations on the user\'s Hostinger VPS.\n    - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process for the user.\n    - **Should Test frontend/backend/both after fix:** N/A (DevOps issue)\n    - **Is recurring issue?** Y\n\n**Known issue recurrence from previous fork**\n- **Issue recurrence in previous fork:** Deployment/Build failures on Hostinger VPS.\n- **Recurrence count:** 5+\n- **Status:** BLOCKED (Workarounds provided, but the core issue on the user\'s server persists. The user struggles with command-line operations, making debugging difficult).\n\n**Code Architecture**\n```\n/app/\n├── backend/\n│   ├── .env\n│   ├── requirements.txt\n│   └── server.py         # Monolithic, but now with caching, Gzip, GridFS, and performance optimizations.\n└── frontend/\n    └── src/\n        ├── pages/\n        │   ├── admin/\n        │   │   ├── Properties.js   # Major additions: Delete Colony/Duplicates dialogs and logic.\n        │   │   ├── Submissions.js  # Added client-side image compression.\n        │   │   ├── Map.js          # Reworked to require colony selection first, uses new fast endpoints.\n        │   │   └── Bills.js        # Added \'skip duplicates\' checkbox.\n        │   └── employee/\n        │       ├── Survey.js       # Added client-side image compression.\n        │       └── Properties.js   # Complete overhaul: Fullscreen, satellite, rotating, stateful map.\n        └── AuthContext.js\n```\n\n**Key Technical Concepts**\n- **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, Haversine formula, **Gzip Middleware**, **LRU Caching (`lru-dict`)**, **GridFS for file storage**.\n- **Frontend:** React, React-Leaflet, Tailwind CSS, Shadcn UI, `axios`, **`localStorage` for state persistence**.\n- **Deployment:** Nginx, `systemctl`/`pm2` on a Hostinger VPS. Prone to `npm` dependency issues.\n\n**key DB schema**\n- **users:** `role` field for RBAC.\n- **properties:** `bill_sr_no` stores GPS-calculated serial. `assigned_employee_ids` for multi-assignment.\n- **attendance:** Tracks daily surveyor attendance.\n- **fs.files / fs.chunks:** Collections automatically created by **GridFS** to store all uploaded file data.\n\n**changes in tech stack**\n- `lru-dict` library added to `backend/requirements.txt` for caching.\n- `fastapi-events` was added for startup events (creating indexes).\n\n**All files of reference**\n- `/app/backend/server.py`: Heavily modified for GridFS migration, performance caching, new property management endpoints, and optimized map data endpoints.\n- `/app/frontend/src/pages/employee/Properties.js`: Completely rewritten to provide a fullscreen, rotating, satellite map experience for surveyors.\n- `/app/frontend/src/pages/admin/Map.js`: Reworked to force colony selection before rendering the map, improving initial load performance.\n- `/app/frontend/src/pages/admin/Properties.js`: New features added for deleting duplicate properties and entire colonies.\n- `/app/frontend/src/pages/admin/Submissions.js`: Added client-side image compression logic.\n- `/app/frontend/src/pages/admin/Bills.js`: Added a checkbox to control duplicate skipping.\n\n**Areas that need refactoring**:\n- **`backend/server.py`:** Still the highest priority. Despite performance optimizations, its monolithic nature makes it hard to maintain. It should be broken down into logical routers (e.g., `auth.py`, `properties.py`, `map.py`).\n\n**key api endpoints**\n- `POST /api/admin/properties/delete-colony`: Deletes all properties in a given colony.\n- `POST /api/admin/properties/delete-duplicates`: Deletes duplicate properties, preserving surveyed ones.\n- `GET /api/file/{file_id}`: Serves any file (image, PDF) directly from GridFS.\n- `GET /api/map/colonies`: (Cached) Returns a list of all colonies and their property counts.\n- `GET /api/map/properties`: (Cached) Returns minimal property data for the admin map.\n- `GET /api/map/employee-properties`: (Cached) Returns minimal property data for the surveyor map.\n- `GET /api/submission/by-property/{property_id}`: Returns submission data for a single property.\n\n**Critical Info for New Agent**\n- **User\'s VPS is the main bottleneck.** The user is not technically proficient, and deployments are a recurring struggle. You must provide extremely clear, copy-paste-ready commands and be prepared to debug issues related to `npm`, `pm2`/`systemd`, and Nginx. The latest deployment instructions included using a virtual environment (`venv`) for Python and `nohup` with multiple `uvicorn` workers, which is a critical improvement.\n- **Performance is paramount.** The app has been heavily optimized. Do not introduce changes that could regress performance. Maintain caching and lightweight API responses.\n- **The surveyor experience is a key focus.** The fullscreen, rotating satellite map is a critical feature for the user. Ensure it remains fast and stable.\n- Your first task is to finalize the feature for hiding completed/duplicate properties on the map views, which involves adding and testing a new UI toggle.\n\n**documents and test reports created in this job**\n- `/app/memory/PRD.md` (updated with all completed work)\n- `/app/test_reports/iteration_7.json`\n\n**Last 10 User Messages and any pending HUMAN messages**\n10. **User:** In property management, add options to delete a single colony and to delete duplicate data, but without deleting properties that have already been surveyed.\n9. **Agent:** Implemented the "Delete Colony" and "Delete Duplicates" features.\n8. **User:** When a surveyor opens the map, it should be stable and not reset its position after submitting a survey.\n7. **Agent:** Implemented map state (center/zoom) persistence using `localStorage`.\n6. **User:** The surveyor map should always be satellite view, fullscreen, rotate with the phone\'s compass, and the property list below it should be removed.\n5. **Agent:** Overhauled the surveyor map page to meet all requirements.\n4. **User:** When a PDF is uploaded, and data is added to properties, some data is skipped. All data should be added.\n3. **Agent:** Added a "Skip Duplicates" checkbox (unchecked by default) to the "Add to Properties" dialog to force all data to be added.\n2. **User:** On the property map, if data is already submitted for a property, it shouldn\'t show up again.\n1. **Agent:** Started implementing backend logic to filter out duplicates and submitted properties from map API responses. (This is the current `Last working item`).\n\n**Project Health Check:**\n- **Broken:** The application\'s deployment on the user\'s live Hostinger VPS is highly unreliable. While the preview environment is stable and fast, the production environment frequently fails, preventing the user from seeing updates.\n- **Mocked:** None.\n\n**3rd Party Integrations**\n- **Leaflet & React-Leaflet:** Used for interactive maps.\n- **PyMuPDF, reportlab:** Used for backend PDF processing.\n- **Nginx:** Used as a reverse proxy on the user\'s VPS.\n\n**Testing status**\n- **Testing agent used after significant changes:** YES (once, after initial performance fixes)\n- **Troubleshoot agent used after agent stuck in loop:** NO\n- **Test files created:** None.\n- **Known regressions:** The `leaflet-rotate` package was removed early on to solve a build issue; rotation was later re-implemented using a different approach.\n\n**Credentials to test flow:**\n- **Admin:** `admin` / `nastu123`\n- **Surveyor:** `surveyor1` / `test123`\n- **Supervisor:** `a` / `test123`\n- **MC Officer:** `1234567890` / `test123`\n\n**What agent forgot to execute**\n- The agent started the work to filter duplicates from the map but did not complete the corresponding frontend change (adding a "Hide Completed" toggle) or test the full end-to-end flow.\n- The root cause of the persistent `npm install` failures on the user\'s VPS was never fully diagnosed; workarounds were provided, but the underlying issue likely remains.\n- No regression testing was performed after the massive performance and feature overhaul, increasing the risk of uncaught bugs.</analysis>" > /app/.emergent/summary.txt'
-BASH_LINENO=()
-BASH_LOADABLES_PATH=/usr/local/lib/bash:/usr/lib/bash:/opt/local/lib/bash:/usr/pkg/lib/bash:/opt/pkg/lib/bash:.
-BASH_SOURCE=()
-BASH_VERSINFO=([0]="5" [1]="2" [2]="15" [3]="1" [4]="release" [5]="aarch64-unknown-linux-gnu")
-BASH_VERSION='5.2.15(1)-release'
-DEBIAN_FRONTEND=noninteractive
-DIRSTACK=()
-ENABLE_RELOAD=true
-EUID=0
-GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D
-GROUPS=()
-HOME=/root
-HOSTNAME=agent-env-6c050ab8-9c23-4adc-a479-18693d8ca483
-HOSTTYPE=aarch64
-IFS=$' \t\n'
-KUBERNETES_PORT=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP_ADDR=34.118.224.1
-KUBERNETES_PORT_443_TCP_PORT=443
-KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_HOST=34.118.224.1
-KUBERNETES_SERVICE_PORT=443
-KUBERNETES_SERVICE_PORT_HTTPS=443
-LANG=C.UTF-8
-MACHTYPE=aarch64-unknown-linux-gnu
-NEXT_TELEMETRY_DISABLED=1
-NODE_VERSION=20
-OPTERR=1
-OPTIND=1
-OSTYPE=linux-gnu
-PATH=/root/.venv/bin:/opt/plugins-venv/bin:/opt/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-PIPESTATUS=([0]="0")
-PIP_NO_INPUT=1
-PLAYWRIGHT_BROWSERS_PATH=/pw-browsers
-PLUGIN_VENV_PATH=/opt/plugins-venv
-PPID=21
-PREVIEW_PROXY_SERVICE_PORT=tcp://34.118.225.58:80
-PREVIEW_PROXY_SERVICE_PORT_80_TCP=tcp://34.118.225.58:80
-PREVIEW_PROXY_SERVICE_PORT_80_TCP_ADDR=34.118.225.58
-PREVIEW_PROXY_SERVICE_PORT_80_TCP_PORT=80
-PREVIEW_PROXY_SERVICE_PORT_80_TCP_PROTO=tcp
-PREVIEW_PROXY_SERVICE_SERVICE_HOST=34.118.225.58
-PREVIEW_PROXY_SERVICE_SERVICE_PORT=80
-PREVIEW_PROXY_SERVICE_SERVICE_PORT_HTTP=80
-PS4='+ '
-PWD=/app
-PYTHONUNBUFFERED=1
-PYTHON_SHA256=8d3ed8ec5c88c1c95f5e558612a725450d2452813ddad5e58fdb1a53b1209b78
-PYTHON_VERSION=3.11.14
-SHELL=/bin/bash
-SHELLOPTS=braceexpand:hashall:interactive-comments
-SHLVL=1
-STRIPE_API_KEY=sk_test_emergent
-TERM=dumb
-UID=0
-UV_COMPILE_BYTECODE=1
-VIRTUAL_ENV=/root/.venv
-_=/app/.emergent
-base_url=https://demobackend.emergentagent.com
-code_server_password=f04a2761
-integration_proxy_url=https://integrations.emergentagent.com
-monitor_polling_interval=1
-preview_endpoint=https://propertytaxmap.preview.emergentagent.com
-run_id=6c050ab8-9c23-4adc-a479-18693d8ca483 to remove properties with duplicate IDs and adds a  field to the API response.
+- **Issue 1: Git push fails due to large files in repository history**
+    - **Attempted fixes:** The agent first added  to  and removed tracked files. When that failed (as files were in past commits), the agent correctly used WARNING: git-filter-branch has a glut of gotchas generating mangled history
+	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+	 alternative filtering tool such as 'git filter-repo'
+	 (https://github.com/newren/git-filter-repo/) instead.  See the
+	 filter-branch manual page for more details; to squelch this warning,
+	 set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch... to rewrite the entire git history, purging the problematic folder.
+    - **Next debug checklist:**
+        1.  The user's last push attempt failed after the  command. It's possible the push needs to be forced because the history has been rewritten.
+        2.  Instruct the user to try saving to GitHub again.
+        3.  If it fails, the next step is to execute a force push on behalf of the user: . This is a destructive operation but necessary after rewriting history.
+        4.  As a last resort, use a more robust tool like .
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The user cannot save any of the recent work until this is resolved.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** N/A (Git operation)
+    - **Blocked on other issue:** None. This is the primary blocker.
+
+- **Issue 2: Hide duplicate and completed properties from map views**
+    - **Attempted fixes:** None in this session. This was the 
+wtmp begins Tue Jan 20 13:35:58 2026 from the *previous* fork but was immediately superseded by the user's request for map rotation.
     - **Next debug checklist:**
         1.  Implement a Hide Completed checkbox in the admin map UI ().
-        2.  Wire the checkbox to filter properties based on the  field from the API.
-        3.  Verify that the surveyor map () no longer shows properties with a Completed status by default.
-        4.  Ensure map performance is not negatively impacted.
-    - **Status:** IN PROGRESS
+        2.  Update backend map endpoints (,  in ) to filter out properties with a Completed status.
+        3.  Ensure the surveyor map does not show completed properties by default.
+    - **Status:** NOT STARTED
     - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend
-    - **Blocked on other issue:** None
-
-- **Issue 2: GPS-based Serial Number Algorithm ()**
-    - **Attempted fixes:** The algorithm was rewritten to find the nearest property with a valid serial number using GPS coordinates to determine the 'X' in 'NX'.
-    - **Next debug checklist:**
-        1.  Process a batch of properties where some are missing a serial number and are physically near numbered properties.
-        2.  Verify in the database/UI that the new  is correctly formatted as  (e.g., ).
-    - **Status:** USER VERIFICATION PENDING
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Backend
-    - **Blocked on other issue:** None
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on other issue:** Git push fails due to large files in repository history
 
 **In progress Task List**:
 - None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **Backend Refactoring (P1):** Decompose the monolithic  into a modular structure using FastAPI routers.
+    - **Implement Hide Completed Properties feature (P1):** As described in Issue 2.
+    - **Backend Refactoring (P2):** Decompose the monolithic  into a modular structure using FastAPI routers.
 - **Future Tasks:**
-    - Implement Completed Colony access restrictions.
     - Offline support for the surveyor's mobile interface.
     - Add a feature to download all split-employee PDFs as a single ZIP file.
     - Add a UI feature to remove a single employee from a property assigned to multiple people.
     - Add a shortcut to open the survey form by clicking a map marker.
+    - Implement Completed Colony access restrictions.
 
 **Completed work in this session**
-- **Performance Overhaul:**
-    - Integrated backend caching () for key API endpoints (, ).
-    - Enabled Gzip compression and increased the MongoDB connection pool size to 50.
-    - Optimized map endpoints to return minimal data, drastically reducing load times.
-    - Ran concurrency tests simulating up to 20 users, achieving response times under 0.6 seconds.
-- **GridFS File Storage Migration:**
-    - Moved all file uploads (survey photos, attendance selfies, PDFs) from the local filesystem to MongoDB GridFS.
-    - Created a unified  endpoint for serving all files from the database.
-    - Implemented a legacy  endpoint for backward compatibility.
-- **Image Upload & Performance Fixes:**
-    - Added client-side image compression on both surveyor () and admin () pages to reduce upload sizes before sending to the server.
-    - Increased the FastAPI request body size limit to handle larger files.
-    - Provided Nginx configuration () to fix 413 Request Entity Too Large errors on the user's VPS.
-- **Surveyor Map UX Overhaul ():**
-    - Changed the UI to be a fullscreen, satellite-view map by default.
-    - Integrated map rotation based on the device's compass heading.
-    - Removed the property list below the map for a cleaner, focused view.
-    - Implemented map state persistence (center/zoom) in  to ensure the map remains stable and in the same position after a surveyor submits a form and returns to the map.
-- **Admin Map UX Improvements ():**
-    - Implemented a Select Colony First screen to prevent performance issues from loading all properties at once.
-    - Created a new fast endpoint () to fetch survey data for a single property when a map marker is clicked.
-- **Property & Data Management Features:**
-    - Added an option in the Add to Properties dialog () to allow adding all bills, disabling the default duplicate-skipping logic.
-    - Implemented Delete Colony and Delete Duplicates features in Property Management (), with logic to protect properties that have already been surveyed.
+- **Surveyor Map Overhaul ():**
+    - Replaced Google Maps with **MapLibre GL** to achieve native, smooth 360° two-finger rotation without API keys or watermarks.
+    - Added a search bar to the map for finding properties by ID, serial number, name, etc.
+- **Backend Data Limit Removal ():**
+    - Modified the  endpoint to remove the data limit, allowing surveyors to see all assigned properties.
+- **PDF Processing Enhancements (, ):**
+    - Implemented logic to automatically skip vacant plots during the initial PDF upload/extraction phase.
+    - Added a feature to print property serial numbers (e.g., N7, 62) onto generated PDF bills, matching what's shown on the map.
+    - Tuned PDF generation to balance image quality and file size, achieving a significant reduction.
+- **UI/UX Cleanup ():**
+    - Removed New Owner Name and New Mobile Number fields from the admin's submission edit/view dialogs for a cleaner interface.
+- **Git Repository Cleanup:**
+    - Purged large files from the entire git history using WARNING: git-filter-branch has a glut of gotchas generating mangled history
+	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+	 alternative filtering tool such as 'git filter-repo'
+	 (https://github.com/newren/git-filter-repo/) instead.  See the
+	 filter-branch manual page for more details; to squelch this warning,
+	 set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch... to prepare for fixing the push failures.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1: Root cause of VPS deployment failures.**
@@ -199,10 +138,7 @@ Configuration fields: npm help 7 config
 
 npm@10.8.2 /usr/lib/node_modules/npm vs. yarn install v1.22.22
 [1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
+success Already up-to-date.
 Done in 0.02s. conflicts, Node.js version mismatches, or resource limitations on the user's Hostinger VPS.
     - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process for the user.
     - **Should Test frontend/backend/both after fix:** N/A (DevOps issue)
@@ -211,148 +147,87 @@ Done in 0.02s. conflicts, Node.js version mismatches, or resource limitations on
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Deployment/Build failures on Hostinger VPS.
 - **Recurrence count:** 5+
-- **Status:** BLOCKED (Workarounds provided, but the core issue on the user's server persists. The user struggles with command-line operations, making debugging difficult).
+- **Status:** BLOCKED (Workarounds provided, but the core issue on the user's server persists.)
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, Haversine formula, **Gzip Middleware**, **LRU Caching ()**, **GridFS for file storage**.
-- **Frontend:** React, React-Leaflet, Tailwind CSS, Shadcn UI, , ** for state persistence**.
-- **Deployment:** Nginx, / on a Hostinger VPS. Prone to npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm dependency issues.
+- **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, GridFS.
+- **Frontend:** React, **MapLibre GL**, **React-Map-GL**, Tailwind CSS, Shadcn UI, .
 
 **key DB schema**
-- **users:**  field for RBAC.
-- **properties:**  stores GPS-calculated serial.  for multi-assignment.
-- **attendance:** Tracks daily surveyor attendance.
-- **fs.files / fs.chunks:** Collections automatically created by **GridFS** to store all uploaded file data.
+- No changes to the schema in this session.
 
 **changes in tech stack**
--  library added to  for caching.
--  was added for startup events (creating indexes).
+- **Added:** , 
+- **Removed:**  (was added and then removed in this session).
 
 **All files of reference**
-- : Heavily modified for GridFS migration, performance caching, new property management endpoints, and optimized map data endpoints.
-- : Completely rewritten to provide a fullscreen, rotating, satellite map experience for surveyors.
-- : Reworked to force colony selection before rendering the map, improving initial load performance.
-- : New features added for deleting duplicate properties and entire colonies.
-- : Added client-side image compression logic.
-- : Added a checkbox to control duplicate skipping.
+- : The most heavily modified file. Now uses MapLibre GL for the surveyor map.
+- : Major updates to PDF processing, PDF generation, and surveyor property endpoints.
+- : UI additions for new PDF features.
+- : UI cleanup.
+- : Updated to ignore large file uploads.
 
 **Areas that need refactoring**:
-- **:** Still the highest priority. Despite performance optimizations, its monolithic nature makes it hard to maintain. It should be broken down into logical routers (e.g., , , ).
+- **:** Remains the highest priority for refactoring into smaller, manageable FastAPI routers to improve maintainability.
 
 **key api endpoints**
-- : Deletes all properties in a given colony.
-- : Deletes duplicate properties, preserving surveyed ones.
-- : Serves any file (image, PDF) directly from GridFS.
-- : (Cached) Returns a list of all colonies and their property counts.
-- : (Cached) Returns minimal property data for the admin map.
-- : (Cached) Returns minimal property data for the surveyor map.
-- : Returns submission data for a single property.
+- : Modified to skip vacant plots during data extraction.
+- : Modified to remove the hardcoded property limit.
+- : Modified to handle printing serial numbers and to optimize output file size and quality.
+- : Modified to handle skipping vacant plots.
 
 **Critical Info for New Agent**
-- **User's VPS is the main bottleneck.** The user is not technically proficient, and deployments are a recurring struggle. You must provide extremely clear, copy-paste-ready commands and be prepared to debug issues related to npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm, /, and Nginx. The latest deployment instructions included using a virtual environment () for Python and  with multiple  workers, which is a critical improvement.
-- **Performance is paramount.** The app has been heavily optimized. Do not introduce changes that could regress performance. Maintain caching and lightweight API responses.
-- **The surveyor experience is a key focus.** The fullscreen, rotating satellite map is a critical feature for the user. Ensure it remains fast and stable.
-- Your first task is to finalize the feature for hiding completed/duplicate properties on the map views, which involves adding and testing a new UI toggle.
+- **The git push failure is the #1 Blocker.** You must resolve this before any other work can proceed. The history has been rewritten with WARNING: git-filter-branch has a glut of gotchas generating mangled history
+	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+	 alternative filtering tool such as 'git filter-repo'
+	 (https://github.com/newren/git-filter-repo/) instead.  See the
+	 filter-branch manual page for more details; to squelch this warning,
+	 set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch..., so the next logical step is a .
+- The user is very specific about UI feel, especially for the map. The switch to MapLibre was successful and should be maintained.
+- The original pending task from the previous fork—hiding completed/duplicate properties—was completely skipped in this session. It remains a high-priority feature once the git issue is resolved.
+- Be prepared to provide clear, copy-paste deployment commands for the user's VPS, as this is a recurring point of friction.
 
 **documents and test reports created in this job**
--  (updated with all completed work)
-- 
+-  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **User:** In property management, add options to delete a single colony and to delete duplicate data, but without deleting properties that have already been surveyed.
-9. **Agent:** Implemented the Delete Colony and Delete Duplicates features.
-8. **User:** When a surveyor opens the map, it should be stable and not reset its position after submitting a survey.
-7. **Agent:** Implemented map state (center/zoom) persistence using .
-6. **User:** The surveyor map should always be satellite view, fullscreen, rotate with the phone's compass, and the property list below it should be removed.
-5. **Agent:** Overhauled the surveyor map page to meet all requirements.
-4. **User:** When a PDF is uploaded, and data is added to properties, some data is skipped. All data should be added.
-3. **Agent:** Added a Skip Duplicates checkbox (unchecked by default) to the Add to Properties dialog to force all data to be added.
-2. **User:** On the property map, if data is already submitted for a property, it shouldn't show up again.
-1. **Agent:** Started implementing backend logic to filter out duplicates and submitted properties from map API responses. (This is the current ).
+10. **User:** Improve PDF quality, it's very poor. (Agent increased quality settings).
+9. **User:** Vacant Plot also need to skip at the time of uploading pdf. (Agent confirmed code was added and user needs to update VPS).
+8. **User:** Serial number size need to reduce by 60%. (Agent reduced font size in PDF generation).
+7. **User:** (Git Push Fails).
+6. **Agent:** Cleaned git history to remove large files.
+5. **User:** (Git Push Fails Again) again why coming this problem correct all issues because i want to easly and safly push on github repo.
+4. **Agent:** Explained the issue is old history and used WARNING: git-filter-branch has a glut of gotchas generating mangled history
+	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+	 alternative filtering tool such as 'git filter-repo'
+	 (https://github.com/newren/git-filter-repo/) instead.  See the
+	 filter-branch manual page for more details; to squelch this warning,
+	 set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch... to rewrite history completely. Advised user to try pushing again.
+3. **User:** *(No response, but triggered a final failed git push)*.
+2. **Agent:** (Final message) Acknowledged the history has been cleaned and advised the user to try saving to GitHub again.
+1. **(Implied)** User needs the git push issue to be fixed so they can save their work.
 
 **Project Health Check:**
-- **Broken:** The application's deployment on the user's live Hostinger VPS is highly unreliable. While the preview environment is stable and fast, the production environment frequently fails, preventing the user from seeing updates.
+- **Broken:**
+    - **Git Repository:** Pushing to the remote is broken due to large files in the commit history, blocking all progress.
+    - **Production Deployment:** The user's live Hostinger VPS deployment is highly unreliable and frequently out of sync with the latest code.
 - **Mocked:** None.
 
 **3rd Party Integrations**
-- **Leaflet & React-Leaflet:** Used for interactive maps.
+- **MapLibre GL & React-Map-GL:** Used for the interactive surveyor map.
 - **PyMuPDF, reportlab:** Used for backend PDF processing.
 - **Nginx:** Used as a reverse proxy on the user's VPS.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (once, after initial performance fixes)
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** The  package was removed early on to solve a build issue; rotation was later re-implemented using a different approach.
+- **Known regressions:** None.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -361,6 +236,5 @@ npm@10.8.2 /usr/lib/node_modules/npm, /, and Nginx. The latest deployment instru
 - **MC Officer:**  / 
 
 **What agent forgot to execute**
-- The agent started the work to filter duplicates from the map but did not complete the corresponding frontend change (adding a Hide Completed toggle) or test the full end-to-end flow.
-- The root cause of the persistent  failures on the user's VPS was never fully diagnosed; workarounds were provided, but the underlying issue likely remains.
-- No regression testing was performed after the massive performance and feature overhaul, increasing the risk of uncaught bugs.</analysis>
+- The agent never implemented the original 
+wtmp begins Tue Jan 20 13:35:58 2026 from the handoff summary: **Hide duplicate and completed properties from map views.** This task was completely bypassed due to the user's immediate and high-priority request for a better map rotation experience.</analysis>
