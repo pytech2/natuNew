@@ -807,73 +807,61 @@ export default function PropertyMap() {
                         property.bill_sr_no || property.serial_number || '-'
                       )}
                     >
-                      <Popup maxWidth={350} className="property-popup">
-                        <div className="p-2 min-w-[280px]">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              {/* Serial Number prominently */}
-                              <span className="text-xl font-bold text-amber-600">
-                                Sr: {property.bill_sr_no || property.serial_number || '-'}
-                              </span>
-                              <p className="font-mono text-sm text-blue-600">{property.property_id}</p>
-                            </div>
+                      {/* COMPACT POPUP - Small and on top of all layers */}
+                      <Popup 
+                        maxWidth={220} 
+                        minWidth={180}
+                        className="compact-popup"
+                        autoPan={true}
+                        keepInView={true}
+                      >
+                        <div className="text-xs" style={{ minWidth: '160px' }}>
+                          {/* Header - Serial & Status */}
+                          <div className="flex items-center justify-between pb-1 mb-1 border-b border-gray-200">
+                            <span className="text-base font-bold text-red-500">
+                              Sr: {property.bill_sr_no || property.serial_number || '-'}
+                            </span>
                             {getStatusBadge(property.status)}
                           </div>
                           
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-start gap-2">
-                              <User className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs text-slate-500">Owner</p>
-                                <p className="font-medium">{property.owner_name || 'N/A'}</p>
-                              </div>
+                          {/* Owner & Mobile */}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3 text-gray-400" />
+                              <span className="font-medium text-gray-900 truncate">{property.owner_name || 'N/A'}</span>
                             </div>
-                            
-                            <div className="flex items-start gap-2">
-                              <Phone className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs text-slate-500">Mobile</p>
-                                <p className="font-mono">{property.mobile || 'N/A'}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start gap-2">
-                              <Home className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs text-slate-500">Address</p>
-                                <p className="text-slate-700">{property.address || 'N/A'}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                              <div>
-                                <p className="text-xs text-slate-500">Area</p>
-                                <p className="font-medium">{property.total_area || '-'} Sq.Yard</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-500">Outstanding</p>
-                                <p className="font-medium text-red-600">₹{property.amount || '0'}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="pt-2 border-t">
-                              <p className="text-xs text-slate-400 font-mono">
-                                GPS: {property.latitude?.toFixed(6)}, {property.longitude?.toFixed(6)}
-                              </p>
-                            </div>
-
-                            {/* View Survey Button */}
-                            <div className="pt-2 border-t">
-                              <Button
-                                size="sm"
-                                className="w-full bg-blue-600 hover:bg-blue-700"
-                                onClick={() => handleViewSurvey(property)}
-                              >
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Survey Data
-                              </Button>
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-blue-400" />
+                              <a href={`tel:${property.mobile}`} className="text-blue-600 font-mono">{property.mobile || 'N/A'}</a>
                             </div>
                           </div>
+                          
+                          {/* Area & Amount - Compact grid */}
+                          <div className="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-gray-100">
+                            <div>
+                              <span className="text-gray-400">Area:</span>
+                              <span className="ml-1 font-medium">{property.total_area ? `${property.total_area}` : '-'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">Amt:</span>
+                              <span className="ml-1 font-medium text-red-600">₹{property.amount || '0'}</span>
+                            </div>
+                          </div>
+                          
+                          {/* GPS - Tiny */}
+                          <div className="mt-1 pt-1 border-t border-gray-100 text-[10px] text-gray-400 font-mono">
+                            {property.latitude?.toFixed(6)}, {property.longitude?.toFixed(6)}
+                          </div>
+
+                          {/* View Survey Button */}
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 h-7 text-xs bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleViewSurvey(property)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            View Survey Data
+                          </Button>
                         </div>
                       </Popup>
                     </Marker>
