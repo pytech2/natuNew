@@ -290,8 +290,27 @@ export default function BillsPage() {
       toast.success(response.data.message);
       setGenerateDialog(false);
       
-      // Auto download
-      window.open(`${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`, '_blank');
+      // Auto download using blob for reliable VPS download
+      if (response.data.download_url) {
+        try {
+          const downloadResponse = await axios.get(
+            `${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`,
+            { responseType: 'blob' }
+          );
+          
+          const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', response.data.filename || 'bills.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (downloadError) {
+          // Fallback to window.open if blob download fails
+          window.open(`${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`, '_blank');
+        }
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to generate PDF');
     } finally {
