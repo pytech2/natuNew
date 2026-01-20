@@ -117,10 +117,17 @@ export default function BillsPage() {
   const [gpsArrangeDialog, setGpsArrangeDialog] = useState(false);
   const [arranging, setArranging] = useState(false);
 
+  // Generated PDFs state - for downloading previously generated PDFs
+  const [generatedPdfs, setGeneratedPdfs] = useState([]);
+  const [loadingPdfs, setLoadingPdfs] = useState(false);
+  const [downloadPdfDialog, setDownloadPdfDialog] = useState(false);
+  const [selectedColonyForDownload, setSelectedColonyForDownload] = useState('');
+
   useEffect(() => {
     fetchBatches();
     fetchColonies();
     fetchEmployees();
+    fetchGeneratedPdfs(); // Fetch previously generated PDFs
   }, []);
 
   useEffect(() => {
