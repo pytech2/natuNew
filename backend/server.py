@@ -4131,16 +4131,6 @@ async def split_bills_by_specific_employees(
         "files": generated_files
     }
 
-# ============== FILE SERVING ==============
-
-@api_router.get("/uploads/{filename}")
-async def serve_upload(filename: str):
-    """Serve file from uploads folder"""
-    file_path = UPLOAD_DIR / filename
-    if file_path.exists():
-        return FileResponse(str(file_path))
-    raise HTTPException(status_code=404, detail="File not found")
-
 # ============== INITIALIZATION ==============
 
 @api_router.get("/")
