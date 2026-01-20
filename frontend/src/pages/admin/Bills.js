@@ -805,53 +805,6 @@ export default function BillsPage() {
           </Card>
         </div>
 
-        {/* Download Previously Generated PDFs */}
-        {generatedPdfs.length > 0 && (
-          <Card className="border-2 border-green-200 bg-green-50/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-heading flex items-center gap-2 text-green-700">
-                <Download className="w-5 h-5" />
-                Download Arranged PDFs
-              </CardTitle>
-              <CardDescription>
-                Previously generated PDFs by colony - click to download again
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {generatedPdfs.map((pdf, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`p-3 rounded-lg border ${
-                      pdf.file_exists 
-                        ? 'bg-white border-green-200 hover:border-green-400 cursor-pointer' 
-                        : 'bg-gray-100 border-gray-200 opacity-60'
-                    }`}
-                    onClick={() => pdf.file_exists && handleDownloadPreviousPdf(pdf.latest_filename)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-semibold text-slate-900">{pdf.colony}</h4>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {pdf.latest_total_records} bills • {new Date(pdf.latest_created_at).toLocaleDateString('en-IN')}
-                        </p>
-                      </div>
-                      {pdf.file_exists ? (
-                        <Download className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <span className="text-xs text-red-500">File missing</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-slate-400 mt-3">
-                💡 Generate new PDFs to update this list. {generatedPdfs.length} colonies have generated PDFs.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Bills Table */}
         {loading ? (
           <div className="flex items-center justify-center h-64">
