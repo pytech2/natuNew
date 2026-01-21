@@ -245,12 +245,12 @@ export default function PropertyMap() {
   useEffect(() => {
     fetchColonies(); // Only fetch colonies first
     fetchEmployees(); // Fetch employees list
+    setShowMap(true); // Show map directly on load
   }, []);
 
   useEffect(() => {
     if (filters.colony) {
       fetchPropertiesByColony(filters.colony);
-      setShowMap(true);
     }
   }, [filters.colony]);
 
