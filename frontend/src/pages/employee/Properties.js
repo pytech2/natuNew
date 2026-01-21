@@ -402,48 +402,53 @@ export default function Properties() {
           dragRotate={true}
           pitchWithRotate={false}
         >
-          {/* User location marker with 100m radius circle */}
+          {/* 100m Radius Circle around user location */}
           {userLocation && (
-            <>
-              {/* 100m radius circle - visible blue area */}
-              <Marker 
-                latitude={userLocation.lat} 
-                longitude={userLocation.lng}
-                anchor="center"
-              >
-                <div 
-                  className="rounded-full border-2 border-blue-500"
-                  style={{
-                    width: `${Math.max(100, 100 * Math.pow(2, viewState.zoom - 17))}px`,
-                    height: `${Math.max(100, 100 * Math.pow(2, viewState.zoom - 17))}px`,
-                    backgroundColor: 'rgba(59, 130, 246, 0.25)',
-                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
-                    transform: 'translate(-50%, -50%)',
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%'
-                  }}
-                />
-              </Marker>
-              
-              {/* User GPS dot - on top */}
-              <Marker 
-                latitude={userLocation.lat} 
-                longitude={userLocation.lng}
-                anchor="center"
-              >
-                <div className="relative">
-                  {/* Outer pulsing ring */}
-                  <div className="absolute -inset-4 bg-blue-500/30 rounded-full animate-ping" />
-                  {/* Middle glow ring */}
-                  <div className="absolute -inset-2 bg-blue-400/40 rounded-full" />
-                  {/* Inner solid dot */}
-                  <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-xl flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full" />
-                  </div>
+            <Source 
+              id="radius-circle" 
+              type="geojson" 
+              data={createCircleGeoJSON(userLocation.lat, userLocation.lng, 100)}
+            >
+              {/* Fill layer - semi-transparent blue */}
+              <Layer
+                id="radius-fill"
+                type="fill"
+                paint={{
+                  'fill-color': '#3b82f6',
+                  'fill-opacity': 0.2
+                }}
+              />
+              {/* Border layer - solid blue */}
+              <Layer
+                id="radius-border"
+                type="line"
+                paint={{
+                  'line-color': '#3b82f6',
+                  'line-width': 3,
+                  'line-opacity': 0.8
+                }}
+              />
+            </Source>
+          )}
+          
+          {/* User GPS dot marker - on top */}
+          {userLocation && (
+            <Marker 
+              latitude={userLocation.lat} 
+              longitude={userLocation.lng}
+              anchor="center"
+            >
+              <div className="relative">
+                {/* Outer pulsing ring */}
+                <div className="absolute -inset-6 bg-blue-500/20 rounded-full animate-ping" />
+                {/* Middle glow ring */}
+                <div className="absolute -inset-3 bg-blue-400/30 rounded-full" />
+                {/* Inner solid dot */}
+                <div className="w-10 h-10 bg-blue-600 rounded-full border-4 border-white shadow-2xl flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full" />
                 </div>
-              </Marker>
-            </>
+              </div>
+            </Marker>
           )}
           
           {/* Property markers - render ALL */}
