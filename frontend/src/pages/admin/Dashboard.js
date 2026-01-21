@@ -514,6 +514,139 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Employee Colony Progress Dialog */}
+      <Dialog open={colonyDialog} onOpenChange={setColonyDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                {selectedEmployee?.employee_name?.charAt(0)}
+              </div>
+              <div>
+                <span className="text-lg">{selectedEmployee?.employee_name}</span>
+                <p className="text-sm text-slate-500 font-normal">Colony-wise Progress</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingColonies ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : colonyProgress.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No colonies assigned</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {colonyProgress.map((colony, idx) => (
+                <div 
+                  key={idx}
+                  className="p-4 border rounded-lg hover:border-blue-200 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-blue-500" />
+                      <span className="font-semibold text-slate-900">{colony.colony}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleOpenRemoveDialog(colony)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          colony.percentage >= 80 ? 'bg-emerald-500' :
+                          colony.percentage >= 50 ? 'bg-blue-500' :
+                          colony.percentage >= 25 ? 'bg-amber-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${colony.percentage}%` }}
+                      />
+                    </div>
+                    <span className={`text-sm font-bold ${
+                      colony.percentage >= 80 ? 'text-emerald-600' :
+                      colony.percentage >= 50 ? 'text-blue-600' :
+                      colony.percentage >= 25 ? 'text-amber-600' : 'text-red-600'
+                    }`}>
+                      {colony.percentage}%
+                    </span>
+                  </div>
+                  
+                  {/* Stats */}
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="p-2 bg-slate-50 rounded">
+                      <p className="text-lg font-bold text-slate-700">{colony.total}</p>
+                      <p className="text-xs text-slate-500">Total</p>
+                    </div>
+                    <div className="p-2 bg-emerald-50 rounded">
+                      <p className="text-lg font-bold text-emerald-600">{colony.completed}</p>
+                      <p className="text-xs text-emerald-600">Done</p>
+                    </div>
+                    <div className="p-2 bg-amber-50 rounded">
+                      <p className="text-lg font-bold text-amber-600">{colony.pending}</p>
+                      <p className="text-xs text-amber-600">Pending</p>
+                    </div>
+                    <div className="p-2 bg-red-50 rounded">
+                      <p className="text-lg font-bold text-red-600">{colony.rejected}</p>
+                      <p className="text-xs text-red-600">Rejected</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setColonyDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove from Colony Confirmation Dialog */}
+      <AlertDialog open={removeDialog} onOpenChange={setRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Remove from Colony
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove <strong>{selectedEmployee?.employee_name}</strong> from <strong>{colonyToRemove?.colony}</strong>?
+              <br /><br />
+              This will unassign <strong>{colonyToRemove?.total}</strong> properties ({colonyToRemove?.completed} completed, {colonyToRemove?.pending} pending).
+              <br /><br />
+              <span className="text-amber-600">⚠️ This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveFromColony}
+              disabled={removing}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {removing ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Removing...</>
+              ) : (
+                'Yes, Remove'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
