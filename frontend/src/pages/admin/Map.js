@@ -1160,44 +1160,143 @@ export default function PropertyMap() {
                   </Card>
                 )}
 
-                {/* Survey Submitted Info */}
-                <Card className="bg-green-50 border-green-200">
+                {/* Survey Submitted Info - With Edit Mode */}
+                <Card className={`${editMode ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
                   <CardHeader className="py-2 pb-1">
-                    <CardTitle className="text-sm text-green-700 flex items-center gap-2">
-                      <Check className="w-4 h-4" /> Survey Submission Details
+                    <CardTitle className={`text-sm flex items-center justify-between ${editMode ? 'text-orange-700' : 'text-green-700'}`}>
+                      <span className="flex items-center gap-2">
+                        {editMode ? <Edit className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                        {editMode ? 'Edit Survey Details' : 'Survey Submission Details'}
+                      </span>
+                      {!editMode && surveyData && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleStartEdit}
+                          className="h-7 text-xs border-blue-400 text-blue-600 hover:bg-blue-50"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="py-2">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-slate-500">Receiver Name</p>
-                        <p className="font-medium">{surveyData.receiver_name || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Relation</p>
-                        <p>{surveyData.relation || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Submitted By</p>
-                        <p className="font-semibold text-blue-600">{surveyData.employee_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Submitted At</p>
-                        <p className="font-mono text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</p>
-                      </div>
-                      {surveyData.new_owner_name && (
-                        <div>
-                          <p className="text-xs text-slate-500">New Owner Name</p>
-                          <p className="font-medium text-orange-600">{surveyData.new_owner_name}</p>
+                    {editMode ? (
+                      // EDIT MODE - Show input fields
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-600">Receiver Name</Label>
+                            <Input
+                              value={editData.receiver_name}
+                              onChange={(e) => setEditData({...editData, receiver_name: e.target.value})}
+                              placeholder="Enter receiver name"
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-600">Relation</Label>
+                            <Select
+                              value={editData.relation}
+                              onValueChange={(value) => setEditData({...editData, relation: value})}
+                            >
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Select relation" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Self">Self</SelectItem>
+                                <SelectItem value="Father">Father</SelectItem>
+                                <SelectItem value="Mother">Mother</SelectItem>
+                                <SelectItem value="Son">Son</SelectItem>
+                                <SelectItem value="Daughter">Daughter</SelectItem>
+                                <SelectItem value="Brother">Brother</SelectItem>
+                                <SelectItem value="Sister">Sister</SelectItem>
+                                <SelectItem value="Spouse">Spouse</SelectItem>
+                                <SelectItem value="Tenant">Tenant</SelectItem>
+                                <SelectItem value="Neighbour">Neighbour</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-600">New Owner Name (if changed)</Label>
+                            <Input
+                              value={editData.new_owner_name}
+                              onChange={(e) => setEditData({...editData, new_owner_name: e.target.value})}
+                              placeholder="Enter new owner name"
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-600">New Mobile (if changed)</Label>
+                            <Input
+                              value={editData.new_mobile}
+                              onChange={(e) => setEditData({...editData, new_mobile: e.target.value})}
+                              placeholder="Enter new mobile"
+                              className="h-9"
+                            />
+                          </div>
                         </div>
-                      )}
-                      {surveyData.new_mobile && (
-                        <div>
-                          <p className="text-xs text-slate-500">New Mobile</p>
-                          <p className="font-mono text-orange-600">{surveyData.new_mobile}</p>
+                        
+                        {/* Edit Action Buttons */}
+                        <div className="flex gap-2 pt-2 border-t border-orange-200">
+                          <Button
+                            size="sm"
+                            onClick={handleSaveEdit}
+                            disabled={savingEdit}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            {savingEdit ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving...</>
+                            ) : (
+                              <><Check className="w-3 h-3 mr-1" /> Save Changes</>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                          >
+                            <X className="w-3 h-3 mr-1" /> Cancel
+                          </Button>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      // VIEW MODE - Show data
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-slate-500">Receiver Name</p>
+                          <p className="font-medium">{surveyData.receiver_name || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Relation</p>
+                          <p>{surveyData.relation || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Submitted By</p>
+                          <p className="font-semibold text-blue-600">{surveyData.employee_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Submitted At</p>
+                          <p className="font-mono text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</p>
+                        </div>
+                        {surveyData.new_owner_name && (
+                          <div>
+                            <p className="text-xs text-slate-500">New Owner Name</p>
+                            <p className="font-medium text-orange-600">{surveyData.new_owner_name}</p>
+                          </div>
+                        )}
+                        {surveyData.new_mobile && (
+                          <div>
+                            <p className="text-xs text-slate-500">New Mobile</p>
+                            <p className="font-mono text-orange-600">{surveyData.new_mobile}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
                   </CardContent>
                 </Card>
 
