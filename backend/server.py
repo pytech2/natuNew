@@ -3705,18 +3705,18 @@ async def generate_arranged_pdf(
                 text_width = len(serial_text) * font_size * 0.6
                 
                 # Position: top-right area of the page
-                x_pos = new_page.rect.width - text_width - 12
-                y_pos = 8
+                x_pos = new_page.rect.width - text_width - 10
+                y_pos = 6
                 
                 rect = fitz.Rect(
-                    x_pos - 4,
+                    x_pos - 3,
                     y_pos,
-                    new_page.rect.width - 6,
-                    y_pos + font_size + 6
+                    new_page.rect.width - 4,
+                    y_pos + font_size + 5
                 )
                 
                 # White background with red border
-                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=0.8)
+                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=0.6)
                 
                 # RED bold text - clear and readable
                 new_page.insert_text(
@@ -3729,10 +3729,10 @@ async def generate_arranged_pdf(
             
             included_count += 1
     else:
-        # 2 OR 3 BILLS PER PAGE - Print quality optimized
-        # A4 dimensions
-        A4_WIDTH = 595.28
-        A4_HEIGHT = 841.89
+        # 2 OR 3 BILLS PER PAGE - Compact & Print quality optimized
+        # A4 dimensions - slightly reduced for compact output
+        A4_WIDTH = 560  # Reduced from 595.28
+        A4_HEIGHT = 792  # Reduced from 841.89
         
         # Use the requested bills_per_page (2 or 3)
         num_bills = bills_per_page if bills_per_page in [2, 3] else 3
