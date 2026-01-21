@@ -36,7 +36,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Function to add watermark to image with GPS, Date, Time
 // Fixed for mobile camera images with EXIF orientation handling
-// Also compresses image to reduce upload size
+// AGGRESSIVE COMPRESSION - Target: Under 100KB file size
 const addWatermarkToImage = (file, latitude, longitude) => {
   return new Promise((resolve, reject) => {
     // Create an image element to load the file
@@ -48,8 +48,8 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // COMPRESS: Limit max dimension to 1200px for smaller file size
-        const MAX_SIZE = 1200;
+        // COMPRESS: Limit max dimension to 800px for much smaller file size
+        const MAX_SIZE = 800;
         let width = img.width;
         let height = img.height;
         
