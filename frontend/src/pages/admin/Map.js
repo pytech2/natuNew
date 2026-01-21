@@ -1195,11 +1195,64 @@ export default function PropertyMap() {
                   </CardHeader>
                   <CardContent className="py-2">
                     {editMode ? (
-                      // EDIT MODE - Show input fields
-                      <div className="space-y-3">
+                      // EDIT MODE - Show ALL input fields like Survey Form
+                      <div className="space-y-4">
+                        {/* Special Conditions */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-600 font-semibold">Special Conditions</Label>
+                          <div className="flex gap-3">
+                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${
+                              editData.special_condition === 'house_locked' 
+                                ? 'bg-amber-100 border-amber-400' 
+                                : 'bg-white border-slate-200 hover:border-amber-300'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="special_condition"
+                                value="house_locked"
+                                checked={editData.special_condition === 'house_locked'}
+                                onChange={(e) => setEditData({...editData, special_condition: e.target.value})}
+                              />
+                              <Lock className="w-4 h-4 text-amber-600" />
+                              <span className="text-sm">House Locked</span>
+                            </label>
+                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${
+                              editData.special_condition === 'owner_denied' 
+                                ? 'bg-red-100 border-red-400' 
+                                : 'bg-white border-slate-200 hover:border-red-300'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="special_condition"
+                                value="owner_denied"
+                                checked={editData.special_condition === 'owner_denied'}
+                                onChange={(e) => setEditData({...editData, special_condition: e.target.value})}
+                              />
+                              <UserX className="w-4 h-4 text-red-600" />
+                              <span className="text-sm">Owner Denied</span>
+                            </label>
+                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${
+                              editData.special_condition === '' 
+                                ? 'bg-green-100 border-green-400' 
+                                : 'bg-white border-slate-200 hover:border-green-300'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="special_condition"
+                                value=""
+                                checked={editData.special_condition === ''}
+                                onChange={(e) => setEditData({...editData, special_condition: ''})}
+                              />
+                              <Check className="w-4 h-4 text-green-600" />
+                              <span className="text-sm">Normal</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Receiver Details */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">Receiver Name</Label>
+                            <Label className="text-xs text-slate-600">Receiver Name *</Label>
                             <Input
                               value={editData.receiver_name}
                               onChange={(e) => setEditData({...editData, receiver_name: e.target.value})}
@@ -1208,31 +1261,52 @@ export default function PropertyMap() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">Relation</Label>
-                            <Select
-                              value={editData.relation}
-                              onValueChange={(value) => setEditData({...editData, relation: value})}
-                            >
-                              <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Select relation" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Self">Self</SelectItem>
-                                <SelectItem value="Father">Father</SelectItem>
-                                <SelectItem value="Mother">Mother</SelectItem>
-                                <SelectItem value="Son">Son</SelectItem>
-                                <SelectItem value="Daughter">Daughter</SelectItem>
-                                <SelectItem value="Brother">Brother</SelectItem>
-                                <SelectItem value="Sister">Sister</SelectItem>
-                                <SelectItem value="Spouse">Spouse</SelectItem>
-                                <SelectItem value="Tenant">Tenant</SelectItem>
-                                <SelectItem value="Neighbour">Neighbour</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Label className="text-xs text-slate-600">Receiver Mobile Number</Label>
+                            <Input
+                              value={editData.receiver_mobile}
+                              onChange={(e) => setEditData({...editData, receiver_mobile: e.target.value})}
+                              placeholder="Enter mobile number"
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Relation with Owner */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-slate-600">Relation with Owner *</Label>
+                          <Select
+                            value={editData.relation}
+                            onValueChange={(value) => setEditData({...editData, relation: value})}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select relation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Self">Self (Owner)</SelectItem>
+                              <SelectItem value="Family Member">Family Member</SelectItem>
+                              <SelectItem value="Father">Father</SelectItem>
+                              <SelectItem value="Mother">Mother</SelectItem>
+                              <SelectItem value="Son">Son</SelectItem>
+                              <SelectItem value="Daughter">Daughter</SelectItem>
+                              <SelectItem value="Brother">Brother</SelectItem>
+                              <SelectItem value="Sister">Sister</SelectItem>
+                              <SelectItem value="Spouse">Spouse (Wife/Husband)</SelectItem>
+                              <SelectItem value="Tenant">Tenant</SelectItem>
+                              <SelectItem value="Neighbour">Neighbour</SelectItem>
+                              <SelectItem value="Caretaker">Caretaker</SelectItem>
+                              <SelectItem value="Security Guard">Security Guard</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* New Owner Details (if changed) */}
+                        <div className="grid grid-cols-2 gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                          <div className="col-span-2">
+                            <Label className="text-xs text-orange-600 font-semibold">If Owner Changed</Label>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">New Owner Name (if changed)</Label>
+                            <Label className="text-xs text-slate-600">New Owner Name</Label>
                             <Input
                               value={editData.new_owner_name}
                               onChange={(e) => setEditData({...editData, new_owner_name: e.target.value})}
@@ -1241,7 +1315,7 @@ export default function PropertyMap() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">New Mobile (if changed)</Label>
+                            <Label className="text-xs text-slate-600">New Mobile Number</Label>
                             <Input
                               value={editData.new_mobile}
                               onChange={(e) => setEditData({...editData, new_mobile: e.target.value})}
@@ -1249,6 +1323,53 @@ export default function PropertyMap() {
                               className="h-9"
                             />
                           </div>
+                        </div>
+
+                        {/* Self Satisfied */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-600 font-semibold">Self Satisfied?</Label>
+                          <div className="flex gap-3">
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer ${
+                              editData.self_satisfied 
+                                ? 'bg-green-100 border-green-400' 
+                                : 'bg-white border-slate-200 hover:border-green-300'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="self_satisfied"
+                                checked={editData.self_satisfied === true}
+                                onChange={() => setEditData({...editData, self_satisfied: true})}
+                              />
+                              <Check className="w-4 h-4 text-green-600" />
+                              <span className="text-sm font-medium">Yes</span>
+                            </label>
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer ${
+                              !editData.self_satisfied 
+                                ? 'bg-red-100 border-red-400' 
+                                : 'bg-white border-slate-200 hover:border-red-300'
+                            }`}>
+                              <input
+                                type="radio"
+                                name="self_satisfied"
+                                checked={editData.self_satisfied === false}
+                                onChange={() => setEditData({...editData, self_satisfied: false})}
+                              />
+                              <X className="w-4 h-4 text-red-600" />
+                              <span className="text-sm font-medium">No</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Remarks */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-slate-600">Remarks / Notes</Label>
+                          <Textarea
+                            value={editData.remarks}
+                            onChange={(e) => setEditData({...editData, remarks: e.target.value})}
+                            placeholder="Enter any remarks or notes..."
+                            rows={2}
+                            className="resize-none"
+                          />
                         </div>
                         
                         {/* Edit Action Buttons */}
