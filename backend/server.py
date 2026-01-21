@@ -299,6 +299,11 @@ class BulkAssignmentRequest(BaseModel):
     area: str
     employee_id: Optional[str] = None  # Single employee (backward compat)
     employee_ids: Optional[List[str]] = None  # Multiple employees (work together)
+    custom_distribution: Optional[Dict[str, int]] = None  # {employee_id: count} for custom distribution
+
+class BulkUnassignRequest(BaseModel):
+    area: str
+    employee_id: Optional[str] = None  # If provided, only unassign this employee from area
 
 class SubmissionApproval(BaseModel):
     submission_id: str
