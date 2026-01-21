@@ -1517,36 +1517,129 @@ export default function PropertyMap() {
                         </div>
                       </div>
                     ) : (
-                      // VIEW MODE - Show data
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                        <div>
-                          <p className="text-xs text-slate-500">Receiver Name</p>
-                          <p className="font-medium">{surveyData.receiver_name || '-'}</p>
+                      // VIEW MODE - Show data matching Surveyor Form Layout
+                      <div className="space-y-4">
+                        {/* Special Conditions - same layout as surveyor form */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-600 font-semibold">Special Conditions</Label>
+                          <div className="flex gap-3">
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                              surveyData.special_condition === 'house_locked' 
+                                ? 'bg-amber-100 border-amber-400' 
+                                : 'bg-slate-50 border-slate-200 opacity-50'
+                            }`}>
+                              <Lock className={`w-4 h-4 ${surveyData.special_condition === 'house_locked' ? 'text-amber-600' : 'text-slate-400'}`} />
+                              <span className="text-sm">House Locked</span>
+                            </div>
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                              surveyData.special_condition === 'owner_denied' 
+                                ? 'bg-red-100 border-red-400' 
+                                : 'bg-slate-50 border-slate-200 opacity-50'
+                            }`}>
+                              <UserX className={`w-4 h-4 ${surveyData.special_condition === 'owner_denied' ? 'text-red-600' : 'text-slate-400'}`} />
+                              <span className="text-sm">Owner Denied</span>
+                            </div>
+                            {!surveyData.special_condition && (
+                              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-green-100 border-green-400">
+                                <Check className="w-4 h-4 text-green-600" />
+                                <span className="text-sm">Normal</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Relation</p>
-                          <p>{surveyData.relation || '-'}</p>
+
+                        {/* Receiver Details - Grid Layout */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-500">Receiver Name *</Label>
+                            <div className="h-9 px-3 py-2 bg-slate-100 rounded-md border border-slate-200 text-sm font-medium">
+                              {surveyData.receiver_name || '-'}
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-500">Receiver Mobile Number *</Label>
+                            <div className="h-9 px-3 py-2 bg-slate-100 rounded-md border border-slate-200 text-sm font-mono">
+                              {surveyData.receiver_mobile || '-'}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Submitted By</p>
-                          <p className="font-semibold text-blue-600">{surveyData.employee_name}</p>
+
+                        {/* Relation with Owner */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-slate-500">Relation with Owner *</Label>
+                          <div className="h-9 px-3 py-2 bg-slate-100 rounded-md border border-slate-200 text-sm">
+                            {surveyData.relation || '-'}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Submitted At</p>
-                          <p className="font-mono text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</p>
+
+                        {/* Self Satisfied - same layout as surveyor form */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-600 font-semibold">Self Satisfied? *</Label>
+                          <div className="flex gap-4">
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                              surveyData.self_satisfied === true || surveyData.self_satisfied === 'yes'
+                                ? 'bg-green-100 border-green-400' 
+                                : 'bg-slate-50 border-slate-200 opacity-50'
+                            }`}>
+                              <Check className={`w-4 h-4 ${surveyData.self_satisfied === true || surveyData.self_satisfied === 'yes' ? 'text-green-600' : 'text-slate-400'}`} />
+                              <span className="text-sm font-medium">Yes</span>
+                            </div>
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                              surveyData.self_satisfied === false || surveyData.self_satisfied === 'no'
+                                ? 'bg-red-100 border-red-400' 
+                                : 'bg-slate-50 border-slate-200 opacity-50'
+                            }`}>
+                              <X className={`w-4 h-4 ${surveyData.self_satisfied === false || surveyData.self_satisfied === 'no' ? 'text-red-600' : 'text-slate-400'}`} />
+                              <span className="text-sm font-medium">No</span>
+                            </div>
+                          </div>
                         </div>
-                        {surveyData.new_owner_name && (
-                          <div>
-                            <p className="text-xs text-slate-500">New Owner Name</p>
-                            <p className="font-medium text-orange-600">{surveyData.new_owner_name}</p>
+
+                        {/* Remarks */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-slate-500">Remarks</Label>
+                          <div className="min-h-[60px] px-3 py-2 bg-slate-100 rounded-md border border-slate-200 text-sm">
+                            {surveyData.remarks || '-'}
+                          </div>
+                        </div>
+
+                        {/* New Owner Details (if changed) */}
+                        {(surveyData.new_owner_name || surveyData.new_mobile) && (
+                          <div className="grid grid-cols-2 gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div className="col-span-2">
+                              <Label className="text-xs text-orange-600 font-semibold">Owner Changed</Label>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-500">New Owner Name</Label>
+                              <div className="h-9 px-3 py-2 bg-white rounded-md border border-orange-200 text-sm font-medium text-orange-700">
+                                {surveyData.new_owner_name || '-'}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-500">New Mobile Number</Label>
+                              <div className="h-9 px-3 py-2 bg-white rounded-md border border-orange-200 text-sm font-mono text-orange-700">
+                                {surveyData.new_mobile || '-'}
+                              </div>
+                            </div>
                           </div>
                         )}
-                        {surveyData.new_mobile && (
-                          <div>
-                            <p className="text-xs text-slate-500">New Mobile</p>
-                            <p className="font-mono text-orange-600">{surveyData.new_mobile}</p>
+
+                        {/* Submission Info */}
+                        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-500">Submitted By</Label>
+                            <div className="h-9 px-3 py-2 bg-blue-50 rounded-md border border-blue-200 text-sm font-semibold text-blue-700">
+                              {surveyData.employee_name || '-'}
+                            </div>
                           </div>
-                        )}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-500">Submitted At</Label>
+                            <div className="h-9 px-3 py-2 bg-blue-50 rounded-md border border-blue-200 text-sm font-mono text-blue-700">
+                              {surveyData.submitted_at ? new Date(surveyData.submitted_at).toLocaleString('en-IN') : '-'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       </div>
                     )}
                   </CardContent>
