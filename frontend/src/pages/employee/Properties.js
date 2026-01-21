@@ -379,18 +379,48 @@ export default function Properties() {
           dragRotate={true}
           pitchWithRotate={false}
         >
-          {/* User location marker */}
+          {/* User location marker with 100m radius circle */}
           {userLocation && (
-            <Marker 
-              latitude={userLocation.lat} 
-              longitude={userLocation.lng}
-              anchor="center"
-            >
-              <div className="relative">
-                <div className="w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg animate-pulse" />
-                <div className="absolute -inset-2 bg-blue-500/30 rounded-full animate-ping" />
-              </div>
-            </Marker>
+            <>
+              {/* 100m radius circle - visible blue area */}
+              <Marker 
+                latitude={userLocation.lat} 
+                longitude={userLocation.lng}
+                anchor="center"
+              >
+                <div 
+                  className="rounded-full border-2 border-blue-500"
+                  style={{
+                    width: `${Math.max(100, 100 * Math.pow(2, viewState.zoom - 17))}px`,
+                    height: `${Math.max(100, 100 * Math.pow(2, viewState.zoom - 17))}px`,
+                    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+                    transform: 'translate(-50%, -50%)',
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%'
+                  }}
+                />
+              </Marker>
+              
+              {/* User GPS dot - on top */}
+              <Marker 
+                latitude={userLocation.lat} 
+                longitude={userLocation.lng}
+                anchor="center"
+              >
+                <div className="relative">
+                  {/* Outer pulsing ring */}
+                  <div className="absolute -inset-4 bg-blue-500/30 rounded-full animate-ping" />
+                  {/* Middle glow ring */}
+                  <div className="absolute -inset-2 bg-blue-400/40 rounded-full" />
+                  {/* Inner solid dot */}
+                  <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </div>
+                </div>
+              </Marker>
+            </>
           )}
           
           {/* Property markers - render ALL */}
