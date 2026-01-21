@@ -112,17 +112,32 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         ctx.fillStyle = '#00ff00';
         ctx.fillText(topText, 16, 8 + smallFontSize + 2);
         
-        // Convert canvas to blob with COMPRESSION (0.7 quality = ~70% smaller)
+        // Convert canvas to blob with AGGRESSIVE COMPRESSION (0.5 quality = ~50-80KB typical)
         canvas.toBlob((blob) => {
           if (blob) {
             const watermarkedFile = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            console.log('Compressed & Watermarked:', watermarkedFile.name, (watermarkedFile.size / 1024).toFixed(0) + 'KB');
-            resolve(watermarkedFile);
+            const sizeKB = (watermarkedFile.size / 1024).toFixed(0);
+            console.log(`📸 Compressed: ${watermarkedFile.name} - ${sizeKB}KB`);
+            
+            // If still too large, try more compression
+            if (watermarkedFile.size > 150 * 1024) {
+              canvas.toBlob((smallerBlob) => {
+                if (smallerBlob) {
+                  const smallerFile = new File([smallerBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                  console.log(`📸 Extra compressed: ${(smallerFile.size / 1024).toFixed(0)}KB`);
+                  resolve(smallerFile);
+                } else {
+                  resolve(watermarkedFile);
+                }
+              }, 'image/jpeg', 0.4); // Even more compression if needed
+            } else {
+              resolve(watermarkedFile);
+            }
           } else {
             console.warn('Canvas toBlob returned null, using original file');
             resolve(file);
           }
-        }, 'image/jpeg', 0.7); // 0.7 quality for better compression
+        }, 'image/jpeg', 0.5); // 0.5 quality for aggressive compression (~50-100KB)
       } catch (err) {
         console.error('Error applying watermark:', err);
         resolve(file);
