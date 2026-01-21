@@ -1668,26 +1668,6 @@ export default function PropertyMap() {
                           </div>
                         </div>
 
-                        {/* New Owner Details (if changed) */}
-                        {(surveyData.new_owner_name || surveyData.new_mobile) && (
-                          <div className="grid grid-cols-2 gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                            <div className="col-span-2">
-                              <Label className="text-xs text-orange-600 font-semibold">Owner Changed</Label>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-500">New Owner Name</Label>
-                              <div className="h-9 px-3 py-2 bg-white rounded-md border border-orange-200 text-sm font-medium text-orange-700">
-                                {surveyData.new_owner_name || '-'}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-500">New Mobile Number</Label>
-                              <div className="h-9 px-3 py-2 bg-white rounded-md border border-orange-200 text-sm font-mono text-orange-700">
-                                {surveyData.new_mobile || '-'}
-                              </div>
-                            </div>
-                          </div>
-                        )}
 
                         {/* Submission Info */}
                         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
