@@ -973,6 +973,7 @@ export default function PropertyMap() {
             </div>
           </CardContent>
         </Card>
+            )}
 
         {/* Map */}
         <Card className="overflow-hidden">
