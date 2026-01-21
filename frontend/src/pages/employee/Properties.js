@@ -14,6 +14,29 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
+// Create a GeoJSON circle polygon for 100m radius
+const createCircleGeoJSON = (centerLat, centerLng, radiusMeters = 100, points = 64) => {
+  const coords = [];
+  const distanceX = radiusMeters / (111320 * Math.cos(centerLat * Math.PI / 180));
+  const distanceY = radiusMeters / 110540;
+  
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = centerLng + (distanceX * Math.cos(theta));
+    const y = centerLat + (distanceY * Math.sin(theta));
+    coords.push([x, y]);
+  }
+  coords.push(coords[0]); // Close the polygon
+  
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coords]
+    }
+  };
+};
+
 // Calculate distance (Haversine)
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371000;
