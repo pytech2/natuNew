@@ -414,7 +414,7 @@ export default function PropertyMap() {
 
   const clearFilters = () => {
     setFilters({ colony: '', category: '', status: '', employee: '', search: '' });
-    setShowMap(false);
+    // Keep map visible, just clear properties
     setProperties([]);
     setFilteredProperties([]);
     setEmployeeStats(null);
