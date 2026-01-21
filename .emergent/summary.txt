@@ -3,75 +3,90 @@
 **PRODUCT REQUIREMENTS:**
 - **Roles:** Super Admin, Surveyor, Supervisor, MC Officer with specific permissions.
 - **Admin Workflow:** Login, upload property data, manage users, assign properties, process PDF bills with data extraction and GPS-based route optimization, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., N42) and managing duplicate data.
-- **Surveyor Workflow:** Login, view assigned properties on a fullscreen, auto-rotating satellite map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. The map view must be fast, stable, and clean, without extra lists or buttons. A search bar is needed to find properties on the map.
-- **Map UI:** The surveyor map must be fast, load all assigned properties without limits, and support smooth, 360-degree rotation using two-finger touch gestures.
+- **Surveyor Workflow:** Login, view assigned properties on a map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. A search bar is needed to find properties on the map.
 - **Data Processing:**
-    - During PDF upload, automatically skip properties identified as vacant plots.
-    - When generating PDFs for surveyors, include an option to print the property's map serial number (e.g., N7, N62) directly onto the bill for easy matching in the field. PDF file size should be optimized.
-- **Performance:** The application must be extremely fast and handle 20+ concurrent surveyors, especially map loading and form submissions.
-- **Data Integrity:** All uploaded files must be stored reliably.
+    - Skip vacant plots during PDF upload.
+    - Print the property's map serial number on generated bills.
+    - Compress surveyor-taken photos to KB-range file sizes.
+- **Performance:** The application must be fast and handle 20+ concurrent surveyors.
+- **Data Integrity:** All uploaded files must be stored reliably. Generated PDFs should be saved and be available for re-download.
 
-**User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., app slow hai, map rotate karna hai, pdf size chhota karo).
+**User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., app slow hai, dropdown काम नहीं कर रहा, pdf quality improve karo).
 
 **what currently exists?**
 A full-stack application with a FastAPI backend, React frontend, and MongoDB.
-- **Backend ():** A monolithic but optimized server handling all logic. It now includes logic to skip vacant plots during PDF processing, print serial numbers on generated PDFs with optimized file sizes, and an endpoint to serve all assigned properties to a surveyor without any limit.
+- **Backend ():** The monolithic server now includes significant enhancements:
+    - A new data model () and endpoints to store and retrieve metadata for all generated PDFs.
+    - Endpoints for bulk un-assigning properties by area and for custom property distribution during bulk assignment.
+    - An endpoint to remove a single surveyor from a specific colony.
+    - Enhanced  endpoint to provide colony-wise progress breakdowns.
+    - PDF generation logic was updated to improve image quality and font clarity while optimizing file size.
 - **Frontend:**
-    - **Surveyor:** The map interface () has been completely rebuilt using **MapLibre GL** to provide a fast, watermark-free satellite map with native 360-degree two-finger rotation. It also includes a search bar to find properties by ID, name, or serial number.
-    - **Admin:** The Bills page () now has UI options to Skip Vacant Plots during property import and Print Serial Number when generating PDFs. The Submissions page () UI has been cleaned up to remove redundant fields from the edit/view dialogs.
+    - **Admin - Bills ():** Revamped UI with a two-column layout. A new left sidebar lists all generated PDFs by colony, allowing admins to re-download them at any time. The generation process now automatically saves metadata for this feature.
+    - **Admin - Map ():** Added filters for survey status (Pending, Completed, Rejected) and a filter for Surveyors. The View Survey Data popup is now a comprehensive form allowing admins to view and edit all submitted survey details.
+    - **Admin - Dashboard ():** The Employee Progress table now shows colony counts and includes a View Details button to see a surveyor's progress per colony, along with an option to remove them from that colony.
+    - **Admin - Properties ():** The assignment dialogs have been updated to support Bulk Unassign by Area and Custom Distribution for assigning a specific number of properties to each selected surveyor.
+    - **Surveyor - Survey ():** Image compression logic has been made more aggressive to reduce photo sizes significantly (targeting < 100KB), and the UI now displays the compressed file size to the surveyor.
 
 **Last working item**:
-- **Last item agent was working:** Resolving a critical  failure. The user is unable to save their work to GitHub because large PDF files were previously committed to the repository, exceeding GitHub's file size limits.
-- **Status:** USER VERIFICATION PENDING
+- **Last item agent was working:** Implementing Bulk Unassign by Area and Custom Distribution for bulk property assignment in  and the corresponding backend logic in .
+- **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Manual verification by the user attempting to Save to Github.
-- **User Testing Done:** N (The user's last attempt to push failed even after the agent's initial fix).
+- **Which testing method agent to use?** Frontend testing agent to test the Assign Properties and Unassign Properties dialogs in . The test should verify that the new Custom Distribution input fields appear when multiple employees are selected and that the Bulk Unassign by Area option functions correctly.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
 - **Issue 1:** Git push fails due to large files in repository history. (P0 - BLOCKER)
-- **Issue 2:** Hide duplicate and completed properties from map views. (P1)
-- **Issue 3:** The GPS-based serial number algorithm () still requires final user verification. (P2)
-- **Issue 4:** A user story to restrict access to completed colonies has not been started. (P3)
-- **Issue 5:** The user's Hostinger VPS deployment remains fragile. (P3)
+- **Issue 2:** Surveyor and Category dropdowns on the Admin Map are not working on the user's VPS. (P1 - High User Impact)
+- **Issue 3:** Hide duplicate and completed properties from map views. (P2)
+- **Issue 4:** The user's Hostinger VPS deployment is fragile and a recurring source of problems. (P3)
 
 **Issues Detail:**
 - **Issue 1: Git push fails due to large files in repository history**
-    - **Attempted fixes:** The agent first added  to  and removed tracked files. When that failed (as files were in past commits), the agent correctly used WARNING: git-filter-branch has a glut of gotchas generating mangled history
+    - **Attempted fixes:** The previous agent used WARNING: git-filter-branch has a glut of gotchas generating mangled history
 	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
 	 alternative filtering tool such as 'git filter-repo'
 	 (https://github.com/newren/git-filter-repo/) instead.  See the
 	 filter-branch manual page for more details; to squelch this warning,
 	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch... to rewrite the entire git history, purging the problematic folder.
+Proceeding with filter-branch... to rewrite history, but the user's subsequent push still failed. This issue was ignored in the last session.
     - **Next debug checklist:**
-        1.  The user's last push attempt failed after the  command. It's possible the push needs to be forced because the history has been rewritten.
-        2.  Instruct the user to try saving to GitHub again.
-        3.  If it fails, the next step is to execute a force push on behalf of the user: . This is a destructive operation but necessary after rewriting history.
-        4.  As a last resort, use a more robust tool like .
-    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The user cannot save any of the recent work until this is resolved.
+        1.  Instruct the user to try saving to GitHub again.
+        2.  If it fails, the next step is to execute a force push on behalf of the user: . This is necessary after rewriting history.
+        3.  Inform the user this is a one-time, necessary step to fix the repository.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The user cannot save any of the recent feature work to their GitHub repository.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** N/A (Git operation)
-    - **Blocked on other issue:** None. This is the primary blocker.
+    - **Blocked on other issue:** This is the primary blocker for saving progress.
 
-- **Issue 2: Hide duplicate and completed properties from map views**
-    - **Attempted fixes:** None in this session. This was the 
-wtmp begins Tue Jan 20 13:35:58 2026 from the *previous* fork but was immediately superseded by the user's request for map rotation.
+- **Issue 2: Surveyor and Category dropdowns not working on VPS**
+    - **Attempted fixes:**
+        - Backend code was updated to correctly return  from the  endpoint.
+        - Frontend code was updated to handle the new data structure.
+        - The agent provided numerous shell commands to the user to force-update code, clear caches, and restart services on their VPS.
+        - The issue was confirmed to be VPS-specific, as it works correctly in the preview environment.
     - **Next debug checklist:**
-        1.  Implement a Hide Completed checkbox in the admin map UI ().
-        2.  Update backend map endpoints (,  in ) to filter out properties with a Completed status.
-        3.  Ensure the surveyor map does not show completed properties by default.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on other issue:** Git push fails due to large files in repository history
+        1.  Guide the user to clear their browser cache and perform a hard refresh ().
+        2.  Guide the user through a clean deployment: stop services (), clean build artifacts (), pull latest code (), reinstall/rebuild (), and restart services.
+        3.  Use  on the user's VPS to test the API endpoint directly and confirm if the backend is returning the correct data. This will isolate the problem to either the backend or a frontend caching/build issue.
+    - **Why fix this issue and what will be achieved with the fix?** The admin cannot filter properties by the assigned surveyor on the map, which is a key requested feature.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** Frontend (on user's environment)
+    - **Blocked on other issue:** None
 
 **In progress Task List**:
-- None.
+- **Task 1: Complete Bulk Unassign and Custom Distribution Feature**
+    - **Where to resume:** The code has been added to  and . The task is pending testing and verification.
+    - **What will be achieved with this?** Admins will gain precise control over bulk property assignments and unassignments.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **Implement Hide Completed Properties feature (P1):** As described in Issue 2.
+    - **Implement Hide Completed Properties feature (P1):** Add a toggle on the map pages to hide properties with a Completed status.
     - **Backend Refactoring (P2):** Decompose the monolithic  into a modular structure using FastAPI routers.
 - **Future Tasks:**
     - Offline support for the surveyor's mobile interface.
@@ -81,25 +96,15 @@ wtmp begins Tue Jan 20 13:35:58 2026 from the *previous* fork but was immediatel
     - Implement Completed Colony access restrictions.
 
 **Completed work in this session**
-- **Surveyor Map Overhaul ():**
-    - Replaced Google Maps with **MapLibre GL** to achieve native, smooth 360° two-finger rotation without API keys or watermarks.
-    - Added a search bar to the map for finding properties by ID, serial number, name, etc.
-- **Backend Data Limit Removal ():**
-    - Modified the  endpoint to remove the data limit, allowing surveyors to see all assigned properties.
-- **PDF Processing Enhancements (, ):**
-    - Implemented logic to automatically skip vacant plots during the initial PDF upload/extraction phase.
-    - Added a feature to print property serial numbers (e.g., N7, 62) onto generated PDF bills, matching what's shown on the map.
-    - Tuned PDF generation to balance image quality and file size, achieving a significant reduction.
-- **UI/UX Cleanup ():**
-    - Removed New Owner Name and New Mobile Number fields from the admin's submission edit/view dialogs for a cleaner interface.
-- **Git Repository Cleanup:**
-    - Purged large files from the entire git history using WARNING: git-filter-branch has a glut of gotchas generating mangled history
-	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
-	 alternative filtering tool such as 'git filter-repo'
-	 (https://github.com/newren/git-filter-repo/) instead.  See the
-	 filter-branch manual page for more details; to squelch this warning,
-	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch... to prepare for fixing the push failures.
+- **PDF Re-Download System:** Implemented a new feature where all generated PDFs (arranged by route, split by employee) are saved to a new  collection in the database. The  page now has a left sidebar listing these PDFs by colony for easy re-downloading.
+- **Admin Map Enhancements ():**
+    - Added filters for survey status (, , ).
+    - Added a filter dropdown for Surveyors.
+    - The View Survey Data popup was converted into a comprehensive, editable form, allowing admins to modify all survey fields.
+- **Surveyor Performance Dashboard ():** Enhanced the employee progress report to show colony-wise breakdowns and added functionality to remove a surveyor from a selected colony.
+- **Surveyor Image Compression ():** Greatly improved image compression on the surveyor form to reduce file sizes to the KB range, with a UI indicator for the final size.
+- **VPS PDF Download Fix:** Diagnosed and provided the fix for a recurring 404 error on the user's VPS by correcting the  path in their Nginx configuration to properly serve static PDF files.
+- **PDF Generation Quality:** Optimized the PDF generation code in  to produce clearer, print-ready documents with improved fonts while maintaining a small file size.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1: Root cause of VPS deployment failures.**
@@ -139,95 +144,93 @@ Configuration fields: npm help 7 config
 npm@10.8.2 /usr/lib/node_modules/npm vs. yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.02s. conflicts, Node.js version mismatches, or resource limitations on the user's Hostinger VPS.
-    - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process for the user.
+Done in 0.04s. conflicts, Node.js version mismatches, file permissions, or resource limitations on the user's Hostinger VPS. The user has been given many one-off commands, but a stable, repeatable deployment process is needed.
+    - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process for the user, reducing friction and support time.
     - **Should Test frontend/backend/both after fix:** N/A (DevOps issue)
     - **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Deployment/Build failures on Hostinger VPS.
+- **Issue recurrence in previous fork:** Deployment/Build failures on Hostinger VPS and Git push failures.
 - **Recurrence count:** 5+
-- **Status:** BLOCKED (Workarounds provided, but the core issue on the user's server persists.)
+- **Status:** IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, GridFS.
-- **Frontend:** React, **MapLibre GL**, **React-Map-GL**, Tailwind CSS, Shadcn UI, .
+- **Frontend:** React, MapLibre GL, React-Map-GL, Tailwind CSS, Shadcn UI, .
+- **File Handling:** Using blob-based downloads on the frontend to handle authenticated file requests, preventing direct URL exposure and bypassing auth issues.
 
 **key DB schema**
-- No changes to the schema in this session.
+- **generated_pdfs** (New Collection): 
+- **submissions:** Schema effectively expanded to allow admin edits on fields like , , , etc.
+- **properties:** Logic now handles  (List[str]) for properties assigned to multiple surveyors.
 
 **changes in tech stack**
-- **Added:** , 
-- **Removed:**  (was added and then removed in this session).
+- No changes to the core tech stack.
 
 **All files of reference**
-- : The most heavily modified file. Now uses MapLibre GL for the surveyor map.
-- : Major updates to PDF processing, PDF generation, and surveyor property endpoints.
-- : UI additions for new PDF features.
-- : UI cleanup.
-- : Updated to ignore large file uploads.
+- : Heavily modified for all new features.
+- : Completely restructured UI.
+- : Modified for filters and editable popups.
+- : Modified for detailed employee progress.
+- : Modified for advanced bulk assignment/unassignment.
+- : Modified for image compression.
 
 **Areas that need refactoring**:
-- **:** Remains the highest priority for refactoring into smaller, manageable FastAPI routers to improve maintainability.
+- **:** Still a high priority for refactoring. The file has grown significantly and should be broken down into FastAPI routers for better maintainability.
 
 **key api endpoints**
-- : Modified to skip vacant plots during data extraction.
-- : Modified to remove the hardcoded property limit.
-- : Modified to handle printing serial numbers and to optimize output file size and quality.
-- : Modified to handle skipping vacant plots.
+- : Saves generated PDF metadata.
+- : Retrieves list of generated PDFs for the download sidebar.
+- : Updated to allow editing of all survey fields.
+- : New endpoint for bulk unassigning by area.
+- : Updated to handle custom property distribution counts.
+- : Updated to provide colony-wise breakdown for the dashboard.
+- : New endpoint to remove a surveyor from a colony.
+- : Updated projection to include .
+- : Updated for improved image quality and file size optimization.
 
 **Critical Info for New Agent**
-- **The git push failure is the #1 Blocker.** You must resolve this before any other work can proceed. The history has been rewritten with WARNING: git-filter-branch has a glut of gotchas generating mangled history
-	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
-	 alternative filtering tool such as 'git filter-repo'
-	 (https://github.com/newren/git-filter-repo/) instead.  See the
-	 filter-branch manual page for more details; to squelch this warning,
-	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch..., so the next logical step is a .
-- The user is very specific about UI feel, especially for the map. The switch to MapLibre was successful and should be maintained.
-- The original pending task from the previous fork—hiding completed/duplicate properties—was completely skipped in this session. It remains a high-priority feature once the git issue is resolved.
-- Be prepared to provide clear, copy-paste deployment commands for the user's VPS, as this is a recurring point of friction.
+- **The git push failure is the #1 Blocker.** You must resolve this before the user can save any work. The next logical step is a . Address this first.
+- **The user's VPS deployment is extremely fragile.** Expect to provide clear, step-by-step shell commands for updates. The Surveyor dropdown not working issue is a direct symptom of this deployment problem. Be prepared to debug Nginx, Node.js build caches, and file permissions.
+- The feature Hide completed properties from map views has been requested for a long time and should be prioritized once the critical blockers are resolved.
+- The user is very responsive and provides feedback with screenshots. Pay close attention to them and be prepared to communicate in a mix of Hindi and English.
 
 **documents and test reports created in this job**
--  (updated)
+- 
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **User:** Improve PDF quality, it's very poor. (Agent increased quality settings).
-9. **User:** Vacant Plot also need to skip at the time of uploading pdf. (Agent confirmed code was added and user needs to update VPS).
-8. **User:** Serial number size need to reduce by 60%. (Agent reduced font size in PDF generation).
-7. **User:** (Git Push Fails).
-6. **Agent:** Cleaned git history to remove large files.
-5. **User:** (Git Push Fails Again) again why coming this problem correct all issues because i want to easly and safly push on github repo.
-4. **Agent:** Explained the issue is old history and used WARNING: git-filter-branch has a glut of gotchas generating mangled history
-	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
-	 alternative filtering tool such as 'git filter-repo'
-	 (https://github.com/newren/git-filter-repo/) instead.  See the
-	 filter-branch manual page for more details; to squelch this warning,
-	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch... to rewrite history completely. Advised user to try pushing again.
-3. **User:** *(No response, but triggered a final failed git push)*.
-2. **Agent:** (Final message) Acknowledged the history has been cleaned and advised the user to try saving to GitHub again.
-1. **(Implied)** User needs the git push issue to be fixed so they can save their work.
+10. User requested improved PDF quality and smaller file size. (Completed)
+9. User requested image compression for surveyor photos. (Completed)
+8. User requested bulk unassign by area and custom distribution for bulk assign. (In Progress)
+7. User reported surveyor dropdown not working on the map. (In Progress)
+6. User reported surveyor dropdown still not working on VPS. (In Progress)
+5. User reported surveyor dropdown still not working and sent a screenshot of the database script output. (In Progress)
+4. User reported surveyor dropdown *still* not working and sent a screenshot of API test results. (In Progress)
+3. User sent a screenshot of Nginx config error on VPS regarding  path. (Resolved)
+2. User sent another screenshot of Nginx/file issues on VPS. (In Progress)
+1. User confirmed PDF download is working after Nginx fix, and then requested survey data popup enhancements. (This was then completed)
 
 **Project Health Check:**
 - **Broken:**
-    - **Git Repository:** Pushing to the remote is broken due to large files in the commit history, blocking all progress.
-    - **Production Deployment:** The user's live Hostinger VPS deployment is highly unreliable and frequently out of sync with the latest code.
+    - **Git Repository:** Pushing to the remote is broken, blocking all progress saving.
+    - **Production Deployment:** The user's VPS deployment is highly unreliable. Key features like the surveyor dropdown filter are confirmed broken on the VPS due to build/cache/sync issues.
 - **Mocked:** None.
 
 **3rd Party Integrations**
-- **MapLibre GL & React-Map-GL:** Used for the interactive surveyor map.
+- **MapLibre GL & React-Map-GL:** Used for the interactive maps.
 - **PyMuPDF, reportlab:** Used for backend PDF processing.
-- **Nginx:** Used as a reverse proxy on the user's VPS.
+- **Nginx:** Used as a reverse proxy on the user's VPS (recurring source of issues).
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** None.
+- **Known regressions:** The surveyor dropdown on the admin map is not working on the user's production environment.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -236,5 +239,5 @@ Proceeding with filter-branch... to rewrite history completely. Advised user to 
 - **MC Officer:**  / 
 
 **What agent forgot to execute**
-- The agent never implemented the original 
-wtmp begins Tue Jan 20 13:35:58 2026 from the handoff summary: **Hide duplicate and completed properties from map views.** This task was completely bypassed due to the user's immediate and high-priority request for a better map rotation experience.</analysis>
+- The agent did not resolve the P0 ** blocker** from the previous handoff summary, instead prioritizing new feature requests.
+- The agent did not implement the long-pending feature request: **Hide duplicate and completed properties from map views.**</analysis>

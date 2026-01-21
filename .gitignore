@@ -483,3 +483,7 @@ backend/uploads/*
 *.env.*
 frontend/node_modules/.cache/default-development/16.pack
 frontend/node_modules/.cache/default-development/17.pack
+-e 
+# Environment files
+*.env
+*.env.*
