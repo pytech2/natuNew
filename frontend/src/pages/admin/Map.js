@@ -1586,13 +1586,39 @@ export default function PropertyMap() {
                             </div>
                             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
                               surveyData.self_satisfied === false || surveyData.self_satisfied === 'no'
-                                ? 'bg-red-100 border-red-400' 
+                                ? 'bg-orange-100 border-orange-400' 
                                 : 'bg-slate-50 border-slate-200 opacity-50'
                             }`}>
-                              <X className={`w-4 h-4 ${surveyData.self_satisfied === false || surveyData.self_satisfied === 'no' ? 'text-red-600' : 'text-slate-400'}`} />
+                              <X className={`w-4 h-4 ${surveyData.self_satisfied === false || surveyData.self_satisfied === 'no' ? 'text-orange-600' : 'text-slate-400'}`} />
                               <span className="text-sm font-medium">No</span>
                             </div>
                           </div>
+                          
+                          {/* Self Certification OTP Info - Show when self_satisfied = 'no' */}
+                          {(surveyData.self_satisfied === 'no' || surveyData.self_satisfied === false) && (
+                            <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertTriangle className="w-4 h-4 text-orange-600" />
+                                <span className="text-xs font-semibold text-orange-700">Self Certification via ULB Portal</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <p className="text-xs text-orange-600">Mobile Used</p>
+                                  <p className="font-mono text-sm font-medium text-orange-800">{surveyData.self_cert_mobile || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-orange-600">OTP Entered</p>
+                                  <p className="font-mono text-sm font-medium text-orange-800">{surveyData.self_cert_otp || '-'}</p>
+                                </div>
+                              </div>
+                              {surveyData.self_cert_otp && (
+                                <div className="mt-2 flex items-center gap-1 text-green-600">
+                                  <Check className="w-4 h-4" />
+                                  <span className="text-xs font-medium">OTP Recorded</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Remarks */}
