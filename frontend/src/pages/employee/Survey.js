@@ -421,6 +421,18 @@ export default function Survey() {
         toast.error('Please select if notice receiver is satisfied');
         return;
       }
+      
+      // If self_satisfied is 'no', require OTP verification
+      if (formData.self_satisfied === 'no') {
+        if (!selfCertMobile || selfCertMobile.length !== 10) {
+          toast.error('Please enter valid 10-digit mobile number for self-certification');
+          return;
+        }
+        if (!selfCertOtp || selfCertOtp.length < 4) {
+          toast.error('Please enter OTP received from ULB Haryana portal');
+          return;
+        }
+      }
     }
 
     // Photo is ALWAYS compulsory - even for special conditions
