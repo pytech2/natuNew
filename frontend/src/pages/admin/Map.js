@@ -1640,7 +1640,6 @@ export default function PropertyMap() {
                           </div>
                         </div>
                       </div>
-                      </div>
                     )}
                   </CardContent>
                 </Card>
