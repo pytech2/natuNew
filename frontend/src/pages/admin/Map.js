@@ -499,9 +499,13 @@ export default function PropertyMap() {
   const handleStartEdit = () => {
     setEditData({
       receiver_name: surveyData?.receiver_name || '',
+      receiver_mobile: surveyData?.receiver_mobile || '',
       relation: surveyData?.relation || '',
       new_owner_name: surveyData?.new_owner_name || '',
-      new_mobile: surveyData?.new_mobile || ''
+      new_mobile: surveyData?.new_mobile || '',
+      special_condition: surveyData?.special_condition || '',
+      self_satisfied: surveyData?.self_satisfied !== false,
+      remarks: surveyData?.remarks || ''
     });
     setEditMode(true);
   };
@@ -511,9 +515,13 @@ export default function PropertyMap() {
     setEditMode(false);
     setEditData({
       receiver_name: '',
+      receiver_mobile: '',
       relation: '',
       new_owner_name: '',
-      new_mobile: ''
+      new_mobile: '',
+      special_condition: '',
+      self_satisfied: true,
+      remarks: ''
     });
   };
 
