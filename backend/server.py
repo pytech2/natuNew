@@ -2855,8 +2855,12 @@ async def submit_survey(
         "relation": relation or ("N/A" if is_special_condition else ""),
         "correct_colony_name": correct_colony_name,
         "remarks": remarks,
-        "self_satisfied": self_satisfied or ("N/A" if is_special_condition else ""),
+        "self_satisfied": self_satisfied or ("N/A" if is_special_condition else "yes"),
         "special_condition": special_condition,  # NEW field
+        # Self Certification OTP data (when self_satisfied = 'no')
+        "self_cert_mobile": self_cert_mobile if self_satisfied == 'no' else None,
+        "self_cert_otp": self_cert_otp if self_satisfied == 'no' else None,
+        "self_cert_verified": True if (self_satisfied == 'no' and self_cert_otp) else None,
         "latitude": latitude,
         "longitude": longitude,
         "submitted_at": datetime.now(timezone.utc).isoformat(),
