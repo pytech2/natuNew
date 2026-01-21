@@ -699,52 +699,54 @@ export default function PropertyMap() {
 
             {/* Stats Cards - Show only when colony selected */}
             {filters.colony && (
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 opacity-80" />
-                    <span className="text-sm opacity-80">Total</span>
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{stats.total}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Navigation className="w-5 h-5 opacity-80" />
-                    <span className="text-sm opacity-80">With GPS</span>
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{stats.withGPS}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-blue-400 to-blue-500 text-white">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Home className="w-5 h-5 opacity-80" />
-                    <span className="text-sm opacity-80">Residential</span>
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{stats.residential}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Building className="w-5 h-5 opacity-80" />
-                    <span className="text-sm opacity-80">Commercial</span>
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{stats.commercial}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <AreaChart className="w-5 h-5 opacity-80" />
-                    <span className="text-sm opacity-80">Vacant</span>
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{stats.vacant}</p>
-                </CardContent>
-              </Card>
-            </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-5 h-5 opacity-80" />
+                      <span className="text-sm opacity-80">Total</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{stats.total}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Navigation className="w-5 h-5 opacity-80" />
+                      <span className="text-sm opacity-80">With GPS</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{stats.withGPS}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-blue-400 to-blue-500 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Home className="w-5 h-5 opacity-80" />
+                      <span className="text-sm opacity-80">Residential</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{stats.residential}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-5 h-5 opacity-80" />
+                      <span className="text-sm opacity-80">Commercial</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{stats.commercial}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <AreaChart className="w-5 h-5 opacity-80" />
+                      <span className="text-sm opacity-80">Vacant</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{stats.vacant}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Filters */}
             <Card>
