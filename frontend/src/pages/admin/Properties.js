@@ -1265,9 +1265,10 @@ export default function Properties() {
           setUnassignDialog(open);
           if (!open) {
             setUnassignEmployeeId('');
+            setUnassignArea('');
           }
         }}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading flex items-center gap-2 text-orange-600">
                 <UserMinus className="w-5 h-5" />
@@ -1307,36 +1308,113 @@ export default function Properties() {
                 </>
               ) : (
                 <>
+                  {/* Option 1: Unassign by Area */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Bulk Unassign by Area
+                    </h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Remove all employee assignments from an entire area.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Select Area *</label>
+                      <Select value={unassignArea} onValueChange={setUnassignArea}>
+                        <SelectTrigger className="border-blue-300">
+                          <SelectValue placeholder="Select Area" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {areas.map(a => (
+                            <SelectItem key={a} value={a}>{a}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {unassignArea && (
+                      <div className="mt-3 space-y-2">
+                        <label className="text-sm font-medium">Remove Specific Employee (optional)</label>
+                        <Select
+                          value={unassignEmployeeId}
+                          onValueChange={setUnassignEmployeeId}
+                        >
+                          <SelectTrigger className="border-blue-300">
+                            <SelectValue placeholder="All Employees" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value=" ">All Employees</SelectItem>
+                            {employees.filter(e => e.role !== 'ADMIN').map(emp => (
+                              <SelectItem key={emp.id} value={emp.id}>
+                                {emp.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-blue-600">
+                          Leave blank to unassign all employees from this area.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {unassignArea && (
+                      <Button 
+                        onClick={handleBulkUnassignByArea}
+                        className="w-full mt-3 bg-blue-600 hover:bg-blue-700"
+                        disabled={unassigning || !unassignArea}
+                      >
+                        {unassigning ? 'Unassigning...' : `Unassign from ${unassignArea}`}
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-slate-200"></div>
+                    <span className="text-xs text-slate-400">OR</span>
+                    <div className="flex-1 h-px bg-slate-200"></div>
+                  </div>
+
+                  {/* Option 2: Unassign Employee from All */}
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                     <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
                       <Users className="w-4 h-4" />
-                      Unassign All Properties from Employee
+                      Unassign Employee from All Properties
                     </h4>
-                    <p className="text-sm text-orange-700">
-                      Use this when an employee leaves or needs to be removed from all assigned properties.
+                    <p className="text-sm text-orange-700 mb-3">
+                      Remove an employee from ALL their assigned properties (across all areas).
                     </p>
-                  </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-red-600">Select Employee to Unassign *</label>
-                    <Select
-                      value={unassignEmployeeId}
-                      onValueChange={setUnassignEmployeeId}
-                    >
-                      <SelectTrigger data-testid="unassign-all-employee-select" className="border-orange-300">
-                        <SelectValue placeholder="Select Employee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {employees.filter(e => e.role !== 'ADMIN').map(emp => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.name} ({emp.role})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-red-500">
-                      This will remove this employee from ALL their assigned properties.
-                    </p>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-red-600">Select Employee *</label>
+                      <Select
+                        value={unassignEmployeeId}
+                        onValueChange={(v) => {
+                          setUnassignEmployeeId(v);
+                          setUnassignArea(''); // Clear area when selecting employee
+                        }}
+                      >
+                        <SelectTrigger data-testid="unassign-all-employee-select" className="border-orange-300">
+                          <SelectValue placeholder="Select Employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees.filter(e => e.role !== 'ADMIN').map(emp => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.name} ({emp.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {unassignEmployeeId && !unassignArea && (
+                      <Button 
+                        onClick={() => handleUnassignAllFromEmployee(unassignEmployeeId)}
+                        className="w-full mt-3 bg-orange-600 hover:bg-orange-700"
+                        disabled={unassigning || !unassignEmployeeId}
+                      >
+                        {unassigning ? 'Unassigning...' : 'Unassign from All Properties'}
+                      </Button>
+                    )}
                   </div>
                 </>
               )}
@@ -1346,10 +1424,11 @@ export default function Properties() {
               <Button variant="outline" onClick={() => {
                 setUnassignDialog(false);
                 setUnassignEmployeeId('');
+                setUnassignArea('');
               }}>
-                Cancel
+                {selectedProperties.length > 0 ? 'Cancel' : 'Close'}
               </Button>
-              {selectedProperties.length > 0 ? (
+              {selectedProperties.length > 0 && (
                 <Button 
                   onClick={handleUnassign}
                   data-testid="confirm-unassign-btn"
@@ -1357,15 +1436,6 @@ export default function Properties() {
                   disabled={unassigning}
                 >
                   {unassigning ? 'Unassigning...' : `Unassign ${selectedProperties.length} Properties`}
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => handleUnassignAllFromEmployee(unassignEmployeeId)}
-                  data-testid="confirm-unassign-employee-btn"
-                  className="bg-orange-600 hover:bg-orange-700"
-                  disabled={unassigning || !unassignEmployeeId}
-                >
-                  {unassigning ? 'Unassigning...' : 'Unassign All Properties'}
                 </Button>
               )}
             </DialogFooter>
