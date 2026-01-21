@@ -437,10 +437,16 @@ export default function Survey() {
       formDataObj.append('receiver_mobile', formData.receiver_mobile || '');
       formDataObj.append('relation', formData.relation || (canSkipRequiredFields ? 'N/A' : ''));
       formDataObj.append('remarks', formData.remarks || (specialCondition ? `Special Condition: ${specialCondition === 'house_locked' ? 'House Locked' : 'Owner Denied'}` : ''));
-      formDataObj.append('self_satisfied', formData.self_satisfied || (canSkipRequiredFields ? 'N/A' : ''));
+      formDataObj.append('self_satisfied', formData.self_satisfied || 'yes');
       formDataObj.append('special_condition', specialCondition || '');
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
+      
+      // Self Certification OTP data (when self_satisfied = 'no')
+      if (formData.self_satisfied === 'no') {
+        formDataObj.append('self_cert_mobile', selfCertMobile || '');
+        formDataObj.append('self_cert_otp', selfCertOtp || '');
+      }
       
       // Photo is compulsory - always append
       formDataObj.append('house_photo', housePhoto);
