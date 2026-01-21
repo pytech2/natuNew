@@ -244,6 +244,7 @@ export default function PropertyMap() {
 
   useEffect(() => {
     fetchColonies(); // Only fetch colonies first
+    fetchEmployees(); // Fetch employees list
   }, []);
 
   useEffect(() => {
