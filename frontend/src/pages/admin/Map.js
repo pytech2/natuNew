@@ -1460,30 +1460,6 @@ export default function PropertyMap() {
                           </Select>
                         </div>
 
-                        {/* New Owner Details (if changed) */}
-                        <div className="grid grid-cols-2 gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                          <div className="col-span-2">
-                            <Label className="text-xs text-orange-600 font-semibold">If Owner Changed</Label>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">New Owner Name</Label>
-                            <Input
-                              value={editData.new_owner_name}
-                              onChange={(e) => setEditData({...editData, new_owner_name: e.target.value})}
-                              placeholder="Enter new owner name"
-                              className="h-9"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-slate-600">New Mobile Number</Label>
-                            <Input
-                              value={editData.new_mobile}
-                              onChange={(e) => setEditData({...editData, new_mobile: e.target.value})}
-                              placeholder="Enter new mobile"
-                              className="h-9"
-                            />
-                          </div>
-                        </div>
 
                         {/* Self Satisfied */}
                         <div className="space-y-2">
