@@ -1297,8 +1297,6 @@ export default function PropertyMap() {
                     )}
                   </CardContent>
                 </Card>
-                  </CardContent>
-                </Card>
 
                 {/* Survey GPS - Location Captured */}
                 <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
