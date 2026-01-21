@@ -412,11 +412,12 @@ export default function Dashboard() {
                     <tr>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Colonies</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Today</th>
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Overall</th>
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Completed</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
-                      <th className="px-6 py-4"></th>
+                      <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -446,13 +447,18 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm">
+                              {emp.colony_count || 0}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-bold">
                               {emp.today_completed}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-700 font-bold">
-                              {emp.overall_completed}
+                              {emp.completed}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
@@ -472,14 +478,26 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              onClick={() => navigate(`/admin/submissions?employee_id=${emp.employee_id}`)}
-                            >
-                              View →
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={() => handleViewColonyProgress(emp)}
+                                title="View Colony Progress"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-slate-600 hover:text-slate-700 hover:bg-slate-50"
+                                onClick={() => navigate(`/admin/submissions?employee_id=${emp.employee_id}`)}
+                                title="View Submissions"
+                              >
+                                →
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
