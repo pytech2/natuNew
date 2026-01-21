@@ -180,6 +180,7 @@ export default function PropertyMap() {
   const [loading, setLoading] = useState(true);
   const [colonies, setColonies] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [employees, setEmployees] = useState([]); // Employees/Surveyors list
   const [mapType, setMapType] = useState('satellite');
   const [showMap, setShowMap] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(false); // NEW: Hide completed properties
@@ -188,9 +189,13 @@ export default function PropertyMap() {
   const [filters, setFilters] = useState({
     colony: '',
     category: '',
-    status: '', // NEW: Status filter (Pending, Completed, Rejected)
+    status: '', // Status filter (Pending, Completed, Rejected)
+    employee: '', // Employee filter
     search: ''
   });
+
+  // Employee stats for selected colony
+  const [employeeStats, setEmployeeStats] = useState(null);
 
   // Stats
   const [stats, setStats] = useState({
