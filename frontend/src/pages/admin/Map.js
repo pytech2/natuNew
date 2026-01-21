@@ -1255,16 +1255,51 @@ export default function PropertyMap() {
                   </CardContent>
                 </Card>
 
-                {/* Bill GPS Coordinates */}
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-600 font-semibold mb-1">📍 Bill GPS Coordinates (Original)</p>
-                  <div className="flex items-center gap-4 text-blue-700">
-                    <span className="font-mono text-sm">
-                      Lat: {selectedProperty?.latitude?.toFixed(6) || 'N/A'}
-                    </span>
-                    <span className="font-mono text-sm">
-                      Long: {selectedProperty?.longitude?.toFixed(6) || 'N/A'}
-                    </span>
+                {/* Combined GPS Coordinates - Original & Survey in ONE line with Distance */}
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                    {/* Original GPS */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      <span className="text-slate-500">Original:</span>
+                      <span className="font-mono text-blue-700">
+                        {selectedProperty?.latitude?.toFixed(5) || 'N/A'}, {selectedProperty?.longitude?.toFixed(5) || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    {/* Arrow */}
+                    <span className="text-slate-400">→</span>
+                    
+                    {/* Survey GPS */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span className="text-slate-500">Survey:</span>
+                      <span className="font-mono text-emerald-700">
+                        {surveyData.latitude?.toFixed(5) || 'N/A'}, {surveyData.longitude?.toFixed(5) || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    {/* Distance Calculation */}
+                    {selectedProperty?.latitude && surveyData.latitude && (
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-100 rounded-full">
+                        <Navigation className="w-3 h-3 text-amber-600" />
+                        <span className="font-semibold text-amber-700">
+                          {(() => {
+                            const R = 6371000; // Earth radius in meters
+                            const lat1 = selectedProperty.latitude * Math.PI / 180;
+                            const lat2 = surveyData.latitude * Math.PI / 180;
+                            const dLat = (surveyData.latitude - selectedProperty.latitude) * Math.PI / 180;
+                            const dLon = (surveyData.longitude - selectedProperty.longitude) * Math.PI / 180;
+                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                      Math.cos(lat1) * Math.cos(lat2) *
+                                      Math.sin(dLon/2) * Math.sin(dLon/2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                            const distance = R * c;
+                            return distance < 1000 ? `${Math.round(distance)}m` : `${(distance/1000).toFixed(2)}km`;
+                          })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
