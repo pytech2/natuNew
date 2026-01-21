@@ -224,9 +224,13 @@ export default function PropertyMap() {
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({
     receiver_name: '',
+    receiver_mobile: '',
     relation: '',
     new_owner_name: '',
-    new_mobile: ''
+    new_mobile: '',
+    special_condition: '',
+    self_satisfied: true,
+    remarks: ''
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
