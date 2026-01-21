@@ -1709,19 +1709,6 @@ export default function PropertyMap() {
                   </CardContent>
                 </Card>
 
-                {/* Survey GPS - Location Captured */}
-                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <p className="text-xs text-emerald-600 font-semibold mb-1">📍 Survey GPS (Location Captured)</p>
-                  <div className="flex items-center gap-4 text-emerald-700">
-                    <span className="font-mono text-sm">
-                      Lat: {surveyData.latitude?.toFixed(6) || 'N/A'}
-                    </span>
-                    <span className="font-mono text-sm">
-                      Long: {surveyData.longitude?.toFixed(6) || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-
                 {/* Photos with GPS Overlay */}
                 {surveyData.photos?.length > 0 && (
                   <div>
