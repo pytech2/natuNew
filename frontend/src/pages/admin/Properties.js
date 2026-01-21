@@ -764,7 +764,7 @@ export default function Properties() {
 
         {/* Assignment Dialog */}
         <Dialog open={assignDialog} onOpenChange={setAssignDialog}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-heading">
                 {selectedProperties.length > 0 ? 'Assign Selected Properties' : 'Bulk Assign by Area'}
@@ -781,7 +781,13 @@ export default function Properties() {
               {selectedProperties.length === 0 && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Area/Zone</label>
-                  <Select value={bulkAssignArea} onValueChange={setBulkAssignArea}>
+                  <Select 
+                    value={bulkAssignArea} 
+                    onValueChange={(v) => {
+                      setBulkAssignArea(v);
+                      fetchAreaPropertyCount(v);
+                    }}
+                  >
                     <SelectTrigger data-testid="bulk-area-select">
                       <SelectValue placeholder="Select area" />
                     </SelectTrigger>
@@ -791,6 +797,11 @@ export default function Properties() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {bulkAssignArea && areaPropertyCount > 0 && (
+                    <p className="text-sm text-blue-600 font-medium">
+                      📊 {areaPropertyCount} properties in this area
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -801,7 +812,7 @@ export default function Properties() {
                 <p className="text-xs text-slate-500 mb-2">
                   Select multiple employees to work together on these properties
                 </p>
-                <div className="max-h-60 overflow-y-auto border rounded-lg p-2 space-y-1">
+                <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1">
                   {employees.length === 0 ? (
                     <p className="text-sm text-slate-500 text-center py-4">
                       No employees found
@@ -830,12 +841,76 @@ export default function Properties() {
                   )}
                 </div>
               </div>
+
+              {/* Custom Distribution Toggle - Only for bulk assign */}
+              {selectedProperties.length === 0 && assignEmployeeIds.length > 1 && bulkAssignArea && areaPropertyCount > 0 && (
+                <div className="space-y-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={useCustomDistribution}
+                      onCheckedChange={(checked) => {
+                        setUseCustomDistribution(checked);
+                        if (checked) {
+                          // Initialize with equal distribution
+                          const perEmployee = Math.floor(areaPropertyCount / assignEmployeeIds.length);
+                          const remainder = areaPropertyCount % assignEmployeeIds.length;
+                          const dist = {};
+                          assignEmployeeIds.forEach((empId, idx) => {
+                            dist[empId] = perEmployee + (idx < remainder ? 1 : 0);
+                          });
+                          setCustomDistribution(dist);
+                        } else {
+                          setCustomDistribution({});
+                        }
+                      }}
+                    />
+                    <label className="text-sm font-medium text-amber-800">
+                      Custom Distribution (specify count per employee)
+                    </label>
+                  </div>
+
+                  {useCustomDistribution && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-amber-700">
+                        Total: {areaPropertyCount} properties | Assigned: {Object.values(customDistribution).reduce((sum, c) => sum + (parseInt(c) || 0), 0)}
+                      </p>
+                      {assignEmployeeIds.map(empId => {
+                        const emp = employees.find(e => e.id === empId);
+                        return (
+                          <div key={empId} className="flex items-center gap-3">
+                            <span className="text-sm font-medium w-32 truncate">{emp?.name || 'Unknown'}</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max={areaPropertyCount}
+                              value={customDistribution[empId] || 0}
+                              onChange={(e) => setCustomDistribution({
+                                ...customDistribution,
+                                [empId]: parseInt(e.target.value) || 0
+                              })}
+                              className="w-24 h-8"
+                            />
+                            <span className="text-xs text-slate-500">properties</span>
+                          </div>
+                        );
+                      })}
+                      {Object.values(customDistribution).reduce((sum, c) => sum + (parseInt(c) || 0), 0) !== areaPropertyCount && (
+                        <p className="text-xs text-red-600">
+                          ⚠️ Total must equal {areaPropertyCount}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => {
                 setAssignDialog(false);
                 setAssignEmployeeIds([]);
+                setCustomDistribution({});
+                setUseCustomDistribution(false);
               }}>
                 Cancel
               </Button>
