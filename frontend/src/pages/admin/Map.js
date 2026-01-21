@@ -29,7 +29,7 @@ import {
   Map as MapIcon, Search, Filter, Home, User, Phone, 
   MapPin, Layers, Navigation, Building, AreaChart,
   Download, Save, ArrowUpDown, Loader2, Eye, Edit, Check, X,
-  Camera, AlertTriangle, Lock, UserX
+  Camera, AlertTriangle, Lock, UserX, Users
 } from 'lucide-react';
 import { Textarea } from '../../components/ui/textarea';
 
