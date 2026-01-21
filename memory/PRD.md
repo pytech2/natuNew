@@ -19,6 +19,12 @@
 - **Position Persistence** - Map center, zoom, bearing saved to localStorage
 - **Fast Loading** - Cached API responses + lightweight markers
 
+### Admin Map UX ✅ (Jan 21, 2026)
+- **Direct Map Access** - Map opens immediately without blocking screens
+- **Inline Colony Selector** - Compact banner with dropdown, no modal required
+- **Conditional UI** - Stats and filters appear only after colony selection
+- **Dynamic Header** - Shows selected colony name or prompts to select
+
 ### How 360° Rotation Works (MapLibre Native)
 - Two-finger twist on mobile → Map rotates smoothly
 - `touchZoomRotate={true}` and `dragRotate={true}` enabled
