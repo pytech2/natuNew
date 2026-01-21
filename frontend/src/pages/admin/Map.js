@@ -980,7 +980,9 @@ export default function PropertyMap() {
           <CardHeader className="pb-2 bg-slate-900 text-white">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <MapIcon className="w-4 h-4" />
-              Property Locations - Click on marker to view details
+              {filters.colony 
+                ? `Property Locations - ${filters.colony} (Click marker for details)` 
+                : 'Property Map - Select a colony above to load properties'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
