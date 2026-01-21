@@ -771,13 +771,29 @@ export default function Properties() {
           </Button>
         </div>
 
-        {/* BOTTOM INFO BAR */}
+        {/* BOTTOM INFO BAR with Color Legend */}
         <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm text-white px-4 py-3 pointer-events-auto">
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <span className="text-slate-400">Total: </span>
               <span className="font-bold text-lg">{sortedProperties.length}</span>
               <span className="text-slate-400"> properties</span>
+            </div>
+            
+            {/* Color Legend */}
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-blue-500 border border-white"></div>
+                <span className="text-blue-300">&lt;100m</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-red-500 border border-white"></div>
+                <span className="text-red-300">Pending</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-green-500 border border-white"></div>
+                <span className="text-green-300">Done</span>
+              </div>
             </div>
             
             {sortedProperties.length > 0 && sortedProperties[0].distance && (
