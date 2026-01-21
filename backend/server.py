@@ -1890,7 +1890,8 @@ async def edit_submission(
         "receiver_name", "receiver_mobile", "relation",
         "correct_colony_name", "self_satisfied",
         "remarks", "latitude", "longitude",
-        "new_owner_name", "new_mobile"  # Added for admin edit
+        "new_owner_name", "new_mobile",
+        "special_condition"  # Added for admin edit
     ]
     
     for field in allowed_fields:
