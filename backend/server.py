@@ -3549,7 +3549,7 @@ async def generate_arranged_pdf(
     included_count = 0
     
     if bills_per_page == 1:
-        # ONE BILL PER PAGE - Render as image with good quality
+        # ONE BILL PER PAGE - High quality, optimized file size
         for bill in bills:
             page_num = bill.get("page_number", 1) - 1
             if page_num < 0 or page_num >= len(src_pdf):
@@ -3558,12 +3558,12 @@ async def generate_arranged_pdf(
             # Render source page as image
             src_page = src_pdf[page_num]
             
-            # Render at 1.0x scale for good quality
-            mat = fitz.Matrix(1.0, 1.0)
+            # Render at 1.5x scale for crisp text (print quality 150 DPI)
+            mat = fitz.Matrix(1.5, 1.5)
             pix = src_page.get_pixmap(matrix=mat)
             
-            # Convert to JPEG with good quality (75% = good balance)
-            img_bytes = pix.tobytes("jpeg", 75)
+            # Convert to JPEG with high quality (85% = sharp text, reasonable size)
+            img_bytes = pix.tobytes("jpeg", 85)
             
             # Create new page with original dimensions
             new_page = output_pdf.new_page(width=src_page.rect.width, height=src_page.rect.height)
@@ -3575,36 +3575,36 @@ async def generate_arranged_pdf(
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
-                # Draw serial number in top-right corner (60% smaller)
-                font_size = 20  # Reduced from 48
-                text_width = len(serial_text) * font_size * 0.7
+                # Draw serial number in top-right corner - clear, bold
+                font_size = 18  # Good readable size
+                text_width = len(serial_text) * font_size * 0.6
                 
                 # Position: top-right area of the page
-                x_pos = new_page.rect.width - text_width - 15
-                y_pos = 10
+                x_pos = new_page.rect.width - text_width - 12
+                y_pos = 8
                 
                 rect = fitz.Rect(
-                    x_pos - 5,
+                    x_pos - 4,
                     y_pos,
-                    new_page.rect.width - 8,
-                    y_pos + font_size + 8
+                    new_page.rect.width - 6,
+                    y_pos + font_size + 6
                 )
                 
-                # White background with border
-                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=1)
+                # White background with red border
+                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=0.8)
                 
-                # RED text - matches map marker color
+                # RED bold text - clear and readable
                 new_page.insert_text(
-                    (x_pos, y_pos + font_size),
+                    (x_pos, y_pos + font_size - 1),
                     serial_text,
                     fontsize=font_size,
-                    fontname="helv",
+                    fontname="hebo",  # Helvetica Bold for clarity
                     color=(1, 0, 0)  # Red to match map markers
                 )
             
             included_count += 1
     else:
-        # 2 OR 3 BILLS PER PAGE - Render as image for accurate output
+        # 2 OR 3 BILLS PER PAGE - Print quality optimized
         # A4 dimensions
         A4_WIDTH = 595.28
         A4_HEIGHT = 841.89
@@ -3629,12 +3629,12 @@ async def generate_arranged_pdf(
             # Get source page and render to image
             src_page = src_pdf[page_num]
             
-            # Render at 0.9x scale (good quality, slightly smaller)
-            mat = fitz.Matrix(0.9, 0.9)
+            # Render at 1.2x scale for clear text
+            mat = fitz.Matrix(1.2, 1.2)
             pix = src_page.get_pixmap(matrix=mat)
             
-            # Convert to JPEG with good quality (70% = good balance for multi-bill)
-            img_bytes = pix.tobytes("jpeg", 70)
+            # Convert to JPEG with high quality (80% = clear text, optimized size)
+            img_bytes = pix.tobytes("jpeg", 80)
             
             # Pixmap dimensions
             pix_width = pix.width
@@ -3642,15 +3642,15 @@ async def generate_arranged_pdf(
             
             # MAXIMIZE - minimal margins, bigger bills
             if num_bills == 2:
-                # 2 bills per page - decrease size 20%
+                # 2 bills per page
                 available_width = A4_WIDTH - 2
                 available_height = slot_height - 1
-                scale_boost = 0.92  # 20% smaller
+                scale_boost = 0.92
             else:
-                # 3 bills per page - increase size 20%
+                # 3 bills per page
                 available_width = A4_WIDTH - 2
                 available_height = slot_height - 0.5
-                scale_boost = 1.38  # 20% bigger
+                scale_boost = 1.38
             
             scale_w = available_width / pix_width
             scale_h = available_height / pix_height
@@ -3662,7 +3662,7 @@ async def generate_arranged_pdf(
             # Center in slot - minimal vertical gap
             x_offset = (A4_WIDTH - final_width) / 2
             y_start = position * slot_height
-            y_offset = (slot_height - final_height) / 2 * 0.3  # Reduce vertical centering gap
+            y_offset = (slot_height - final_height) / 2 * 0.3
             
             rect = fitz.Rect(
                 x_offset,
@@ -3674,26 +3674,26 @@ async def generate_arranged_pdf(
             # Insert the JPEG image
             current_page.insert_image(rect, stream=img_bytes)
             
-            # Add serial number overlay if enabled (for multi-bill pages)
+            # Add serial number overlay if enabled
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
-                # Draw serial number in top-right of the bill slot (smaller size)
-                font_size = 12 if num_bills == 3 else 14
-                text_x = rect.x1 - len(serial_text) * font_size * 0.5 - 5
-                text_y = rect.y0 + font_size + 3
+                # Draw serial number - clear and readable
+                font_size = 11 if num_bills == 3 else 13
+                text_x = rect.x1 - len(serial_text) * font_size * 0.5 - 4
+                text_y = rect.y0 + font_size + 2
                 
                 # White background rectangle
-                bg_rect = fitz.Rect(text_x - 3, rect.y0 + 2, rect.x1 - 3, text_y + 3)
+                bg_rect = fitz.Rect(text_x - 2, rect.y0 + 1, rect.x1 - 2, text_y + 2)
                 current_page.draw_rect(bg_rect, color=(1, 1, 1), fill=(1, 1, 1))
                 
-                # Red text
+                # Red bold text
                 current_page.insert_text(
                     (text_x, text_y),
                     serial_text,
                     fontsize=font_size,
-                    fontname="helv",
-                    color=(1, 0, 0)  # Red
+                    fontname="hebo",  # Helvetica Bold
+                    color=(1, 0, 0)
                 )
             
             included_count += 1
