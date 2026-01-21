@@ -88,6 +88,9 @@ export default function Properties() {
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [assignEmployeeIds, setAssignEmployeeIds] = useState([]); // Changed to array for multi-select
   const [bulkAssignArea, setBulkAssignArea] = useState('');
+  const [customDistribution, setCustomDistribution] = useState({}); // { empId: count }
+  const [useCustomDistribution, setUseCustomDistribution] = useState(false);
+  const [areaPropertyCount, setAreaPropertyCount] = useState(0); // Total properties in selected area
   
   // Delete dialog
   const [deleteDialog, setDeleteDialog] = useState(false);
@@ -107,6 +110,7 @@ export default function Properties() {
   // Unassign dialog
   const [unassignDialog, setUnassignDialog] = useState(false);
   const [unassignEmployeeId, setUnassignEmployeeId] = useState('');
+  const [unassignArea, setUnassignArea] = useState(''); // NEW: Bulk unassign by area
   const [unassigning, setUnassigning] = useState(false);
   
   // Property detail dialog

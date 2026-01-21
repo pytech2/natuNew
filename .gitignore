@@ -481,3 +481,4 @@ backend/uploads/*
 # Environment files
 *.env
 *.env.*
+frontend/node_modules/.cache/default-development/16.pack
