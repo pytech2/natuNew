@@ -54,6 +54,17 @@ export default function Dashboard() {
   const [employeeProgress, setEmployeeProgress] = useState([]);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
+  
+  // Employee Colony Detail Dialog
+  const [colonyDialog, setColonyDialog] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [colonyProgress, setColonyProgress] = useState([]);
+  const [loadingColonies, setLoadingColonies] = useState(false);
+  
+  // Remove from Colony Dialog
+  const [removeDialog, setRemoveDialog] = useState(false);
+  const [colonyToRemove, setColonyToRemove] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     fetchData();
