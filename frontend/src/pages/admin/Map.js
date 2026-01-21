@@ -664,66 +664,41 @@ export default function PropertyMap() {
     <AdminLayout title="Property Map">
       <div data-testid="property-map-page" className="space-y-4">
         
-        {/* Colony Selection Screen - Show first before map */}
-        {!showMap && (
-          <Card className="border-2 border-blue-200 bg-blue-50/30">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-blue-700">
-                <MapPin className="w-5 h-5" />
-                Select Colony to View Map
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-slate-600">Please select a colony/area to load properties on the map. This improves loading speed.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Colony/Area *</Label>
-                  <Select 
-                    value={filters.colony} 
-                    onValueChange={(v) => setFilters({ ...filters, colony: v })}
-                  >
-                    <SelectTrigger className="h-12 text-lg">
-                      <SelectValue placeholder="-- Select Colony --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colonies.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => filters.colony && setShowMap(true)}
-                    disabled={!filters.colony || loading}
-                    className="h-12 px-8 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <MapIcon className="w-4 h-4 mr-2" />
-                    )}
-                    Load Map
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <p className="text-sm text-slate-500">
-                  <strong>{colonies.length}</strong> colonies available • <strong>{stats.total}</strong> total properties
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Show Map and Filters only after colony is selected */}
+        {/* Map and Filters - Show directly */}
         {showMap && (
           <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {/* Colony Selection Info Banner - Show only when no colony selected */}
+            {!filters.colony && (
+              <Card className="border-2 border-blue-200 bg-blue-50/50">
+                <CardContent className="py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="font-medium text-blue-800">Select a Colony to view properties on map</p>
+                        <p className="text-sm text-blue-600">{colonies.length} colonies available • {stats.total} total properties</p>
+                      </div>
+                    </div>
+                    <Select 
+                      value={filters.colony} 
+                      onValueChange={(v) => setFilters({ ...filters, colony: v })}
+                    >
+                      <SelectTrigger className="w-[250px] h-10 bg-white border-blue-300">
+                        <SelectValue placeholder="-- Select Colony --" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colonies.map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Stats Cards - Show only when colony selected */}
+            {filters.colony && (
               <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
