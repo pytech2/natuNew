@@ -364,6 +364,11 @@ export default function PropertyMap() {
       filtered = filtered.filter(p => p.status === filters.status);
     }
     
+    // NEW: Employee filter
+    if (filters.employee) {
+      filtered = filtered.filter(p => p.assigned_employee_id === filters.employee);
+    }
+    
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(p => 
@@ -384,10 +389,11 @@ export default function PropertyMap() {
   };
 
   const clearFilters = () => {
-    setFilters({ colony: '', category: '', status: '', search: '' });
+    setFilters({ colony: '', category: '', status: '', employee: '', search: '' });
     setShowMap(false);
     setProperties([]);
     setFilteredProperties([]);
+    setEmployeeStats(null);
   };
 
   // Arrange properties by GPS route
