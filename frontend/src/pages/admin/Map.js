@@ -1176,9 +1176,13 @@ export default function PropertyMap() {
 
         {/* Survey View Dialog - with high z-index to appear above map */}
         <Dialog open={surveyDialog} onOpenChange={setSurveyDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-[9999]" style={{zIndex: 9999}}>
-            <DialogHeader>
-              <DialogTitle className="font-heading flex items-center justify-between">
+          <DialogContent 
+            className="max-w-2xl max-h-[85vh] overflow-y-auto z-[9999]" 
+            style={{zIndex: 9999}}
+            onInteractOutside={() => setSurveyDialog(false)}
+          >
+            <DialogHeader className="pb-2 border-b">
+              <DialogTitle className="text-lg font-semibold flex items-center justify-between pr-8">
                 <span>Survey Data</span>
                 {surveyData && getStatusBadge(surveyData.status)}
               </DialogTitle>
