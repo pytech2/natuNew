@@ -750,7 +750,7 @@ export default function PropertyMap() {
             {/* Filters */}
             <Card>
               <CardContent className="py-4">
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-500">Colony/Area</Label>
                     <Select 
@@ -768,6 +768,27 @@ export default function PropertyMap() {
                     </Select>
                   </div>
               
+                  {/* Employee/Surveyor Filter */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500">Surveyor</Label>
+                    <Select 
+                      value={filters.employee} 
+                      onValueChange={(v) => setFilters({ ...filters, employee: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Surveyors" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All Surveyors</SelectItem>
+                        {employeeStats && Object.values(employeeStats).map(emp => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.name} ({emp.completed}/{emp.total})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-500">Category</Label>
                     <Select 
@@ -786,7 +807,7 @@ export default function PropertyMap() {
                     </Select>
                   </div>
                   
-                  {/* NEW: Status Filter */}
+                  {/* Status Filter */}
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-500">Survey Status</Label>
                     <Select 
@@ -798,11 +819,10 @@ export default function PropertyMap() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value=" ">All Status</SelectItem>
-                        <SelectItem value="Pending">🔴 Pending Survey</SelectItem>
-                        <SelectItem value="Completed">🟡 Completed Survey</SelectItem>
+                        <SelectItem value="Pending">🔴 Pending</SelectItem>
+                        <SelectItem value="Completed">🟡 Completed</SelectItem>
                         <SelectItem value="Approved">🟢 Approved</SelectItem>
                         <SelectItem value="Rejected">🟠 Rejected</SelectItem>
-                        <SelectItem value="In Progress">🟡 In Progress</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -812,7 +832,7 @@ export default function PropertyMap() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        placeholder="ID, Name, Mobile..."
+                        placeholder="ID, Name..."
                         value={filters.search}
                         onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                         className="pl-10"
@@ -839,6 +859,50 @@ export default function PropertyMap() {
                   </Button>
                 </div>
             
+                {/* Employee Stats Summary when employee selected */}
+                {filters.employee && employeeStats && employeeStats[filters.employee] && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <span className="font-semibold text-blue-900">
+                          {employeeStats[filters.employee].name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm">
+                          <span className="font-bold text-blue-600">{employeeStats[filters.employee].total}</span>
+                          <span className="text-slate-500 ml-1">Total</span>
+                        </span>
+                        <span className="text-sm">
+                          <span className="font-bold text-emerald-600">{employeeStats[filters.employee].completed}</span>
+                          <span className="text-slate-500 ml-1">Done</span>
+                        </span>
+                        <span className="text-sm">
+                          <span className="font-bold text-amber-600">{employeeStats[filters.employee].pending}</span>
+                          <span className="text-slate-500 ml-1">Pending</span>
+                        </span>
+                        <span className="text-sm font-bold">
+                          {employeeStats[filters.employee].total > 0 
+                            ? Math.round((employeeStats[filters.employee].completed / employeeStats[filters.employee].total) * 100)
+                            : 0}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
+                        style={{ 
+                          width: `${employeeStats[filters.employee].total > 0 
+                            ? (employeeStats[filters.employee].completed / employeeStats[filters.employee].total) * 100 
+                            : 0}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <p className="text-slate-500">
                     Showing <span className="font-semibold text-slate-900">{filteredProperties.length}</span> properties on map
