@@ -424,7 +424,11 @@ export default function Properties() {
           )}
           
           {/* Property markers - render ALL */}
-          {sortedProperties.map((property, index) => (
+          {sortedProperties.map((property, index) => {
+            const withinReach = isWithinReach(property.distance);
+            const markerColor = getMarkerColor(property.status, property.distance);
+            
+            return (
             <Marker
               key={property.id}
               latitude={property.latitude}
@@ -436,15 +440,24 @@ export default function Properties() {
               }}
             >
               <div 
-                className={`flex items-center justify-center rounded-full border-2 border-white shadow-lg cursor-pointer transition-transform hover:scale-110 ${index === 0 && userLocation ? 'w-10 h-10 animate-pulse' : 'w-8 h-8'}`}
-                style={{ backgroundColor: getMarkerColor(property.status) }}
+                className={`flex items-center justify-center rounded-full border-2 shadow-lg cursor-pointer transition-transform hover:scale-110 ${
+                  withinReach 
+                    ? 'w-10 h-10 border-white animate-pulse' 
+                    : index === 0 && userLocation 
+                      ? 'w-10 h-10 border-white animate-pulse' 
+                      : 'w-8 h-8 border-white'
+                }`}
+                style={{ 
+                  backgroundColor: markerColor,
+                  boxShadow: withinReach ? '0 0 15px rgba(59, 130, 246, 0.8)' : undefined
+                }}
               >
                 <span className="text-white text-xs font-bold">
                   {property.bill_sr_no || property.serial_number || (index + 1)}
                 </span>
               </div>
             </Marker>
-          ))}
+          )})}
           
           {/* Popup for selected property - Detailed Card View */}
           {selectedProperty && (
