@@ -492,7 +492,14 @@ async def get_map_properties(
         "owner_name": 1,
         "colony": 1,
         "ward": 1,
-        "mobile": 1
+        "mobile": 1,
+        "assigned_employee_id": 1,
+        "assigned_employee_name": 1,
+        "assigned_employee_ids": 1,
+        "category": 1,
+        "total_area": 1,
+        "amount": 1,
+        "address": 1
     }
     
     properties = await db.properties.find(query, projection).limit(limit).to_list(limit)
