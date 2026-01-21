@@ -100,6 +100,61 @@ export default function Dashboard() {
     }
   };
 
+  // View employee's colony-wise progress
+  const handleViewColonyProgress = async (employee) => {
+    setSelectedEmployee(employee);
+    setColonyDialog(true);
+    setLoadingColonies(true);
+    
+    try {
+      const response = await axios.get(
+        `${API_URL}/admin/employee-progress/${employee.employee_id}/colonies`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setColonyProgress(response.data.colonies || []);
+    } catch (error) {
+      toast.error('Failed to load colony progress');
+    } finally {
+      setLoadingColonies(false);
+    }
+  };
+
+  // Open remove from colony confirmation
+  const handleOpenRemoveDialog = (colony) => {
+    setColonyToRemove(colony);
+    setRemoveDialog(true);
+  };
+
+  // Remove employee from colony
+  const handleRemoveFromColony = async () => {
+    if (!selectedEmployee || !colonyToRemove) return;
+    
+    setRemoving(true);
+    try {
+      const formData = new FormData();
+      formData.append('employee_id', selectedEmployee.employee_id);
+      formData.append('colony', colonyToRemove.colony);
+      
+      const response = await axios.post(
+        `${API_URL}/admin/employee/remove-from-colony`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(response.data.message);
+      setRemoveDialog(false);
+      
+      // Refresh colony progress
+      handleViewColonyProgress(selectedEmployee);
+      // Refresh main data
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to remove from colony');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   const pieData = stats ? [
     { name: 'Completed', value: stats.completed },
     { name: 'Pending', value: stats.pending },
