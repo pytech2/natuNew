@@ -215,7 +215,7 @@ export default function Dashboard() {
                   <Users className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Today's Attendance</p>
+                  <p className="text-sm text-slate-500">Today&apos;s Attendance</p>
                   <p className="text-2xl font-heading font-bold text-slate-900">
                     {attendanceStats.present} / {attendanceStats.total}
                     <span className="text-sm font-normal text-slate-500 ml-2">employees present</span>
