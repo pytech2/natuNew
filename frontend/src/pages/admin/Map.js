@@ -491,6 +491,54 @@ export default function PropertyMap() {
     }
   };
 
+  // Start editing survey
+  const handleStartEdit = () => {
+    setEditData({
+      receiver_name: surveyData?.receiver_name || '',
+      relation: surveyData?.relation || '',
+      new_owner_name: surveyData?.new_owner_name || '',
+      new_mobile: surveyData?.new_mobile || ''
+    });
+    setEditMode(true);
+  };
+
+  // Cancel edit
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditData({
+      receiver_name: '',
+      relation: '',
+      new_owner_name: '',
+      new_mobile: ''
+    });
+  };
+
+  // Save edited survey data
+  const handleSaveEdit = async () => {
+    if (!surveyData) return;
+    
+    setSavingEdit(true);
+    try {
+      await axios.put(`${API_URL}/admin/submissions/${surveyData.id}`, editData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setSurveyData({
+        ...surveyData,
+        ...editData
+      });
+      
+      toast.success('Survey data updated successfully');
+      setEditMode(false);
+      filters.colony && fetchPropertiesByColony(filters.colony);
+    } catch (error) {
+      toast.error('Failed to update survey data');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const colors = {
       'Pending': 'bg-red-100 text-red-700',
