@@ -3939,7 +3939,7 @@ async def split_bills_by_employee(
                 x, y = rect.width - 100, 50
             
             sn_text = f"{bill['serial_number']}"
-            new_page.insert_text((x, y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="helv", rotate=rotation)
+            new_page.insert_text((x, y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
         
         output_pdf.save(str(output_path))
         output_pdf.close()
