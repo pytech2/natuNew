@@ -3668,26 +3668,32 @@ async def generate_arranged_pdf(
     included_count = 0
     
     if bills_per_page == 1:
-        # ONE BILL PER PAGE - High quality, optimized file size
+        # ONE BILL PER PAGE - High quality, compact size
         for bill in bills:
             page_num = bill.get("page_number", 1) - 1
             if page_num < 0 or page_num >= len(src_pdf):
                 continue
             
-            # Render source page as image
+            # Get source page
             src_page = src_pdf[page_num]
             
-            # Render at 1.5x scale for crisp text (print quality 150 DPI)
-            mat = fitz.Matrix(1.5, 1.5)
-            pix = src_page.get_pixmap(matrix=mat)
+            # Render at 2.0x scale for CRISP text (200 DPI quality)
+            mat = fitz.Matrix(2.0, 2.0)
+            pix = src_page.get_pixmap(matrix=mat, alpha=False)
             
-            # Convert to JPEG with high quality (85% = sharp text, reasonable size)
-            img_bytes = pix.tobytes("jpeg", 85)
+            # Use PNG format - much better for text-heavy documents
+            img_bytes = pix.tobytes("png")
             
-            # Create new page with original dimensions
-            new_page = output_pdf.new_page(width=src_page.rect.width, height=src_page.rect.height)
+            # COMPACT SIZE: Scale down the output page to 90% of original
+            # This reduces overall PDF size while keeping text readable
+            scale_factor = 0.90
+            new_width = src_page.rect.width * scale_factor
+            new_height = src_page.rect.height * scale_factor
             
-            # Insert image
+            # Create new page with compact dimensions
+            new_page = output_pdf.new_page(width=new_width, height=new_height)
+            
+            # Insert image scaled to fit the compact page
             new_page.insert_image(new_page.rect, stream=img_bytes)
             
             # Add serial number overlay if enabled
@@ -3695,7 +3701,7 @@ async def generate_arranged_pdf(
                 serial_text = get_display_serial(bill)
                 
                 # Draw serial number in top-right corner - clear, bold
-                font_size = 18  # Good readable size
+                font_size = 16  # Slightly smaller for compact PDF
                 text_width = len(serial_text) * font_size * 0.6
                 
                 # Position: top-right area of the page
