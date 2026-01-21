@@ -27,8 +27,13 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)}m` : `${(meters/1000).toFixed(1)}km`;
 
-// Marker colors based on status
-const getMarkerColor = (status) => {
+// Marker colors based on status and distance
+const getMarkerColor = (status, distance = null) => {
+  // If within 100m, show BLUE color (reachable)
+  if (distance !== null && distance <= 100) {
+    return '#3b82f6'; // Blue - within reach
+  }
+  
   const colors = {
     'Pending': '#ef4444',
     'Completed': '#22c55e',
@@ -38,6 +43,9 @@ const getMarkerColor = (status) => {
   };
   return colors[status] || '#ef4444';
 };
+
+// Check if property is within 100m reach
+const isWithinReach = (distance) => distance !== null && distance <= 100;
 
 export default function Properties() {
   const navigate = useNavigate();
