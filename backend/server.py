@@ -1731,6 +1731,10 @@ async def get_employee_progress(current_user: dict = Depends(get_current_user)):
             "status": {"$ne": "Rejected"}
         })
         
+        # Get assigned colonies for this employee
+        assigned_colonies = await db.properties.distinct("ward", {"assigned_employee_id": emp["id"]})
+        assigned_colonies = [c for c in assigned_colonies if c]  # Filter None
+        
         progress.append({
             "employee_id": emp["id"],
             "employee_name": emp["name"],
@@ -1739,10 +1743,103 @@ async def get_employee_progress(current_user: dict = Depends(get_current_user)):
             "completed": completed,
             "pending": total - completed,
             "today_completed": today_completed,
-            "overall_completed": overall_completed
+            "overall_completed": overall_completed,
+            "assigned_colonies": assigned_colonies,
+            "colony_count": len(assigned_colonies)
         })
     
     return progress
+
+@api_router.get("/admin/employee-progress/{employee_id}/colonies")
+async def get_employee_colony_progress(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed colony-wise progress for a specific employee"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get employee details
+    employee = await db.users.find_one({"id": employee_id}, {"_id": 0})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Get assigned colonies
+    pipeline = [
+        {"$match": {"assigned_employee_id": employee_id}},
+        {"$group": {
+            "_id": "$ward",
+            "total": {"$sum": 1},
+            "completed": {"$sum": {"$cond": [{"$in": ["$status", ["Completed", "Approved"]]}, 1, 0]}},
+            "pending": {"$sum": {"$cond": [{"$eq": ["$status", "Pending"]}, 1, 0]}},
+            "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    colony_stats = await db.properties.aggregate(pipeline).to_list(None)
+    
+    colonies = []
+    for c in colony_stats:
+        if c["_id"]:  # Skip None colony
+            percentage = round((c["completed"] / c["total"]) * 100) if c["total"] > 0 else 0
+            colonies.append({
+                "colony": c["_id"],
+                "total": c["total"],
+                "completed": c["completed"],
+                "pending": c["pending"],
+                "rejected": c["rejected"],
+                "percentage": percentage
+            })
+    
+    return {
+        "employee_id": employee_id,
+        "employee_name": employee["name"],
+        "role": employee["role"],
+        "colonies": colonies,
+        "total_colonies": len(colonies)
+    }
+
+@api_router.post("/admin/employee/remove-from-colony")
+async def remove_employee_from_colony(
+    employee_id: str = Form(...),
+    colony: str = Form(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove an employee from a specific colony - unassign all properties in that colony"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check employee exists
+    employee = await db.users.find_one({"id": employee_id}, {"_id": 0})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Count properties to be unassigned
+    count = await db.properties.count_documents({
+        "assigned_employee_id": employee_id,
+        "ward": colony
+    })
+    
+    if count == 0:
+        raise HTTPException(status_code=404, detail=f"No properties found for {employee['name']} in {colony}")
+    
+    # Unassign properties in this colony
+    result = await db.properties.update_many(
+        {
+            "assigned_employee_id": employee_id,
+            "ward": colony
+        },
+        {
+            "$set": {
+                "assigned_employee_id": None,
+                "assigned_employee_name": None,
+                "assignment_date": None
+            }
+        }
+    )
+    
+    return {
+        "message": f"Removed {employee['name']} from {colony}",
+        "properties_unassigned": result.modified_count
+    }
 
 # ============== SUBMISSIONS ROUTES ==============
 
