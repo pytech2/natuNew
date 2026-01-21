@@ -1066,44 +1066,158 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
     if not new_employees:
         raise HTTPException(status_code=404, detail="No employees found")
     
+    emp_name_map = {emp["id"]: emp["name"] for emp in new_employees}
+    
     # Get all properties in the ward/area
     properties = await db.properties.find({"ward": data.area}, {"_id": 0, "id": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
     
-    # Process each property to ADD new employees to existing assignments
-    updated_count = 0
-    for prop in properties:
-        # Get existing assigned employee IDs (or empty list)
-        existing_emp_ids = prop.get("assigned_employee_ids") or []
-        if prop.get("assigned_employee_id") and prop["assigned_employee_id"] not in existing_emp_ids:
-            existing_emp_ids.append(prop["assigned_employee_id"])
+    # Check if custom distribution is provided
+    if data.custom_distribution:
+        # Custom distribution: assign specific count to each employee
+        updated_count = 0
+        prop_index = 0
         
-        # Merge new employees with existing (avoid duplicates)
-        combined_emp_ids = list(set(existing_emp_ids + new_emp_ids))
+        for emp_id, count in data.custom_distribution.items():
+            if emp_id not in new_emp_ids:
+                continue
+                
+            emp_name = emp_name_map.get(emp_id, "Unknown")
+            
+            # Assign 'count' properties to this employee
+            for i in range(int(count)):
+                if prop_index >= len(properties):
+                    break
+                    
+                prop = properties[prop_index]
+                
+                # Get existing assigned employee IDs
+                existing_emp_ids = prop.get("assigned_employee_ids") or []
+                if prop.get("assigned_employee_id") and prop["assigned_employee_id"] not in existing_emp_ids:
+                    existing_emp_ids.append(prop["assigned_employee_id"])
+                
+                # Add only this employee (not all)
+                combined_emp_ids = list(set(existing_emp_ids + [emp_id]))
+                
+                # Get all employee names
+                all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+                combined_names = ", ".join([e["name"] for e in all_employees])
+                
+                await db.properties.update_one(
+                    {"id": prop["id"]},
+                    {"$set": {
+                        "assigned_employee_ids": combined_emp_ids,
+                        "assigned_employee_id": combined_emp_ids[0] if combined_emp_ids else None,
+                        "assigned_employee_name": combined_names
+                    }}
+                )
+                updated_count += 1
+                prop_index += 1
         
-        # Get all employee names for the combined list
-        all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
-        combined_names = ", ".join([emp["name"] for emp in all_employees])
+        # Build distribution summary
+        dist_summary = ", ".join([f"{emp_name_map.get(eid, 'Unknown')}: {cnt}" for eid, cnt in data.custom_distribution.items()])
+        return {"message": f"Assigned {updated_count} properties in {data.area} (Distribution: {dist_summary})"}
+    
+    else:
+        # Default: assign ALL employees to ALL properties (existing behavior)
+        updated_count = 0
+        for prop in properties:
+            existing_emp_ids = prop.get("assigned_employee_ids") or []
+            if prop.get("assigned_employee_id") and prop["assigned_employee_id"] not in existing_emp_ids:
+                existing_emp_ids.append(prop["assigned_employee_id"])
+            
+            combined_emp_ids = list(set(existing_emp_ids + new_emp_ids))
+            
+            all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+            combined_names = ", ".join([emp["name"] for emp in all_employees])
+            
+            await db.properties.update_one(
+                {"id": prop["id"]},
+                {"$set": {
+                    "assigned_employee_ids": combined_emp_ids,
+                    "assigned_employee_id": combined_emp_ids[0] if combined_emp_ids else None,
+                    "assigned_employee_name": combined_names
+                }}
+            )
+            updated_count += 1
         
-        # Update the property with merged assignments
-        await db.properties.update_one(
-            {"id": prop["id"]},
+        # Update all assigned employees with the area
+        for emp_id in new_emp_ids:
+            await db.users.update_one(
+                {"id": emp_id},
+                {"$set": {"assigned_area": data.area}}
+            )
+        
+        new_employee_names = ", ".join([emp["name"] for emp in new_employees])
+        return {"message": f"Added {new_employee_names} to {updated_count} properties in {data.area}"}
+
+@api_router.post("/admin/unassign-bulk")
+async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = Depends(get_current_user)):
+    """Bulk unassign properties by area"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {"ward": data.area}
+    
+    # If specific employee, only unassign that employee
+    if data.employee_id:
+        employee = await db.users.find_one({"id": data.employee_id}, {"_id": 0, "name": 1})
+        emp_name = employee["name"] if employee else "Unknown"
+        
+        # Find properties assigned to this employee in this area
+        properties = await db.properties.find({
+            "ward": data.area,
+            "$or": [
+                {"assigned_employee_id": data.employee_id},
+                {"assigned_employee_ids": data.employee_id}
+            ]
+        }, {"_id": 0, "id": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
+        
+        updated_count = 0
+        for prop in properties:
+            existing_emp_ids = prop.get("assigned_employee_ids") or []
+            
+            # Remove this employee from the list
+            new_emp_ids = [eid for eid in existing_emp_ids if eid != data.employee_id]
+            
+            if new_emp_ids:
+                # Still has other employees
+                all_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "name": 1}).to_list(None)
+                combined_names = ", ".join([e["name"] for e in all_employees])
+                
+                await db.properties.update_one(
+                    {"id": prop["id"]},
+                    {"$set": {
+                        "assigned_employee_ids": new_emp_ids,
+                        "assigned_employee_id": new_emp_ids[0],
+                        "assigned_employee_name": combined_names
+                    }}
+                )
+            else:
+                # No employees left, clear all
+                await db.properties.update_one(
+                    {"id": prop["id"]},
+                    {"$set": {
+                        "assigned_employee_ids": [],
+                        "assigned_employee_id": None,
+                        "assigned_employee_name": None
+                    }}
+                )
+            updated_count += 1
+        
+        return {"message": f"Removed {emp_name} from {updated_count} properties in {data.area}"}
+    
+    else:
+        # Unassign ALL employees from ALL properties in this area
+        result = await db.properties.update_many(
+            query,
             {"$set": {
-                "assigned_employee_ids": combined_emp_ids,
-                "assigned_employee_id": combined_emp_ids[0] if combined_emp_ids else None,
-                "assigned_employee_name": combined_names
+                "assigned_employee_ids": [],
+                "assigned_employee_id": None,
+                "assigned_employee_name": None
             }}
         )
-        updated_count += 1
-    
-    # Update all assigned employees with the area
-    for emp_id in new_emp_ids:
-        await db.users.update_one(
-            {"id": emp_id},
-            {"$set": {"assigned_area": data.area}}
-        )
-    
-    new_employee_names = ", ".join([emp["name"] for emp in new_employees])
-    return {"message": f"Added {new_employee_names} to {updated_count} properties in {data.area}"}
+        
+        return {"message": f"Unassigned all employees from {result.modified_count} properties in {data.area}"}
 
 # ============== UNASSIGN PROPERTIES ==============
 class UnassignRequest(BaseModel):
