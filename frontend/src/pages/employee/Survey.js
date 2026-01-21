@@ -212,8 +212,12 @@ export default function Survey() {
     receiver_mobile: '',  // Receiver mobile with 10-digit validation
     relation: '',
     remarks: '',
-    self_satisfied: ''
+    self_satisfied: 'yes'  // Default to Yes
   });
+
+  // Self Certification OTP state (when self_satisfied = 'no')
+  const [selfCertOtp, setSelfCertOtp] = useState('');
+  const [selfCertMobile, setSelfCertMobile] = useState(''); // Mobile used for OTP
 
   // Special submission conditions - allows bypassing required fields
   const [specialCondition, setSpecialCondition] = useState(''); // 'house_locked' or 'owner_denied'
