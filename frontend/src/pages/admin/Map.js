@@ -985,10 +985,10 @@ export default function PropertyMap() {
 
         {/* Survey View Dialog - with high z-index to appear above map */}
         <Dialog open={surveyDialog} onOpenChange={setSurveyDialog}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto z-[9999]" style={{zIndex: 9999}}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-[9999]" style={{zIndex: 9999}}>
             <DialogHeader>
               <DialogTitle className="font-heading flex items-center justify-between">
-                <span>Survey Data - {selectedProperty?.property_id}</span>
+                <span>Survey Data</span>
                 {surveyData && getStatusBadge(surveyData.status)}
               </DialogTitle>
             </DialogHeader>
@@ -999,30 +999,79 @@ export default function PropertyMap() {
               </div>
             ) : surveyData ? (
               <div className="space-y-4">
-                {/* Property Info */}
-                <Card className="bg-slate-50">
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
-                      <Home className="w-4 h-4" /> Property Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    <div className="grid grid-cols-3 gap-3 text-sm">
+                {/* Bill Details Header - Matching Survey Form Style */}
+                <Card className="border-2 border-amber-200 bg-amber-50">
+                  <CardContent className="py-3">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-slate-500">Serial #</p>
-                        <p className="font-medium">{selectedProperty?.serial_na ? 'N/A' : selectedProperty?.serial_number || '-'}</p>
+                        <p className="text-xs text-amber-600 font-medium">BILL SERIAL NUMBER</p>
+                        <p className="text-4xl font-bold text-red-500">
+                          {selectedProperty?.bill_sr_no || selectedProperty?.serial_number || '-'}
+                        </p>
                       </div>
-                      <div>
+                      <div className="text-right">
                         <p className="text-xs text-slate-500">Property ID</p>
-                        <p className="font-mono font-medium">{selectedProperty?.property_id}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Owner</p>
-                        <p className="font-medium">{selectedProperty?.owner_name || '-'}</p>
+                        <p className="text-lg font-mono font-bold text-blue-600">{selectedProperty?.property_id}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Property Details Grid - Matching Survey Form */}
+                <Card className="bg-slate-50">
+                  <CardHeader className="py-2 pb-1">
+                    <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
+                      <Home className="w-4 h-4" /> Property Details (From Bill)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-500">Owner</p>
+                        <p className="font-semibold text-slate-900">{selectedProperty?.owner_name || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Mobile</p>
+                        <p className="font-mono font-medium text-blue-600">{selectedProperty?.mobile || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Colony</p>
+                        <p className="font-medium">{selectedProperty?.colony || selectedProperty?.ward || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Category</p>
+                        <p className="font-medium">{selectedProperty?.category || 'Residential'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Total Area</p>
+                        <p className="font-medium">{selectedProperty?.total_area || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Total Amount</p>
+                        <p className="font-bold text-red-600">₹{selectedProperty?.amount || selectedProperty?.total_outstanding || '0'}</p>
+                      </div>
+                    </div>
+                    {selectedProperty?.address && (
+                      <div className="mt-2 pt-2 border-t border-slate-200">
+                        <p className="text-xs text-slate-500">Address</p>
+                        <p className="text-sm text-slate-800">{selectedProperty?.address}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Bill GPS Coordinates */}
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs text-blue-600 font-semibold mb-1">📍 Bill GPS Coordinates (Original)</p>
+                  <div className="flex items-center gap-4 text-blue-700">
+                    <span className="font-mono text-sm">
+                      Lat: {selectedProperty?.latitude?.toFixed(6) || 'N/A'}
+                    </span>
+                    <span className="font-mono text-sm">
+                      Long: {selectedProperty?.longitude?.toFixed(6) || 'N/A'}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Special Conditions */}
                 {(surveyData.special_condition || surveyData.self_certified !== undefined) && (
@@ -1053,68 +1102,111 @@ export default function PropertyMap() {
                   </Card>
                 )}
 
-                {/* Survey Info */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-slate-500">New Owner Name</p>
-                    <p className="font-medium">{surveyData.new_owner_name || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">New Mobile</p>
-                    <p className="font-mono">{surveyData.new_mobile || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Receiver Name</p>
-                    <p className="font-medium">{surveyData.receiver_name || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Relation</p>
-                    <p>{surveyData.relation || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Submitted By</p>
-                    <p className="font-medium">{surveyData.employee_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Submitted At</p>
-                    <p>{new Date(surveyData.submitted_at).toLocaleString()}</p>
-                  </div>
-                </div>
+                {/* Survey Submitted Info */}
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader className="py-2 pb-1">
+                    <CardTitle className="text-sm text-green-700 flex items-center gap-2">
+                      <Check className="w-4 h-4" /> Survey Submission Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-500">Receiver Name</p>
+                        <p className="font-medium">{surveyData.receiver_name || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Relation</p>
+                        <p>{surveyData.relation || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Submitted By</p>
+                        <p className="font-semibold text-blue-600">{surveyData.employee_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Submitted At</p>
+                        <p className="font-mono text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</p>
+                      </div>
+                      {surveyData.new_owner_name && (
+                        <div>
+                          <p className="text-xs text-slate-500">New Owner Name</p>
+                          <p className="font-medium text-orange-600">{surveyData.new_owner_name}</p>
+                        </div>
+                      )}
+                      {surveyData.new_mobile && (
+                        <div>
+                          <p className="text-xs text-slate-500">New Mobile</p>
+                          <p className="font-mono text-orange-600">{surveyData.new_mobile}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* GPS */}
-                <div className="p-3 bg-emerald-50 rounded-lg">
-                  <div className="flex items-center gap-2 text-emerald-700">
-                    <MapPin className="w-4 h-4" />
+                {/* Survey GPS - Location Captured */}
+                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <p className="text-xs text-emerald-600 font-semibold mb-1">📍 Survey GPS (Location Captured)</p>
+                  <div className="flex items-center gap-4 text-emerald-700">
                     <span className="font-mono text-sm">
-                      Lat: {surveyData.latitude?.toFixed(6)}, Long: {surveyData.longitude?.toFixed(6)}
+                      Lat: {surveyData.latitude?.toFixed(6) || 'N/A'}
+                    </span>
+                    <span className="font-mono text-sm">
+                      Long: {surveyData.longitude?.toFixed(6) || 'N/A'}
                     </span>
                   </div>
                 </div>
 
-                {/* Photos */}
+                {/* Photos with GPS Overlay */}
                 {surveyData.photos?.length > 0 && (
                   <div>
-                    <p className="text-xs text-slate-500 mb-2 flex items-center gap-1">
-                      <Camera className="w-3 h-3" /> Photos
+                    <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
+                      <Camera className="w-4 h-4" /> Survey Photos ({surveyData.photos.length})
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       {surveyData.photos.filter((p, i, self) => 
                         i === self.findIndex(x => x.file_url === p.file_url)
                       ).map((photo, idx) => (
-                        <img
-                          key={idx}
-                          src={`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`}
-                          alt={photo.photo_type}
-                          className="w-full h-36 object-cover rounded-lg cursor-pointer hover:opacity-90"
-                          onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
-                        />
+                        <div key={idx} className="relative group">
+                          {/* Photo with border */}
+                          <div className="relative overflow-hidden rounded-lg border-2 border-slate-200">
+                            <img
+                              src={`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`}
+                              alt={photo.photo_type || `Photo ${idx + 1}`}
+                              className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
+                            />
+                            
+                            {/* GPS Overlay on Thumbnail - Always Visible */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                              <div className="text-white text-[10px] font-mono">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-red-400" />
+                                  <span>{surveyData.latitude?.toFixed(6)}, {surveyData.longitude?.toFixed(6)}</span>
+                                </div>
+                                <div className="text-gray-300 text-[9px] mt-0.5">
+                                  {new Date(surveyData.submitted_at).toLocaleString('en-IN')}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Photo Type Badge */}
+                            <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-0.5 rounded text-xs">
+                              {photo.photo_type || `Photo ${idx + 1}`}
+                            </div>
+
+                            {/* Click to Expand Icon */}
+                            <div className="absolute top-2 right-2 bg-white/80 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Eye className="w-4 h-4 text-slate-700" />
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                {(!surveyData.status || surveyData.status === 'Pending') && (
+                {(!surveyData.status || surveyData.status === 'Pending' || surveyData.status === 'Completed') && (
                   <div className="flex gap-3 pt-4 border-t">
                     <Button
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700"
