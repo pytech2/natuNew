@@ -719,7 +719,7 @@ export default function Properties() {
             {/* No results message */}
             {showSearchResults && searchResults.length === 0 && searchQuery.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg p-4 text-center text-gray-500 text-sm">
-                No properties found for "{searchQuery}"
+                No properties found for &quot;{searchQuery}&quot;
               </div>
             )}
           </div>
