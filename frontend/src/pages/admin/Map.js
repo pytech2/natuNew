@@ -219,6 +219,16 @@ export default function PropertyMap() {
   const [loadingSurvey, setLoadingSurvey] = useState(false);
   const [rejectDialog, setRejectDialog] = useState(false);
   const [rejectRemarks, setRejectRemarks] = useState('');
+  
+  // Edit Survey state
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState({
+    receiver_name: '',
+    relation: '',
+    new_owner_name: '',
+    new_mobile: ''
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Default center (Kurukshetra, Haryana)
   const defaultCenter = [29.9506, 76.8378];
