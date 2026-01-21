@@ -748,7 +748,8 @@ export default function PropertyMap() {
               </div>
             )}
 
-            {/* Filters */}
+            {/* Filters - Show only when colony selected */}
+            {filters.colony && (
             <Card>
               <CardContent className="py-4">
                 <div className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
