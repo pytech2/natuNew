@@ -862,6 +862,12 @@ export default function Survey() {
                       alt="Property"
                       className="w-full h-48 object-cover rounded-lg"
                     />
+                    {/* Show file size badge */}
+                    {housePhoto && (
+                      <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        📷 {(housePhoto.size / 1024).toFixed(0)} KB
+                      </div>
+                    )}
                     <Button
                       size="sm"
                       variant="secondary"
