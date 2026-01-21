@@ -3765,17 +3765,17 @@ async def generate_arranged_pdf(
             pix_width = pix.width
             pix_height = pix.height
             
-            # MAXIMIZE - minimal margins, bigger bills
+            # COMPACT - efficient use of space, reduced margins
             if num_bills == 2:
-                # 2 bills per page
-                available_width = A4_WIDTH - 2
-                available_height = slot_height - 1
-                scale_boost = 0.92
+                # 2 bills per page - compact
+                available_width = A4_WIDTH - 4
+                available_height = slot_height - 2
+                scale_boost = 0.88
             else:
-                # 3 bills per page
-                available_width = A4_WIDTH - 2
-                available_height = slot_height - 0.5
-                scale_boost = 1.38
+                # 3 bills per page - very compact
+                available_width = A4_WIDTH - 4
+                available_height = slot_height - 1
+                scale_boost = 1.30
             
             scale_w = available_width / pix_width
             scale_h = available_height / pix_height
