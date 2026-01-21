@@ -221,10 +221,20 @@ export default function Properties() {
       return;
     }
 
+    // Validate custom distribution if enabled
+    if (useCustomDistribution) {
+      const totalAssigned = Object.values(customDistribution).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
+      if (totalAssigned !== areaPropertyCount) {
+        toast.error(`Distribution total (${totalAssigned}) must equal total properties (${areaPropertyCount})`);
+        return;
+      }
+    }
+
     try {
       const response = await axios.post(`${API_URL}/admin/assign-bulk`, {
         area: bulkAssignArea,
-        employee_ids: assignEmployeeIds  // Send array of employee IDs
+        employee_ids: assignEmployeeIds,
+        custom_distribution: useCustomDistribution ? customDistribution : null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -232,9 +242,50 @@ export default function Properties() {
       setAssignDialog(false);
       setBulkAssignArea('');
       setAssignEmployeeIds([]);
+      setCustomDistribution({});
+      setUseCustomDistribution(false);
       fetchProperties();
     } catch (error) {
       toast.error('Failed to assign properties');
+    }
+  };
+
+  // Fetch property count when area is selected
+  const fetchAreaPropertyCount = async (area) => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/properties?ward=${encodeURIComponent(area)}&limit=1`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAreaPropertyCount(response.data.total || 0);
+    } catch (error) {
+      setAreaPropertyCount(0);
+    }
+  };
+
+  // Handle bulk unassign by area
+  const handleBulkUnassignByArea = async () => {
+    if (!unassignArea) {
+      toast.error('Please select an area');
+      return;
+    }
+
+    setUnassigning(true);
+    try {
+      const response = await axios.post(`${API_URL}/admin/unassign-bulk`, {
+        area: unassignArea,
+        employee_id: unassignEmployeeId || null // Optional: unassign specific employee only
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(response.data.message);
+      setUnassignDialog(false);
+      setUnassignArea('');
+      setUnassignEmployeeId('');
+      fetchProperties();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to unassign properties');
+    } finally {
+      setUnassigning(false);
     }
   };
 
