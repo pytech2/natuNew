@@ -314,6 +314,7 @@ export default function PropertyMap() {
       // Calculate employee-wise stats for this colony
       const empStats = {};
       props.forEach(p => {
+        // Handle single employee assignment
         if (p.assigned_employee_id) {
           if (!empStats[p.assigned_employee_id]) {
             empStats[p.assigned_employee_id] = {
@@ -330,6 +331,29 @@ export default function PropertyMap() {
           } else {
             empStats[p.assigned_employee_id].pending++;
           }
+        }
+        
+        // Handle multiple employee assignments (assigned_employee_ids array)
+        if (p.assigned_employee_ids && Array.isArray(p.assigned_employee_ids)) {
+          p.assigned_employee_ids.forEach((empId, idx) => {
+            if (!empStats[empId]) {
+              // Get name from assigned_employee_name (comma-separated) if available
+              const names = (p.assigned_employee_name || '').split(',').map(n => n.trim());
+              empStats[empId] = {
+                id: empId,
+                name: names[idx] || 'Unknown',
+                total: 0,
+                completed: 0,
+                pending: 0
+              };
+            }
+            empStats[empId].total++;
+            if (p.status === 'Completed' || p.status === 'Approved') {
+              empStats[empId].completed++;
+            } else {
+              empStats[empId].pending++;
+            }
+          });
         }
       });
       setEmployeeStats(empStats);
