@@ -277,6 +277,20 @@ export default function PropertyMap() {
     }
   };
 
+  // Fetch employees/surveyors list
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Filter to get surveyors and field employees
+      const empList = (response.data || []).filter(u => u.role !== 'ADMIN');
+      setEmployees(empList);
+    } catch (error) {
+      console.error('Failed to fetch employees:', error);
+    }
+  };
+
   // Fetch properties for selected colony only
   const fetchPropertiesByColony = async (colony) => {
     setLoading(true);
@@ -292,6 +306,32 @@ export default function PropertyMap() {
       
       const uniqueCategories = [...new Set(props.map(p => p.category).filter(Boolean))];
       setCategories(uniqueCategories.sort());
+      
+      // Get unique employees assigned to this colony
+      const assignedEmployees = [...new Set(props.map(p => p.assigned_employee_id).filter(Boolean))];
+      
+      // Calculate employee-wise stats for this colony
+      const empStats = {};
+      props.forEach(p => {
+        if (p.assigned_employee_id) {
+          if (!empStats[p.assigned_employee_id]) {
+            empStats[p.assigned_employee_id] = {
+              id: p.assigned_employee_id,
+              name: p.assigned_employee_name || 'Unknown',
+              total: 0,
+              completed: 0,
+              pending: 0
+            };
+          }
+          empStats[p.assigned_employee_id].total++;
+          if (p.status === 'Completed' || p.status === 'Approved') {
+            empStats[p.assigned_employee_id].completed++;
+          } else {
+            empStats[p.assigned_employee_id].pending++;
+          }
+        }
+      });
+      setEmployeeStats(empStats);
       
       const withGPS = props.filter(p => p.latitude && p.longitude).length;
       setStats({
