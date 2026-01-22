@@ -3713,26 +3713,26 @@ async def generate_arranged_pdf(
                 serial_text = get_display_serial(bill)
                 
                 # Draw serial number in top-right corner - clear, bold
-                font_size = 18  # Good readable size
-                text_width = len(serial_text) * font_size * 0.6
+                font_size = 20  # Larger for better visibility
+                text_width = len(serial_text) * font_size * 0.55
                 
                 # Position: top-right area of the page
-                x_pos = new_page.rect.width - text_width - 10
-                y_pos = 6
+                x_pos = new_page.rect.width - text_width - 15
+                y_pos = 10
                 
                 rect = fitz.Rect(
-                    x_pos - 3,
+                    x_pos - 5,
                     y_pos,
-                    new_page.rect.width - 4,
-                    y_pos + font_size + 5
+                    new_page.rect.width - 8,
+                    y_pos + font_size + 8
                 )
                 
                 # White background with red border
-                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=0.6)
+                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=1.0)
                 
                 # RED bold text - clear and readable
                 new_page.insert_text(
-                    (x_pos, y_pos + font_size - 1),
+                    (x_pos, y_pos + font_size),
                     serial_text,
                     fontsize=font_size,
                     fontname="hebo",  # Helvetica Bold for clarity
