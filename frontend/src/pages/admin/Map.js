@@ -296,7 +296,7 @@ export default function PropertyMap() {
   const fetchPropertiesByColony = async (colony) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/map/properties?colony=${encodeURIComponent(colony)}&limit=2000`, {
+      const response = await axios.get(`${API_URL}/map/properties?colony=${encodeURIComponent(colony)}&limit=5000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
