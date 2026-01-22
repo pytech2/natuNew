@@ -3755,7 +3755,7 @@ async def generate_arranged_pdf(
     included_count = 0
     
     if bills_per_page == 1:
-        # ONE BILL PER PAGE - Render as image to ensure serial numbers print
+        # ONE BILL PER PAGE - Copy original page directly, add serial overlay
         for bill in bills:
             page_num = bill.get("page_number", 1) - 1
             if page_num < 0 or page_num >= len(src_pdf):
@@ -3764,18 +3764,11 @@ async def generate_arranged_pdf(
             # Get source page
             src_page = src_pdf[page_num]
             
-            # Render page as high-quality image (ensures serial number overlay works)
-            mat = fitz.Matrix(2.0, 2.0)  # 200 DPI for crisp text
-            pix = src_page.get_pixmap(matrix=mat, alpha=False)
-            img_bytes = pix.tobytes("png")
+            # COPY page directly to preserve original quality and size
+            output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
+            new_page = output_pdf[-1]  # Get the newly inserted page
             
-            # Create new page with same dimensions as original
-            new_page = output_pdf.new_page(width=src_page.rect.width, height=src_page.rect.height)
-            
-            # Insert the rendered image
-            new_page.insert_image(new_page.rect, stream=img_bytes)
-            
-            # Add serial number overlay if enabled
+            # Add serial number overlay if enabled (draw directly on copied page)
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
