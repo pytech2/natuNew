@@ -3682,9 +3682,10 @@ async def generate_arranged_pdf(
     src_pdf = fitz.open(str(original_pdf_path))
     output_pdf = fitz.open()
     
-    # Build serial number lookup - N/A serials get NX format
+    # Build serial number lookup from ALL bills (including skipped ones)
+    # This ensures N/A serials can find nearby valid serials
     valid_serials_with_gps = []
-    for b in bills:
+    for b in all_bills_for_serial_lookup:
         if not b.get("serial_na", False) and b.get("serial_number", 0) > 0 and b.get("latitude") and b.get("longitude"):
             valid_serials_with_gps.append({
                 "serial": b["serial_number"],
