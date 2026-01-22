@@ -3695,7 +3695,7 @@ async def generate_arranged_pdf(
     included_count = 0
     
     if bills_per_page == 1:
-        # ONE BILL PER PAGE - High quality, compact size
+        # ONE BILL PER PAGE - EDITABLE TEXT PDF (copy pages directly)
         for bill in bills:
             page_num = bill.get("page_number", 1) - 1
             if page_num < 0 or page_num >= len(src_pdf):
@@ -3704,31 +3704,16 @@ async def generate_arranged_pdf(
             # Get source page
             src_page = src_pdf[page_num]
             
-            # Render at 2.0x scale for CRISP text (200 DPI quality)
-            mat = fitz.Matrix(2.0, 2.0)
-            pix = src_page.get_pixmap(matrix=mat, alpha=False)
-            
-            # Use PNG format - much better for text-heavy documents
-            img_bytes = pix.tobytes("png")
-            
-            # COMPACT SIZE: Scale down the output page to 90% of original
-            # This reduces overall PDF size while keeping text readable
-            scale_factor = 0.90
-            new_width = src_page.rect.width * scale_factor
-            new_height = src_page.rect.height * scale_factor
-            
-            # Create new page with compact dimensions
-            new_page = output_pdf.new_page(width=new_width, height=new_height)
-            
-            # Insert image scaled to fit the compact page
-            new_page.insert_image(new_page.rect, stream=img_bytes)
+            # COPY page directly (preserves text, makes it editable)
+            output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
+            new_page = output_pdf[-1]  # Get the newly inserted page
             
             # Add serial number overlay if enabled
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
                 # Draw serial number in top-right corner - clear, bold
-                font_size = 16  # Slightly smaller for compact PDF
+                font_size = 18  # Good readable size
                 text_width = len(serial_text) * font_size * 0.6
                 
                 # Position: top-right area of the page
