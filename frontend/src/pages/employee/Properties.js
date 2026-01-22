@@ -468,19 +468,21 @@ export default function Properties() {
               }}
             >
               <div 
-                className={`flex items-center justify-center rounded-full border-2 shadow-lg cursor-pointer transition-transform hover:scale-110 ${
+                className={`flex items-center justify-center rounded-full border-3 shadow-xl cursor-pointer transition-transform hover:scale-110 ${
                   withinReach 
-                    ? 'w-10 h-10 border-white animate-pulse' 
+                    ? 'w-12 h-12 border-white animate-pulse' 
                     : index === 0 && userLocation 
-                      ? 'w-10 h-10 border-white animate-pulse' 
-                      : 'w-8 h-8 border-white'
+                      ? 'w-12 h-12 border-white animate-pulse' 
+                      : 'w-11 h-11 border-white'
                 }`}
                 style={{ 
                   backgroundColor: markerColor,
-                  boxShadow: withinReach ? '0 0 15px rgba(59, 130, 246, 0.8)' : undefined
+                  boxShadow: withinReach 
+                    ? '0 0 15px rgba(59, 130, 246, 0.8), 0 2px 8px rgba(0,0,0,0.4)' 
+                    : '0 2px 8px rgba(0,0,0,0.4)'
                 }}
               >
-                <span className="text-white text-xs font-bold">
+                <span className="text-white text-sm font-bold drop-shadow-md" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
                   {property.bill_sr_no || property.serial_number || (index + 1)}
                 </span>
               </div>
