@@ -3295,11 +3295,32 @@ async def upload_pdf_bills(
     
     # Helper function to check if owner name is valid (not NA or empty)
     def is_valid_owner_name(name):
+        """Check if owner name is valid - be LENIENT to avoid skipping good data"""
         if not name:
             return False
-        name_upper = name.strip().upper()
-        invalid_values = ['NA', 'N/A', 'N.A.', 'NOT AVAILABLE', 'NIL', 'NONE', '-', '--', '']
-        return name_upper not in invalid_values and len(name.strip()) > 0
+        name_clean = name.strip()
+        name_upper = name_clean.upper()
+        # Only skip if EXACTLY matches these invalid values
+        invalid_values = ['NA', 'N/A', 'N.A.', '-', '--', '']
+        return name_upper not in invalid_values and len(name_clean) > 0
+    
+    def should_skip_record(owner_name, category=""):
+        """Determine if a record should be skipped - be CONSERVATIVE"""
+        owner = (owner_name or "").strip().lower()
+        cat = (category or "").strip().lower()
+        
+        # Only skip if owner is completely empty/invalid AND category is vacant
+        if not owner or owner in ['na', 'n/a', '-', '--']:
+            # Even if owner is NA, keep residential properties
+            if 'residential' in cat or 'commercial' in cat:
+                return False
+            return True
+        
+        # Skip ONLY if explicitly marked as vacant plot with no owner
+        if ('vacant' in cat or 'empty' in cat) and (not owner or len(owner) <= 2):
+            return True
+        
+        return False
     
     # Extract text from each page using PyMuPDF
     bills = []
