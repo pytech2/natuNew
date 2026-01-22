@@ -92,6 +92,11 @@ export default function Properties() {
   const [useCustomDistribution, setUseCustomDistribution] = useState(false);
   const [areaPropertyCount, setAreaPropertyCount] = useState(0); // Total properties in selected area
   
+  // Range-based assignment (for large colonies like Sector 5)
+  const [useRangeAssign, setUseRangeAssign] = useState(false);
+  const [serialRangeFrom, setSerialRangeFrom] = useState('');
+  const [serialRangeTo, setSerialRangeTo] = useState('');
+  
   // Delete dialog
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [deleteAllDialog, setDeleteAllDialog] = useState(false);
