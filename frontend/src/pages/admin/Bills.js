@@ -868,8 +868,7 @@ export default function BillsPage() {
           </Card>
         )}
 
-          </div>{/* End of lg:col-span-3 right column */}
-        </div>{/* End of grid cols-4 */}
+          </div>{/* End of main content */}
 
         {/* Upload Dialog */}
         <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
