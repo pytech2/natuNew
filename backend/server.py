@@ -300,6 +300,8 @@ class BulkAssignmentRequest(BaseModel):
     employee_id: Optional[str] = None  # Single employee (backward compat)
     employee_ids: Optional[List[str]] = None  # Multiple employees (work together)
     custom_distribution: Optional[Dict[str, int]] = None  # {employee_id: count} for custom distribution
+    serial_from: Optional[int] = None  # Range assignment: start serial number
+    serial_to: Optional[int] = None    # Range assignment: end serial number
 
 class BulkUnassignRequest(BaseModel):
     area: str
