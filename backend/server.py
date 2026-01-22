@@ -509,26 +509,16 @@ async def get_map_properties(
     
     properties = await db.properties.find(query, projection).limit(limit).to_list(limit)
     
-    # Remove duplicates - keep unique by property_id or (owner_name + mobile)
+    # Remove duplicates - keep unique by property_id ONLY
     seen_property_ids = set()
-    seen_owner_mobile = set()
     unique_properties = []
     
     for prop in properties:
         prop_id = prop.get("property_id", "")
-        owner = (prop.get("owner_name") or "").strip().upper()
-        mobile = (prop.get("mobile") or "").strip()
         
         # Skip if duplicate property_id
         if prop_id and prop_id in seen_property_ids:
             continue
-        
-        # Skip if duplicate owner+mobile combination
-        if owner and mobile:
-            key = f"{owner}_{mobile}"
-            if key in seen_owner_mobile:
-                continue
-            seen_owner_mobile.add(key)
         
         if prop_id:
             seen_property_ids.add(prop_id)
