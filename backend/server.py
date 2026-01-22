@@ -3638,6 +3638,33 @@ async def generate_arranged_pdf(
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found")
     
+    # Helper functions to skip vacant plots and invalid owner names (same as Add to Properties)
+    def should_skip_for_pdf(bill):
+        """Skip vacant plots and bills with no valid owner name"""
+        owner = (bill.get("owner_name") or "").strip().lower()
+        category = (bill.get("category") or "").strip().lower()
+        
+        # Skip if no owner name or invalid owner
+        if not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']:
+            return True
+        
+        # Skip vacant plots
+        if "vacant" in category or "empty" in category:
+            return True
+        if "vacant" in owner or "empty plot" in owner or "खाली" in owner:
+            return True
+        
+        return False
+    
+    # Filter out vacant plots and invalid owner names
+    valid_bills = [b for b in bills if not should_skip_for_pdf(b)]
+    skipped_count = len(bills) - len(valid_bills)
+    
+    if not valid_bills:
+        raise HTTPException(status_code=404, detail=f"No valid bills found (skipped {skipped_count} vacant/invalid records)")
+    
+    bills = valid_bills  # Use filtered bills
+    
     batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
     if not batch or not batch.get("pdf_filename"):
         raise HTTPException(status_code=404, detail="Original PDF not found")
