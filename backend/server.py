@@ -1060,8 +1060,38 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
     
     emp_name_map = {emp["id"]: emp["name"] for emp in new_employees}
     
-    # Get all properties in the ward/area
-    properties = await db.properties.find({"ward": data.area}, {"_id": 0, "id": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
+    # Build query based on area and optional serial range
+    query = {"ward": data.area}
+    
+    # RANGE ASSIGNMENT: Filter by serial number range
+    if data.serial_from is not None and data.serial_to is not None:
+        query["$or"] = [
+            {"serial_number": {"$gte": data.serial_from, "$lte": data.serial_to}},
+            {"bill_sr_no": {"$gte": str(data.serial_from), "$lte": str(data.serial_to)}}
+        ]
+    
+    # Get all properties in the ward/area (with optional serial filter)
+    properties = await db.properties.find(query, {"_id": 0, "id": 1, "serial_number": 1, "bill_sr_no": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
+    
+    # For range assignment, filter more precisely by serial number
+    if data.serial_from is not None and data.serial_to is not None:
+        filtered_props = []
+        for prop in properties:
+            serial = prop.get("serial_number") or 0
+            bill_sr = 0
+            try:
+                bill_sr = int(prop.get("bill_sr_no") or 0)
+            except:
+                pass
+            
+            effective_serial = serial or bill_sr
+            if data.serial_from <= effective_serial <= data.serial_to:
+                filtered_props.append(prop)
+        
+        properties = filtered_props
+    
+    if not properties:
+        raise HTTPException(status_code=404, detail=f"No properties found in {data.area}" + (f" with serial {data.serial_from}-{data.serial_to}" if data.serial_from else ""))
     
     # Check if custom distribution is provided
     if data.custom_distribution:
