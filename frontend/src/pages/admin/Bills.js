@@ -339,52 +339,39 @@ export default function BillsPage() {
       toast.success(response.data.message);
       setGenerateDialog(false);
       
-      // Save to database for future downloads
-      if (response.data.filename && response.data.download_url) {
+      // Auto download PDF immediately
+      if (response.data.filename) {
+        toast.info('Starting download...');
+        
         try {
-          const saveFormData = new FormData();
-          saveFormData.append('colony', filters.colony || 'All');
-          saveFormData.append('filename', response.data.filename);
-          saveFormData.append('download_url', response.data.download_url);
-          saveFormData.append('pdf_type', 'arranged_bills');
-          saveFormData.append('total_records', response.data.total_bills || 0);
-          
-          await axios.post(`${API_URL}/admin/generated-pdfs/save`, saveFormData, {
-            headers: { 
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-          
-          // Refresh generated PDFs list
-          fetchGeneratedPdfs();
-        } catch (saveError) {
-          console.error('Failed to save PDF record:', saveError);
-        }
-      }
-      
-      // Auto download using blob for reliable VPS download
-      if (response.data.download_url) {
-        try {
+          // Direct download using blob
           const downloadResponse = await axios.get(
-            `${API_URL}/admin/generated-pdfs/download/${response.data.filename}`,
+            `${API_URL}/uploads/${response.data.filename}`,
             { 
               headers: { Authorization: `Bearer ${token}` },
-              responseType: 'blob' 
+              responseType: 'blob',
+              timeout: 120000 // 2 minute timeout for large files
             }
           );
           
-          const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
+          // Create download link
+          const blob = new Blob([downloadResponse.data], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.setAttribute('download', response.data.filename || 'bills.pdf');
+          link.download = response.data.filename;
           document.body.appendChild(link);
           link.click();
-          link.remove();
+          document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
+          
+          toast.success('PDF downloaded successfully!');
         } catch (downloadError) {
-          // Fallback to window.open if blob download fails
-          window.open(`${process.env.REACT_APP_BACKEND_URL}${response.data.download_url}`, '_blank');
+          console.error('Blob download failed:', downloadError);
+          // Fallback: Open in new tab
+          const directUrl = `${process.env.REACT_APP_BACKEND_URL}/api/uploads/${response.data.filename}`;
+          window.open(directUrl, '_blank');
+          toast.info('PDF opened in new tab - please save it manually');
         }
       }
     } catch (error) {
