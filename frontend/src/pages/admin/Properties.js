@@ -226,8 +226,22 @@ export default function Properties() {
       return;
     }
 
+    // Validate range if enabled
+    if (useRangeAssign) {
+      if (!serialRangeFrom || !serialRangeTo) {
+        toast.error('Please enter both From and To serial numbers');
+        return;
+      }
+      const from = parseInt(serialRangeFrom);
+      const to = parseInt(serialRangeTo);
+      if (isNaN(from) || isNaN(to) || from > to) {
+        toast.error('Invalid serial number range');
+        return;
+      }
+    }
+
     // Validate custom distribution if enabled
-    if (useCustomDistribution) {
+    if (useCustomDistribution && !useRangeAssign) {
       const totalAssigned = Object.values(customDistribution).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
       if (totalAssigned !== areaPropertyCount) {
         toast.error(`Distribution total (${totalAssigned}) must equal total properties (${areaPropertyCount})`);
@@ -236,11 +250,19 @@ export default function Properties() {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/admin/assign-bulk`, {
+      const payload = {
         area: bulkAssignArea,
         employee_ids: assignEmployeeIds,
-        custom_distribution: useCustomDistribution ? customDistribution : null
-      }, {
+        custom_distribution: useCustomDistribution && !useRangeAssign ? customDistribution : null
+      };
+      
+      // Add range parameters if enabled
+      if (useRangeAssign) {
+        payload.serial_from = parseInt(serialRangeFrom);
+        payload.serial_to = parseInt(serialRangeTo);
+      }
+      
+      const response = await axios.post(`${API_URL}/admin/assign-bulk`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(response.data.message);
@@ -249,9 +271,12 @@ export default function Properties() {
       setAssignEmployeeIds([]);
       setCustomDistribution({});
       setUseCustomDistribution(false);
+      setUseRangeAssign(false);
+      setSerialRangeFrom('');
+      setSerialRangeTo('');
       fetchProperties();
     } catch (error) {
-      toast.error('Failed to assign properties');
+      toast.error(error.response?.data?.detail || 'Failed to assign properties');
     }
   };
 
