@@ -446,7 +446,7 @@ async def get_map_properties(
     colony: Optional[str] = None,
     status: Optional[str] = None,
     hide_completed: bool = False,
-    limit: int = 500,
+    limit: int = 5000,  # Increased from 500 to handle larger colonies
     current_user: dict = Depends(get_current_user)
 ):
     """Fast lightweight endpoint for map markers - NO DUPLICATES, shows submission status"""
