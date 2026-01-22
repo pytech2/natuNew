@@ -537,3 +537,7 @@ frontend/node_modules/.cache/default-development/17.pack
 *.env.*
 backend/uploads/arranged_all_20260122_090956.pdf
 backend/uploads/arranged_all_20260122_091158.pdf
+-e 
+# Environment files
+*.env
+*.env.*
