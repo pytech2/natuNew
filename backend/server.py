@@ -3906,10 +3906,27 @@ async def split_bills_by_employee(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get arranged bills
-    bills = await db.bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    all_bills = await db.bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    
+    if not all_bills:
+        raise HTTPException(status_code=404, detail="No bills found")
+    
+    # Skip vacant plots and invalid owner names (same logic as generate-pdf)
+    def should_skip_for_pdf(bill):
+        owner = (bill.get("owner_name") or "").strip().lower()
+        category = (bill.get("category") or "").strip().lower()
+        if not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']:
+            return True
+        if "vacant" in category or "empty" in category:
+            return True
+        if "vacant" in owner or "empty plot" in owner or "खाली" in owner:
+            return True
+        return False
+    
+    bills = [b for b in all_bills if not should_skip_for_pdf(b)]
     
     if not bills:
-        raise HTTPException(status_code=404, detail="No bills found")
+        raise HTTPException(status_code=404, detail="No valid bills found after filtering")
     
     # Get original PDF
     batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
