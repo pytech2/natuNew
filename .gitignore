@@ -545,3 +545,7 @@ backend/uploads/arranged_all_20260122_091158.pdf
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
