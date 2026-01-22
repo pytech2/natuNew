@@ -3826,12 +3826,12 @@ async def generate_arranged_pdf(
             # Get source page and render to image
             src_page = src_pdf[page_num]
             
-            # Render at 1.8x scale for CLEAR text (180 DPI)
-            mat = fitz.Matrix(1.8, 1.8)
+            # Render at 1.5x scale for good quality (150 DPI) - balanced quality/size
+            mat = fitz.Matrix(1.5, 1.5)
             pix = src_page.get_pixmap(matrix=mat, alpha=False)
             
-            # Use PNG format for text clarity
-            img_bytes = pix.tobytes("png")
+            # Use JPEG format with 85% quality - much smaller than PNG, good quality
+            img_bytes = pix.tobytes("jpeg", jpg_quality=85)
             
             # Pixmap dimensions
             pix_width = pix.width
