@@ -3663,7 +3663,9 @@ async def generate_arranged_pdf(
     if not valid_bills:
         raise HTTPException(status_code=404, detail=f"No valid bills found (skipped {skipped_count} vacant/invalid records)")
     
-    bills = valid_bills  # Use filtered bills
+    # Keep original bills for serial number lookup (N/A serials need ALL valid serials for nearby lookup)
+    all_bills_for_serial_lookup = bills
+    bills = valid_bills  # Use filtered bills for PDF generation
     
     batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
     if not batch or not batch.get("pdf_filename"):
