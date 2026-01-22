@@ -3330,32 +3330,28 @@ async def upload_pdf_bills(
     try:
         pdf_doc = fitz.open(str(pdf_path))
         
-        # Vacant plot keywords to check
-        VACANT_KEYWORDS = ["vacant", "empty", "plot", "n/a", "na", "nil", "blank", "-", "खाली", "रिक्त", "खालि"]
+        # Vacant plot keywords to check - be more specific
+        VACANT_KEYWORDS = ["vacant plot", "empty plot", "खाली प्लॉट"]
         
         def is_vacant_plot(owner_name, category=""):
-            """Check if a bill represents a vacant plot"""
+            """Check if a bill represents a vacant plot - be STRICT, only skip obvious vacant plots"""
             owner = (owner_name or "").strip().lower()
             cat = (category or "").strip().lower()
             
-            # Check if owner name matches vacant patterns
+            # Only skip if category explicitly says vacant AND owner is empty/invalid
+            if "vacant" in cat and (not owner or owner in ['na', 'n/a', '-', 'nil']):
+                return True
+            
+            # Check for exact vacant plot phrases
             for keyword in VACANT_KEYWORDS:
                 if keyword in owner:
                     return True
-            
-            # Check if category indicates vacant
-            if "vacant" in cat or "empty" in cat:
-                return True
-            
-            # Check if owner name is very short or just numbers
-            if len(owner) <= 2 or owner.isdigit():
-                return True
             
             return False
         
         skipped_vacant = 0
         
-        # First pass: Extract all bill data
+        # First pass: Extract all bill data - BE LENIENT, include most records
         for page_num in range(len(pdf_doc)):
             page = pdf_doc[page_num]
             text = page.get_text()
@@ -3363,15 +3359,18 @@ async def upload_pdf_bills(
             # Extract bill data (pass page for block-based BillSrNo extraction)
             bill_data = extract_bill_data(text, page_num + 1, page)
             
-            # Skip if owner name is NA or empty
-            if not is_valid_owner_name(bill_data.get("owner_name")):
-                skipped_count += 1
-                continue  # Skip this record
+            owner_name = bill_data.get("owner_name", "")
+            category = bill_data.get("category", "")
             
-            # Skip vacant plots
-            if is_vacant_plot(bill_data.get("owner_name"), bill_data.get("category")):
+            # Use conservative skip logic - only skip obvious invalid records
+            if should_skip_record(owner_name, category):
+                skipped_count += 1
+                continue
+            
+            # Skip only obvious vacant plots with no owner
+            if is_vacant_plot(owner_name, category):
                 skipped_vacant += 1
-                continue  # Skip vacant plots
+                continue
             
             bill_data["id"] = str(uuid.uuid4())
             bill_data["batch_id"] = batch_id
