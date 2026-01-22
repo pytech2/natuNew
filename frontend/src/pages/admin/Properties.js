@@ -1000,6 +1000,9 @@ export default function Properties() {
                 setAssignEmployeeIds([]);
                 setCustomDistribution({});
                 setUseCustomDistribution(false);
+                setUseRangeAssign(false);
+                setSerialRangeFrom('');
+                setSerialRangeTo('');
               }}>
                 Cancel
               </Button>
