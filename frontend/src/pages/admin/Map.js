@@ -1033,6 +1033,12 @@ export default function PropertyMap() {
                             {getStatusBadge(property.status)}
                           </div>
                           
+                          {/* Property ID */}
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
+                            <span className="font-medium">ID:</span>
+                            <span className="font-mono">{property.property_id || '-'}</span>
+                          </div>
+                          
                           {/* Owner & Mobile */}
                           <div className="space-y-1">
                             <div className="flex items-center gap-1">
