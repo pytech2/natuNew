@@ -4030,7 +4030,13 @@ async def split_bills_by_employee(
             sn_text = f"{bill['serial_number']}"
             new_page.insert_text((x, y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
         
-        output_pdf.save(str(output_path))
+        output_pdf.save(
+            str(output_path),
+            garbage=4,  # Maximum garbage collection
+            deflate=True,  # Compress streams
+            deflate_images=True,  # Compress images
+            deflate_fonts=True   # Compress fonts
+        )
         output_pdf.close()
         
         generated_files.append({
@@ -4458,7 +4464,13 @@ async def split_bills_by_specific_employees(
             
             new_page.insert_text((sn_x, sn_y), f"{bill['serial_number']}", fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
         
-        output_pdf.save(str(output_path))
+        output_pdf.save(
+            str(output_path),
+            garbage=4,  # Maximum garbage collection
+            deflate=True,  # Compress streams
+            deflate_images=True,  # Compress images
+            deflate_fonts=True   # Compress fonts
+        )
         output_pdf.close()
         
         generated_files.append({
