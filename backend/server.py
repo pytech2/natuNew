@@ -1170,7 +1170,8 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             )
         
         new_employee_names = ", ".join([emp["name"] for emp in new_employees])
-        return {"message": f"Added {new_employee_names} to {updated_count} properties in {data.area}"}
+        range_info = f" (Serial {data.serial_from}-{data.serial_to})" if data.serial_from else ""
+        return {"message": f"Assigned {new_employee_names} to {updated_count} properties in {data.area}{range_info}"}
 
 @api_router.post("/admin/unassign-bulk")
 async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = Depends(get_current_user)):
