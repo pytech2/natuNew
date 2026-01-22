@@ -4176,25 +4176,20 @@ async def copy_bills_to_properties(
                 "lng": b["longitude"]
             })
     
-    # Vacant plot keywords to check
-    VACANT_KEYWORDS = ["vacant", "empty", "plot", "n/a", "na", "nil", "blank", "-", "खाली", "रिक्त"]
-    
-    def is_vacant_plot(bill):
-        """Check if a bill represents a vacant plot"""
+    # Vacant plot keywords - SAME as Generate PDF function
+    def should_skip_for_property(bill):
+        """Skip vacant plots and bills with no valid owner name - SAME as PDF generation"""
         owner = (bill.get("owner_name") or "").strip().lower()
         category = (bill.get("category") or "").strip().lower()
         
-        # Check if owner name matches vacant patterns
-        for keyword in VACANT_KEYWORDS:
-            if keyword in owner:
-                return True
-        
-        # Check if category indicates vacant
-        if "vacant" in category or "empty" in category or "plot" in category:
+        # Skip if no owner name or invalid owner
+        if not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']:
             return True
         
-        # Check if owner name is very short or just numbers
-        if len(owner) <= 2 or owner.isdigit():
+        # Skip vacant plots
+        if "vacant" in category or "empty" in category:
+            return True
+        if "vacant" in owner or "empty plot" in owner or "खाली" in owner:
             return True
         
         return False
