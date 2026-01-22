@@ -1079,12 +1079,26 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
         for prop in properties:
             serial = prop.get("serial_number") or 0
             bill_sr = 0
+            bill_sr_str = str(prop.get("bill_sr_no") or "").strip()
+            
+            # Handle N-prefix serial numbers (e.g., N45, N3, N123)
+            # Extract the number part from N-prefix
+            n_serial = 0
+            if bill_sr_str.upper().startswith("N"):
+                try:
+                    n_serial = int(bill_sr_str[1:])  # Extract number after "N"
+                except:
+                    pass
+            
             try:
-                bill_sr = int(prop.get("bill_sr_no") or 0)
+                bill_sr = int(bill_sr_str)
             except:
                 pass
             
-            effective_serial = serial or bill_sr
+            # Use the best available serial: actual serial > bill_sr_no > N-prefix number
+            effective_serial = serial or bill_sr or n_serial
+            
+            # Include if the effective serial is within range
             if data.serial_from <= effective_serial <= data.serial_to:
                 filtered_props.append(prop)
         
