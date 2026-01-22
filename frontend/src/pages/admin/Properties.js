@@ -872,8 +872,67 @@ export default function Properties() {
                 </div>
               </div>
 
-              {/* Custom Distribution Toggle - Only for bulk assign */}
-              {selectedProperties.length === 0 && assignEmployeeIds.length > 1 && bulkAssignArea && areaPropertyCount > 0 && (
+              {/* Range Assignment - For large colonies */}
+              {selectedProperties.length === 0 && bulkAssignArea && (
+                <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={useRangeAssign}
+                      onCheckedChange={(checked) => {
+                        setUseRangeAssign(checked);
+                        if (!checked) {
+                          setSerialRangeFrom('');
+                          setSerialRangeTo('');
+                        }
+                      }}
+                    />
+                    <label className="text-sm font-medium text-blue-800">
+                      📊 Assign by Serial Number Range (for large colonies)
+                    </label>
+                  </div>
+
+                  {useRangeAssign && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-blue-700">
+                        Assign properties within a serial number range to selected employee(s)
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <Label className="text-xs text-blue-700">From Serial</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={serialRangeFrom}
+                            onChange={(e) => setSerialRangeFrom(e.target.value)}
+                            placeholder="e.g., 1"
+                            className="h-9"
+                          />
+                        </div>
+                        <span className="mt-5 text-slate-400">→</span>
+                        <div className="flex-1">
+                          <Label className="text-xs text-blue-700">To Serial</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={serialRangeTo}
+                            onChange={(e) => setSerialRangeTo(e.target.value)}
+                            placeholder="e.g., 200"
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                      {serialRangeFrom && serialRangeTo && (
+                        <p className="text-xs text-blue-600 font-medium">
+                          Will assign {Math.max(0, parseInt(serialRangeTo) - parseInt(serialRangeFrom) + 1)} properties (Serial {serialRangeFrom} to {serialRangeTo})
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Custom Distribution Toggle - Only for bulk assign without range */}
+              {selectedProperties.length === 0 && assignEmployeeIds.length > 1 && bulkAssignArea && areaPropertyCount > 0 && !useRangeAssign && (
                 <div className="space-y-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
                   <div className="flex items-center gap-2">
                     <Checkbox
