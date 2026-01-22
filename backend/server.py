@@ -1060,29 +1060,27 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
     
     emp_name_map = {emp["id"]: emp["name"] for emp in new_employees}
     
-    # Build query based on area and optional serial range
+    # Build query - just filter by area, serial filtering done in Python
     query = {"ward": data.area}
     
-    # RANGE ASSIGNMENT: Filter by serial number range
-    if data.serial_from is not None and data.serial_to is not None:
-        query["$or"] = [
-            {"serial_number": {"$gte": data.serial_from, "$lte": data.serial_to}},
-            {"bill_sr_no": {"$gte": str(data.serial_from), "$lte": str(data.serial_to)}}
-        ]
-    
-    # Get all properties in the ward/area (with optional serial filter)
+    # Get ALL properties in the ward/area (serial filtering done in Python to handle N-prefix)
     properties = await db.properties.find(query, {"_id": 0, "id": 1, "serial_number": 1, "bill_sr_no": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
     
-    # For range assignment, filter more precisely by serial number
+    # RANGE ASSIGNMENT: Filter by serial number range (handles N-prefix)
     if data.serial_from is not None and data.serial_to is not None:
         filtered_props = []
         for prop in properties:
             serial = prop.get("serial_number") or 0
-            bill_sr = 0
             bill_sr_str = str(prop.get("bill_sr_no") or "").strip()
             
-            # Handle N-prefix serial numbers (e.g., N45, N3, N123)
-            # Extract the number part from N-prefix
+            # Try to get numeric serial
+            bill_sr_num = 0
+            try:
+                bill_sr_num = int(bill_sr_str)
+            except:
+                pass
+            
+            # Handle N-prefix serial numbers (e.g., N45, N584, N123)
             n_serial = 0
             if bill_sr_str.upper().startswith("N"):
                 try:
@@ -1090,16 +1088,11 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
                 except:
                     pass
             
-            try:
-                bill_sr = int(bill_sr_str)
-            except:
-                pass
-            
-            # Use the best available serial: actual serial > bill_sr_no > N-prefix number
-            effective_serial = serial or bill_sr or n_serial
+            # Use the best available serial: actual serial > bill_sr_no as number > N-prefix number
+            effective_serial = serial if serial > 0 else (bill_sr_num if bill_sr_num > 0 else n_serial)
             
             # Include if the effective serial is within range
-            if data.serial_from <= effective_serial <= data.serial_to:
+            if effective_serial > 0 and data.serial_from <= effective_serial <= data.serial_to:
                 filtered_props.append(prop)
         
         properties = filtered_props
