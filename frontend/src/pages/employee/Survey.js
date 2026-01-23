@@ -171,8 +171,8 @@ const dataURLtoBlob = (dataURL) => {
 const RELATION_OPTIONS = [
   'Self',
   'Family Member',
-  'Tenant',
-  'Neighbour',
+  'Kirayedar',
+  'Padosi',
   'Other'
 ];
 
