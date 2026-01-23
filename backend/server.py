@@ -4240,6 +4240,12 @@ async def copy_bills_to_properties(
         
         return False
     
+    # Load self-certified PIDs from database for matching
+    self_certified_docs = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+    self_certified_pids = set(doc["pid"].upper() for doc in self_certified_docs)
+    self_certified_count = 0
+    not_self_certified_count = 0
+    
     # Convert bills to properties
     properties = []
     skipped_duplicates = 0
