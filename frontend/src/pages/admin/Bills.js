@@ -1512,19 +1512,53 @@ export default function BillsPage() {
                   </p>
                 </div>
               )}
+
+              {/* Download Sample Button */}
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <p className="text-sm text-slate-600 mb-2">Need the correct format?</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Create sample Excel data
+                    const sampleData = [
+                      ['PID (C)', 'Owner Name', 'Area'],
+                      ['3UYE8N55', 'Sample Owner 1', 'Sector 5'],
+                      ['3UUOCQ65', 'Sample Owner 2', 'Sector 5'],
+                      ['3UBVBM48', 'Sample Owner 3', 'T.P.S 8 A'],
+                      ['3U2KG128', 'Sample Owner 4', 'T.P.S 8 A'],
+                    ];
+                    
+                    // Create CSV content (Excel compatible)
+                    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'self_certification_sample.csv';
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    toast.success('Sample file downloaded');
+                  }}
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Sample Excel
+                </Button>
+                <p className="text-xs text-slate-500 mt-2">
+                  File must have a column named "PID" or "Property ID"
+                </p>
+              </div>
               
               {/* File Upload */}
               <div className="space-y-2">
-                <Label>Select Excel File (.xlsx)</Label>
+                <Label>Select Excel File (.xlsx or .csv)</Label>
                 <Input
                   type="file"
-                  accept=".xlsx,.xls"
+                  accept=".xlsx,.xls,.csv"
                   onChange={(e) => setSelfCertFile(e.target.files[0])}
                   className="cursor-pointer"
                 />
-                <p className="text-xs text-slate-500">
-                  File should have a column with Property IDs (PID)
-                </p>
               </div>
 
               {selfCertFile && (
