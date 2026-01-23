@@ -816,8 +816,7 @@ export default function Survey() {
 
                 {/* Self Certification Section - Conditional based on property.self_certified */}
                 {property?.self_certified === true ? (
-                  /* SELF-CERTIFIED PROPERTIES: No self-satisfied section shown at all */
-                  /* Surveyor can submit directly without OTP verification */
+                  /* SELF-CERTIFIED PROPERTIES: Already done - show success */
                   <div className="p-3 bg-green-100 border-2 border-green-400 rounded-lg">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-600" />
@@ -828,69 +827,146 @@ export default function Survey() {
                     </div>
                   </div>
                 ) : (
-                  /* NON-SELF-CERTIFIED PROPERTIES: Show OTP section directly (mandatory) */
-                  /* No Yes/No buttons - OTP verification is required */
+                  /* NON-SELF-CERTIFIED PROPERTIES: Show radio options */
                   <Card className="border-2 border-orange-300 bg-orange-50">
                     <CardContent className="py-3 space-y-3">
                       <div className="flex items-start gap-2">
                         <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-semibold text-orange-800">Self Certification Required *</p>
+                          <p className="text-sm font-semibold text-orange-800">Self Certification Status *</p>
                           <p className="text-xs text-orange-700 mt-1">
-                            Owner must complete self-certification on ULB Haryana portal. OTP verification is mandatory for submission.
+                            Select the self-certification status for this property
                           </p>
                         </div>
                       </div>
                       
-                      {/* External Link */}
-                      <a 
-                        href="https://property.ulbharyana.gov.in/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                        data-testid="ulb-portal-link"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Open ULB Haryana Portal
-                      </a>
-                      
-                      <div className="pt-2 border-t border-orange-200">
-                        <p className="text-xs text-orange-700 mb-2 font-medium">
-                          After owner receives OTP on portal, enter details below:
-                        </p>
+                      {/* Radio Button Options */}
+                      <div className="space-y-2">
+                        {/* Option 1: Self Certified - Done */}
+                        <label 
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selfCertStatus === 'done' 
+                              ? 'border-green-500 bg-green-50' 
+                              : 'border-gray-200 bg-white hover:border-green-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="selfCertStatus"
+                            value="done"
+                            checked={selfCertStatus === 'done'}
+                            onChange={(e) => setSelfCertStatus(e.target.value)}
+                            className="w-5 h-5 text-green-600"
+                            data-testid="self-cert-done"
+                          />
+                          <div className="flex-1">
+                            <span className="font-semibold text-green-700">Self Certified - Done</span>
+                            <p className="text-xs text-gray-500">Owner completed self-certification on portal</p>
+                          </div>
+                          <CheckCircle className={`w-5 h-5 ${selfCertStatus === 'done' ? 'text-green-600' : 'text-gray-300'}`} />
+                        </label>
                         
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <Label className="text-xs text-orange-700">Mobile Number *</Label>
-                            <Input
-                              value={selfCertMobile}
-                              onChange={(e) => setSelfCertMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                              placeholder="10-digit mobile"
-                              maxLength={10}
-                              className="h-9 border-orange-300 focus:border-orange-500"
-                              data-testid="self-cert-mobile"
-                            />
+                        {/* Option 2: Owner do later */}
+                        <label 
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selfCertStatus === 'later' 
+                              ? 'border-yellow-500 bg-yellow-50' 
+                              : 'border-gray-200 bg-white hover:border-yellow-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="selfCertStatus"
+                            value="later"
+                            checked={selfCertStatus === 'later'}
+                            onChange={(e) => setSelfCertStatus(e.target.value)}
+                            className="w-5 h-5 text-yellow-600"
+                            data-testid="self-cert-later"
+                          />
+                          <div className="flex-1">
+                            <span className="font-semibold text-yellow-700">Owner Do Later</span>
+                            <p className="text-xs text-gray-500">Owner will complete self-certification later</p>
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-orange-700">OTP Code *</Label>
-                            <Input
-                              value={selfCertOtp}
-                              onChange={(e) => setSelfCertOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                              placeholder="6-digit OTP"
-                              maxLength={6}
-                              className="h-9 border-orange-300 focus:border-orange-500 font-mono text-center tracking-widest"
-                              data-testid="self-cert-otp"
-                            />
-                          </div>
-                        </div>
+                          <AlertTriangle className={`w-5 h-5 ${selfCertStatus === 'later' ? 'text-yellow-600' : 'text-gray-300'}`} />
+                        </label>
                         
-                        {selfCertMobile.length === 10 && selfCertOtp.length >= 4 && (
-                          <div className="mt-2 p-2 bg-green-100 rounded-lg flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span className="text-xs text-green-700 font-medium">OTP recorded - will be submitted with survey</span>
+                        {/* Option 3: Deny */}
+                        <label 
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selfCertStatus === 'deny' 
+                              ? 'border-red-500 bg-red-50' 
+                              : 'border-gray-200 bg-white hover:border-red-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="selfCertStatus"
+                            value="deny"
+                            checked={selfCertStatus === 'deny'}
+                            onChange={(e) => setSelfCertStatus(e.target.value)}
+                            className="w-5 h-5 text-red-600"
+                            data-testid="self-cert-deny"
+                          />
+                          <div className="flex-1">
+                            <span className="font-semibold text-red-700">Deny</span>
+                            <p className="text-xs text-gray-500">Owner denied/refused self-certification</p>
                           </div>
-                        )}
+                          <XCircle className={`w-5 h-5 ${selfCertStatus === 'deny' ? 'text-red-600' : 'text-gray-300'}`} />
+                        </label>
                       </div>
+                      
+                      {/* Show OTP fields only when "Done" is selected */}
+                      {selfCertStatus === 'done' && (
+                        <div className="pt-3 border-t border-orange-200 space-y-3">
+                          {/* External Link */}
+                          <a 
+                            href="https://property.ulbharyana.gov.in/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            data-testid="ulb-portal-link"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Open ULB Haryana Portal
+                          </a>
+                          
+                          <p className="text-xs text-orange-700 font-medium">
+                            Enter OTP details received from portal:
+                          </p>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-orange-700">Mobile Number *</Label>
+                              <Input
+                                value={selfCertMobile}
+                                onChange={(e) => setSelfCertMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                placeholder="10-digit mobile"
+                                maxLength={10}
+                                className="h-9 border-orange-300 focus:border-orange-500"
+                                data-testid="self-cert-mobile"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-orange-700">OTP Code *</Label>
+                              <Input
+                                value={selfCertOtp}
+                                onChange={(e) => setSelfCertOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="6-digit OTP"
+                                maxLength={6}
+                                className="h-9 border-orange-300 focus:border-orange-500 font-mono text-center tracking-widest"
+                                data-testid="self-cert-otp"
+                              />
+                            </div>
+                          </div>
+                          
+                          {selfCertMobile.length === 10 && selfCertOtp.length >= 4 && (
+                            <div className="p-2 bg-green-100 rounded-lg flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <span className="text-xs text-green-700 font-medium">OTP recorded ✓</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}
