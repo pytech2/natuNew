@@ -216,7 +216,10 @@ export default function Survey() {
     self_satisfied: 'yes'  // Default to Yes
   });
 
-  // Self Certification OTP state (when self_satisfied = 'no')
+  // Self Certification status for non-self-certified properties
+  const [selfCertStatus, setSelfCertStatus] = useState(''); // 'done', 'later', 'deny'
+  
+  // Self Certification OTP state (when selfCertStatus = 'done')
   const [selfCertOtp, setSelfCertOtp] = useState('');
   const [selfCertMobile, setSelfCertMobile] = useState(''); // Mobile used for OTP
 
