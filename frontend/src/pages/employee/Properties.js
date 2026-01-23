@@ -175,14 +175,39 @@ export default function Properties() {
     };
   }, []);
 
-  const fetchProperties = async () => {
+  // OPTIMIZED: Fetch with localStorage caching for faster reload
+  const fetchProperties = async (forceRefresh = false) => {
     try {
-      // NO LIMIT - fetch ALL assigned properties
+      // Check cache first (valid for 2 minutes)
+      const cacheKey = 'surveyor_properties_cache';
+      const cacheTimeKey = 'surveyor_properties_cache_time';
+      const cached = localStorage.getItem(cacheKey);
+      const cacheTime = localStorage.getItem(cacheTimeKey);
+      
+      if (!forceRefresh && cached && cacheTime) {
+        const age = Date.now() - parseInt(cacheTime);
+        if (age < 120000) { // 2 minutes cache
+          const props = JSON.parse(cached);
+          setAllProperties(props);
+          const pending = props.filter(p => p.status === 'Pending').length;
+          const completed = props.filter(p => ['Completed', 'Approved', 'In Progress'].includes(p.status)).length;
+          setStats({ total: props.length, pending, completed });
+          setLoading(false);
+          toast.success(`Loaded ${props.length} properties (cached)`);
+          return;
+        }
+      }
+      
+      // Fetch from API
       const response = await axios.get(`${API_URL}/map/employee-properties`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const props = response.data.properties || [];
       setAllProperties(props);
+      
+      // Update cache
+      localStorage.setItem(cacheKey, JSON.stringify(props));
+      localStorage.setItem(cacheTimeKey, Date.now().toString());
       
       const pending = props.filter(p => p.status === 'Pending').length;
       const completed = props.filter(p => ['Completed', 'Approved', 'In Progress'].includes(p.status)).length;
