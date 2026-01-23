@@ -4156,6 +4156,7 @@ async def copy_bills_to_properties(
     colony: str = Form(None),
     skip_duplicates: str = Form("false"),
     skip_vacant_plots: str = Form("false"),
+    skip_duplicate_gps: str = Form("false"),
     current_user: dict = Depends(get_current_user)
 ):
     """Copy bill data to properties collection"""
@@ -4165,6 +4166,7 @@ async def copy_bills_to_properties(
     # Parse options
     should_skip_duplicates = skip_duplicates.lower() == "true"
     should_skip_vacant = skip_vacant_plots.lower() == "true"
+    should_skip_duplicate_gps = skip_duplicate_gps.lower() == "true"
     
     query = {}
     if batch_id and batch_id.strip():
@@ -4190,6 +4192,10 @@ async def copy_bills_to_properties(
             mobile = (p.get("mobile") or "").strip()
             if owner and mobile:
                 existing_keys.add(f"{owner}_{mobile}")
+    
+    # Track GPS coordinates to skip duplicates
+    seen_gps = set()
+    skipped_duplicate_gps = 0
     
     # Create a new batch for properties
     prop_batch_id = str(uuid.uuid4())
