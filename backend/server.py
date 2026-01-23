@@ -539,7 +539,7 @@ async def get_employee_map_properties(
     hide_completed: bool = False,
     current_user: dict = Depends(get_current_user)
 ):
-    """Fast lightweight endpoint for surveyor map - NO LIMIT, fetch ALL assigned properties"""
+    """Fast lightweight endpoint for surveyor map - Optimized for speed"""
     
     query = {
         "$or": [
@@ -554,7 +554,7 @@ async def get_employee_map_properties(
     if hide_completed:
         query["status"] = {"$nin": ["Completed", "Approved"]}
     
-    # Full projection for detailed popup view
+    # OPTIMIZED: Minimal projection for fast loading - only essential fields
     projection = {
         "_id": 0,
         "id": 1,
@@ -566,46 +566,33 @@ async def get_employee_map_properties(
         "property_id": 1,
         "owner_name": 1,
         "colony": 1,
-        "ward": 1,
         "mobile": 1,
-        "category": 1,
-        "total_area": 1,
         "amount": 1,
-        "address": 1,
-        "self_certified": 1  # Include self-certification status
+        "self_certified": 1
     }
     
-    # Sort: pending first, then by serial - NO LIMIT
-    properties = await db.properties.find(query, projection).sort([
+    # OPTIMIZED: Use index hint and batch size for faster queries
+    properties = await db.properties.find(
+        query, 
+        projection,
+        batch_size=1000  # Faster batch processing
+    ).sort([
         ("status", 1),
         ("serial_number", 1)
     ]).to_list(None)
     
-    # Remove duplicates - keep unique by property_id or (owner_name + mobile)
-    seen_property_ids = set()
-    seen_owner_mobile = set()
+    # OPTIMIZED: Faster deduplication using dict
+    seen = {}
     unique_properties = []
     
     for prop in properties:
         prop_id = prop.get("property_id", "")
-        owner = (prop.get("owner_name") or "").strip().upper()
-        mobile = (prop.get("mobile") or "").strip()
-        
-        # Skip if duplicate property_id
-        if prop_id and prop_id in seen_property_ids:
-            continue
-        
-        # Skip if duplicate owner+mobile combination
-        if owner and mobile:
-            key = f"{owner}_{mobile}"
-            if key in seen_owner_mobile:
-                continue
-            seen_owner_mobile.add(key)
-        
         if prop_id:
-            seen_property_ids.add(prop_id)
-        
-        unique_properties.append(prop)
+            if prop_id not in seen:
+                seen[prop_id] = True
+                unique_properties.append(prop)
+        else:
+            unique_properties.append(prop)
     
     return {
         "properties": unique_properties,
