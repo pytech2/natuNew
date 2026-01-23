@@ -410,12 +410,12 @@ export default function Properties() {
           dragRotate={true}
           pitchWithRotate={false}
         >
-          {/* 100m Radius Circle around user location */}
+          {/* 40m Radius Circle around user location */}
           {userLocation && (
             <Source 
               id="radius-circle" 
               type="geojson" 
-              data={createCircleGeoJSON(userLocation.lat, userLocation.lng, 100)}
+              data={createCircleGeoJSON(userLocation.lat, userLocation.lng, 40)}
             >
               {/* Fill layer - semi-transparent blue */}
               <Layer
