@@ -571,7 +571,8 @@ async def get_employee_map_properties(
         "category": 1,
         "total_area": 1,
         "amount": 1,
-        "address": 1
+        "address": 1,
+        "self_certified": 1  # Include self-certification status
     }
     
     # Sort: pending first, then by serial - NO LIMIT
