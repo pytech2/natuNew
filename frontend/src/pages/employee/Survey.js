@@ -426,15 +426,23 @@ export default function Survey() {
         return;
       }
 
-      // For NON-self-certified properties, OTP verification is MANDATORY
+      // For NON-self-certified properties, selfCertStatus is required
       if (property?.self_certified !== true) {
-        if (!selfCertMobile || selfCertMobile.length !== 10) {
-          toast.error('Please enter valid 10-digit mobile number for self-certification');
+        if (!selfCertStatus) {
+          toast.error('Please select self-certification status');
           return;
         }
-        if (!selfCertOtp || selfCertOtp.length < 4) {
-          toast.error('Please enter OTP received from ULB Haryana portal');
-          return;
+        
+        // If "Done" is selected, OTP is required
+        if (selfCertStatus === 'done') {
+          if (!selfCertMobile || selfCertMobile.length !== 10) {
+            toast.error('Please enter valid 10-digit mobile number for self-certification');
+            return;
+          }
+          if (!selfCertOtp || selfCertOtp.length < 4) {
+            toast.error('Please enter OTP received from ULB Haryana portal');
+            return;
+          }
         }
       }
     }
