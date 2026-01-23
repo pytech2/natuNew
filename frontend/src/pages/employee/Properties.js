@@ -718,7 +718,7 @@ export default function Properties() {
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                       style={{ backgroundColor: getMarkerColor(property.status) }}
                     >
-                      {property.bill_sr_no || property.serial_number || '-'}
+                      {isCompleted(property.status) ? '✓' : (property.bill_sr_no || property.serial_number || '-')}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 truncate">{property.owner_name}</div>
