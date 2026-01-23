@@ -543,6 +543,47 @@ export default function BillsPage() {
     }
   };
 
+  // Self-Certification Upload Handler
+  const handleUploadSelfCert = async () => {
+    if (!selfCertFile) {
+      toast.error('Please select an Excel file');
+      return;
+    }
+
+    setUploadingSelfCert(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selfCertFile);
+
+      const response = await axios.post(`${API_URL}/admin/upload-self-certification`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success(response.data.message);
+      setSelfCertStats(response.data);
+      setSelfCertFile(null);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload self-certification data');
+    } finally {
+      setUploadingSelfCert(false);
+    }
+  };
+
+  // Fetch self-certification stats
+  const fetchSelfCertStats = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/self-certification-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelfCertStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch self-cert stats');
+    }
+  };
+
   const handleEditBill = (bill) => {
     setEditingBill({ ...bill });
     setEditDialog(true);
