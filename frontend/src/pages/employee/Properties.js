@@ -394,13 +394,24 @@ export default function Properties() {
     return props;
   }, [allProperties, userLocation]);
 
-  // Memoize visible markers based on current viewport (performance optimization)
+  // OPTIMIZED: Smart marker limiting based on zoom level
   const visibleMarkers = useMemo(() => {
-    // For performance, limit to nearest 500 markers when zoomed out
-    if (viewState.zoom < 15 && sortedProperties.length > 500) {
+    const len = sortedProperties.length;
+    
+    // Progressive limits based on zoom - prioritize pending properties
+    if (viewState.zoom < 13) {
+      // Very zoomed out - show only 100 nearest pending
+      const pending = sortedProperties.filter(p => p.status === 'Pending').slice(0, 100);
+      return pending;
+    } else if (viewState.zoom < 15) {
+      // Medium zoom - show 300 markers
+      return sortedProperties.slice(0, 300);
+    } else if (viewState.zoom < 17) {
+      // Closer zoom - show 500 markers
       return sortedProperties.slice(0, 500);
     }
-    return sortedProperties;
+    // Fully zoomed in - show all (up to 1000)
+    return sortedProperties.slice(0, 1000);
   }, [sortedProperties, viewState.zoom]);
 
   if (loading) {
