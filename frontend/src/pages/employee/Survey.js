@@ -450,7 +450,6 @@ export default function Survey() {
       formDataObj.append('receiver_mobile', formData.receiver_mobile || '');
       formDataObj.append('relation', formData.relation || (canSkipRequiredFields ? 'N/A' : ''));
       formDataObj.append('remarks', formData.remarks || (specialCondition ? `Special Condition: ${specialCondition === 'house_locked' ? 'House Locked' : 'Owner Denied'}` : ''));
-      formDataObj.append('self_satisfied', formData.self_satisfied || 'yes');
       formDataObj.append('special_condition', specialCondition || '');
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
