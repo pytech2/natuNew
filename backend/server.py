@@ -4728,17 +4728,21 @@ async def upload_self_certification(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Upload self-certification Excel file to store certified property IDs"""
+    """Upload self-certification Excel/CSV file to store certified property IDs"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="Please upload an Excel file (.xlsx or .xls)")
+    if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(status_code=400, detail="Please upload an Excel (.xlsx, .xls) or CSV file")
     
     try:
-        # Read the Excel file
+        # Read the file
         contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
+        
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(contents))
+        else:
+            df = pd.read_excel(io.BytesIO(contents))
         
         # Find the PID column (could be 'PID (C)' or similar)
         pid_column = None
