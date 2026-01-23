@@ -423,13 +423,8 @@ export default function Survey() {
         return;
       }
 
-      if (!formData.self_satisfied) {
-        toast.error('Please select if notice receiver is satisfied');
-        return;
-      }
-      
-      // If self_satisfied is 'no', require OTP verification
-      if (formData.self_satisfied === 'no') {
+      // For NON-self-certified properties, OTP verification is MANDATORY
+      if (property?.self_certified !== true) {
         if (!selfCertMobile || selfCertMobile.length !== 10) {
           toast.error('Please enter valid 10-digit mobile number for self-certification');
           return;
