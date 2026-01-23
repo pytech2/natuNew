@@ -561,3 +561,4 @@ backend/uploads/arranged_all_20260122_091158.pdf
 # Environment files
 *.env
 *.env.*
+frontend/node_modules/.cache/default-development/15.pack

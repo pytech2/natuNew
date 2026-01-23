@@ -122,9 +122,6 @@ export default function Login() {
               <MapPin className="w-3 h-3" />
               <span>NSTU INDIA PRIVATE LIMITED</span>
             </div>
-            <p className="text-center text-xs text-slate-400 mt-2">
-              Default Admin: admin / nastu123
-            </p>
           </div>
         </CardContent>
       </Card>
