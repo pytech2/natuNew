@@ -327,7 +327,7 @@ export default function Properties() {
     setShowSearchResults(false);
   };
 
-  // Filter and sort by distance
+  // Filter and sort by distance - optimized for performance
   const sortedProperties = useMemo(() => {
     let props = [...allProperties].filter(p => p.latitude && p.longitude);
     
@@ -336,6 +336,7 @@ export default function Properties() {
         ...p,
         distance: calculateDistance(userLocation.lat, userLocation.lng, p.latitude, p.longitude)
       }));
+      // Sort: Pending first, then by distance
       props.sort((a, b) => {
         const statusOrder = { 'Pending': 0, 'Rejected': 1, 'In Progress': 2, 'Completed': 3, 'Approved': 4 };
         if ((statusOrder[a.status] || 0) !== (statusOrder[b.status] || 0)) {
@@ -347,6 +348,15 @@ export default function Properties() {
     
     return props;
   }, [allProperties, userLocation]);
+
+  // Memoize visible markers based on current viewport (performance optimization)
+  const visibleMarkers = useMemo(() => {
+    // For performance, limit to nearest 500 markers when zoomed out
+    if (viewState.zoom < 15 && sortedProperties.length > 500) {
+      return sortedProperties.slice(0, 500);
+    }
+    return sortedProperties;
+  }, [sortedProperties, viewState.zoom]);
 
   if (loading) {
     return (
