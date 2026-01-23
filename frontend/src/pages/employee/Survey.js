@@ -455,10 +455,13 @@ export default function Survey() {
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
       
-      // Self Certification OTP data (when self_satisfied = 'no')
-      if (formData.self_satisfied === 'no') {
+      // Self Certification OTP data (for non-self-certified properties)
+      if (property?.self_certified !== true) {
         formDataObj.append('self_cert_mobile', selfCertMobile || '');
         formDataObj.append('self_cert_otp', selfCertOtp || '');
+        formDataObj.append('self_satisfied', 'no'); // Non-self-certified implies self_satisfied = no
+      } else {
+        formDataObj.append('self_satisfied', 'yes'); // Self-certified properties are auto-satisfied
       }
       
       // Photo is compulsory - always append
