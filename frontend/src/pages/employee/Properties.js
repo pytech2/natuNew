@@ -1,21 +1,66 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmployeeLayout from '../../components/EmployeeLayout';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
-import Map, { Marker, NavigationControl, GeolocateControl, Source, Layer } from 'react-map-gl/maplibre';
+import Map, { Marker, Source, Layer } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { 
   MapPin, Navigation, FileText, Loader2, RefreshCw, 
-  Compass, LocateFixed, Search, X
+  Compass, LocateFixed, Search, X, CheckCircle, XCircle, AlertTriangle
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Create a GeoJSON circle polygon for 40m radius
-const createCircleGeoJSON = (centerLat, centerLng, radiusMeters = 40, points = 64) => {
+// PERFORMANCE: Memoized marker component to prevent re-renders
+const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
+  const markerColor = completed ? '#16a34a' : '#ef4444';
+  const serialNum = property.bill_sr_no || property.serial_number || '-';
+  
+  return (
+    <Marker
+      latitude={property.latitude}
+      longitude={property.longitude}
+      anchor="bottom"
+      onClick={onClick}
+    >
+      <div className="relative cursor-pointer" style={{ transform: 'translateY(0)' }}>
+        <svg 
+          width="32" 
+          height="40" 
+          viewBox="0 0 36 44" 
+          style={{ 
+            filter: withinReach && !completed ? 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.8))' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))'
+          }}
+        >
+          <path 
+            d="M18 0C8.06 0 0 8.06 0 18c0 12.6 18 26 18 26s18-13.4 18-26C36 8.06 27.94 0 18 0z" 
+            fill={markerColor}
+            stroke="#fff"
+            strokeWidth="2"
+          />
+        </svg>
+        <div 
+          className="absolute top-1 left-0 right-0 flex items-center justify-center"
+          style={{ height: '24px' }}
+        >
+          <span 
+            className={`font-bold text-white ${String(serialNum).length > 3 ? 'text-[10px]' : 'text-xs'}`}
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            {completed ? '✓' : serialNum}
+          </span>
+        </div>
+      </div>
+    </Marker>
+  );
+});
+PropertyMarker.displayName = 'PropertyMarker';
+
+// Create a GeoJSON circle polygon for 40m radius - OPTIMIZED with fewer points
+const createCircleGeoJSON = (centerLat, centerLng, radiusMeters = 40, points = 32) => {
   const coords = [];
   const distanceX = radiusMeters / (111320 * Math.cos(centerLat * Math.PI / 180));
   const distanceY = radiusMeters / 110540;
