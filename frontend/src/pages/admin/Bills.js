@@ -115,6 +115,12 @@ export default function BillsPage() {
   const [skipVacantPlots, setSkipVacantPlots] = useState(false); // Skip vacant/empty plots
   const [skipDuplicateGPS, setSkipDuplicateGPS] = useState(false); // Skip duplicate lat/lng
 
+  // Self-Certification Upload state
+  const [selfCertDialog, setSelfCertDialog] = useState(false);
+  const [selfCertFile, setSelfCertFile] = useState(null);
+  const [uploadingSelfCert, setUploadingSelfCert] = useState(false);
+  const [selfCertStats, setSelfCertStats] = useState(null);
+
   // GPS Arrangement confirmation dialog
   const [gpsArrangeDialog, setGpsArrangeDialog] = useState(false);
   const [arranging, setArranging] = useState(false);
