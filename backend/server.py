@@ -4698,6 +4698,96 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ==============================================
+# SELF CERTIFICATION ENDPOINTS
+# ==============================================
+
+@api_router.post("/admin/upload-self-certification")
+async def upload_self_certification(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload self-certification Excel file to store certified property IDs"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Please upload an Excel file (.xlsx or .xls)")
+    
+    try:
+        # Read the Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Find the PID column (could be 'PID (C)' or similar)
+        pid_column = None
+        for col in df.columns:
+            if 'PID' in col.upper() or 'PROPERTY' in col.upper() and 'ID' in col.upper():
+                pid_column = col
+                break
+        
+        if not pid_column:
+            # Try first column if no PID column found
+            pid_column = df.columns[0] if len(df.columns) > 0 else None
+        
+        if not pid_column:
+            raise HTTPException(status_code=400, detail="Could not find Property ID column in Excel file")
+        
+        # Extract unique PIDs
+        pids = df[pid_column].dropna().astype(str).str.strip().str.upper().unique().tolist()
+        
+        if not pids:
+            raise HTTPException(status_code=400, detail="No property IDs found in the file")
+        
+        # Store in database - create or update the self_certified_pids collection
+        # First, get existing PIDs to avoid duplicates
+        existing = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+        existing_pids = set(p["pid"] for p in existing)
+        
+        # Only insert new PIDs
+        new_pids = [pid for pid in pids if pid not in existing_pids]
+        
+        if new_pids:
+            docs = [{"pid": pid, "uploaded_at": datetime.now(timezone.utc).isoformat()} for pid in new_pids]
+            await db.self_certified_pids.insert_many(docs)
+        
+        # Create index for fast lookups
+        await db.self_certified_pids.create_index("pid")
+        
+        return {
+            "message": f"Uploaded {len(new_pids)} new self-certified PIDs. {len(existing_pids)} already existed.",
+            "total_in_file": len(pids),
+            "new_added": len(new_pids),
+            "already_existed": len(pids) - len(new_pids),
+            "total_in_database": len(existing_pids) + len(new_pids)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@api_router.get("/admin/self-certification-stats")
+async def get_self_certification_stats(current_user: dict = Depends(get_current_user)):
+    """Get statistics about self-certified properties"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    total_certified = await db.self_certified_pids.count_documents({})
+    
+    return {
+        "total_self_certified_pids": total_certified
+    }
+
+@api_router.delete("/admin/clear-self-certification")
+async def clear_self_certification(current_user: dict = Depends(get_current_user)):
+    """Clear all self-certification data (use with caution)"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Super Admin access required")
+    
+    result = await db.self_certified_pids.delete_many({})
+    
+    return {
+        "message": f"Cleared {result.deleted_count} self-certified PIDs"
+    }
+
 # Logging
 logging.basicConfig(
     level=logging.INFO,
