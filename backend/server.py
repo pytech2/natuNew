@@ -4252,6 +4252,18 @@ async def copy_bills_to_properties(
             skipped_vacant += 1
             continue
         
+        # Skip duplicate GPS coordinates if option is enabled
+        if should_skip_duplicate_gps:
+            lat = bill.get("latitude")
+            lng = bill.get("longitude")
+            if lat and lng:
+                # Round to 6 decimal places for comparison (about 0.1m precision)
+                gps_key = f"{round(lat, 6)}_{round(lng, 6)}"
+                if gps_key in seen_gps:
+                    skipped_duplicate_gps += 1
+                    continue
+                seen_gps.add(gps_key)
+        
         # Only check duplicates if option is enabled
         if should_skip_duplicates:
             # Check for duplicate by property_id
