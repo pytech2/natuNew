@@ -449,40 +449,64 @@ export default function Properties() {
             </Marker>
           )}
           
-          {/* Property markers - render ALL */}
-          {sortedProperties.map((property, index) => {
+          {/* Property markers - Google Maps style pins */}
+          {sortedProperties.map((property) => {
             const withinReach = isWithinReach(property.distance);
-            const markerColor = getMarkerColor(property.status, property.distance);
+            const completed = isCompleted(property.status);
+            const markerColor = getMarkerColor(property.status);
+            const serialNum = property.bill_sr_no || property.serial_number || '-';
             
             return (
             <Marker
               key={property.id}
               latitude={property.latitude}
               longitude={property.longitude}
-              anchor="center"
+              anchor="bottom"
               onClick={(e) => {
                 e.originalEvent.stopPropagation();
                 setSelectedProperty(property);
               }}
             >
-              <div 
-                className={`flex items-center justify-center rounded-full border-3 shadow-xl cursor-pointer transition-transform hover:scale-110 ${
-                  withinReach 
-                    ? 'w-12 h-12 border-white animate-pulse' 
-                    : index === 0 && userLocation 
-                      ? 'w-12 h-12 border-white animate-pulse' 
-                      : 'w-11 h-11 border-white'
-                }`}
-                style={{ 
-                  backgroundColor: markerColor,
-                  boxShadow: withinReach 
-                    ? '0 0 15px rgba(59, 130, 246, 0.8), 0 2px 8px rgba(0,0,0,0.4)' 
-                    : '0 2px 8px rgba(0,0,0,0.4)'
-                }}
-              >
-                <span className="text-white text-sm font-bold drop-shadow-md" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
-                  {property.bill_sr_no || property.serial_number || (index + 1)}
-                </span>
+              {/* Google Maps Style Pin */}
+              <div className="relative cursor-pointer group" style={{ transform: 'translateY(0)' }}>
+                {/* Pin SVG Shape */}
+                <svg 
+                  width="36" 
+                  height="44" 
+                  viewBox="0 0 36 44" 
+                  className={`drop-shadow-lg transition-transform ${withinReach ? 'scale-110' : 'group-hover:scale-105'}`}
+                  style={{ filter: completed ? 'none' : (withinReach ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))') }}
+                >
+                  {/* Pin body */}
+                  <path 
+                    d="M18 0C8.06 0 0 8.06 0 18c0 12.6 18 26 18 26s18-13.4 18-26C36 8.06 27.94 0 18 0z" 
+                    fill={markerColor}
+                    stroke="#fff"
+                    strokeWidth="2"
+                  />
+                  {/* Lock icon for completed */}
+                  {completed && (
+                    <circle cx="18" cy="16" r="8" fill="rgba(255,255,255,0.3)" />
+                  )}
+                </svg>
+                
+                {/* Serial number inside pin */}
+                <div 
+                  className="absolute top-1 left-0 right-0 flex items-center justify-center"
+                  style={{ height: '28px' }}
+                >
+                  <span 
+                    className={`font-bold text-white ${String(serialNum).length > 3 ? 'text-xs' : 'text-sm'}`}
+                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  >
+                    {completed ? '✓' : serialNum}
+                  </span>
+                </div>
+                
+                {/* Blue ring for within reach */}
+                {withinReach && !completed && (
+                  <div className="absolute -inset-2 border-2 border-blue-400 rounded-full animate-ping opacity-75" />
+                )}
               </div>
             </Marker>
           )})}
