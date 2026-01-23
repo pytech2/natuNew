@@ -281,6 +281,9 @@ export default function Survey() {
       setProperty(response.data.property);
       setSubmission(response.data.submission);
 
+      // Check if property is self-certified - if yes, lock self_satisfied to 'yes'
+      const isSelfCertified = response.data.property?.self_certified === true;
+
       if (response.data.submission) {
         const sub = response.data.submission;
         setFormData({
@@ -289,8 +292,11 @@ export default function Survey() {
           relation: sub.relation || '',
           correct_colony_name: sub.correct_colony_name || '',
           remarks: sub.remarks || '',
-          self_satisfied: sub.self_satisfied || ''
+          self_satisfied: isSelfCertified ? 'yes' : (sub.self_satisfied || 'yes')
         });
+      } else if (isSelfCertified) {
+        // Pre-set self_satisfied to 'yes' for self-certified properties
+        setFormData(prev => ({ ...prev, self_satisfied: 'yes' }));
       }
     } catch (error) {
       toast.error('Failed to load property');
