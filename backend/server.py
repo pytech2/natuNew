@@ -4361,6 +4361,10 @@ async def copy_bills_to_properties(
     
     # Build detailed message
     msg_parts = [f"Successfully added {len(properties)} bills to properties"]
+    if self_certified_count > 0:
+        msg_parts.append(f"{self_certified_count} self-certified")
+    if not_self_certified_count > 0:
+        msg_parts.append(f"{not_self_certified_count} not self-certified")
     if skipped_duplicates > 0:
         msg_parts.append(f"Skipped {skipped_duplicates} duplicates")
     if skipped_vacant > 0:
@@ -4373,6 +4377,8 @@ async def copy_bills_to_properties(
         "batch_id": prop_batch_id,
         "batch_name": prop_batch_name,
         "total_added": len(properties),
+        "self_certified": self_certified_count,
+        "not_self_certified": not_self_certified_count,
         "skipped_duplicates": skipped_duplicates,
         "skipped_vacant": skipped_vacant,
         "skipped_duplicate_gps": skipped_duplicate_gps
