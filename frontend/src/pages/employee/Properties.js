@@ -495,7 +495,7 @@ export default function Properties() {
             </Source>
           )}
           
-          {/* User GPS dot marker - on top */}
+          {/* User GPS dot marker - OPTIMIZED simpler design */}
           {userLocation && (
             <Marker 
               latitude={userLocation.lat} 
@@ -503,13 +503,9 @@ export default function Properties() {
               anchor="center"
             >
               <div className="relative">
-                {/* Outer pulsing ring */}
-                <div className="absolute -inset-6 bg-blue-500/20 rounded-full animate-ping" />
-                {/* Middle glow ring */}
-                <div className="absolute -inset-3 bg-blue-400/30 rounded-full" />
-                {/* Inner solid dot */}
-                <div className="w-10 h-10 bg-blue-600 rounded-full border-4 border-white shadow-2xl flex items-center justify-center">
-                  <div className="w-3 h-3 bg-white rounded-full" />
+                <div className="absolute -inset-4 bg-blue-500/20 rounded-full animate-pulse" />
+                <div className="w-8 h-8 bg-blue-600 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full" />
                 </div>
               </div>
             </Marker>
