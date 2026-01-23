@@ -837,12 +837,12 @@ export default function Properties() {
             </Button>
           )}
           
-          {/* Refresh Properties */}
+          {/* Refresh Properties - Force refresh */}
           <Button
             size="sm"
             variant="outline"
             className="w-12 h-12 rounded-full bg-white shadow-lg"
-            onClick={fetchProperties}
+            onClick={() => fetchProperties(true)}
             title="Refresh properties"
           >
             <RefreshCw className="w-5 h-5 text-slate-700" />
