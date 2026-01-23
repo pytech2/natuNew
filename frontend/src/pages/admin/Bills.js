@@ -1490,6 +1490,73 @@ export default function BillsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* Self-Certification Upload Dialog */}
+        <Dialog open={selfCertDialog} onOpenChange={setSelfCertDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-blue-600 flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Upload Self-Certification Data
+              </DialogTitle>
+              <DialogDescription>
+                Upload an Excel file containing Property IDs that are already self-certified.
+                When adding bills to properties, matching IDs will be marked as self-certified.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Current Stats */}
+              {selfCertStats && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    <strong>{selfCertStats.total_self_certified_pids || selfCertStats.total_in_database || 0}</strong> self-certified PIDs in database
+                  </p>
+                </div>
+              )}
+              
+              {/* File Upload */}
+              <div className="space-y-2">
+                <Label>Select Excel File (.xlsx)</Label>
+                <Input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => setSelfCertFile(e.target.files[0])}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-slate-500">
+                  File should have a column with Property IDs (PID)
+                </p>
+              </div>
+
+              {selfCertFile && (
+                <div className="p-2 bg-green-50 rounded-lg border border-green-200 text-sm text-green-700">
+                  Selected: {selfCertFile.name}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelfCertDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUploadSelfCert}
+                disabled={uploadingSelfCert || !selfCertFile}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {uploadingSelfCert ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
