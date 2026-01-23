@@ -62,8 +62,8 @@ const getMarkerColor = (status) => {
   return colors[status] || '#ef4444';
 };
 
-// Check if property is within 100m reach
-const isWithinReach = (distance) => distance !== null && distance <= 100;
+// Check if property is within 40m reach
+const isWithinReach = (distance) => distance !== null && distance <= 40;
 
 // Check if property is completed/locked
 const isCompleted = (status) => ['Completed', 'Approved'].includes(status);
