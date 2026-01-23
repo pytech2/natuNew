@@ -4350,6 +4350,8 @@ async def copy_bills_to_properties(
         msg_parts.append(f"Skipped {skipped_duplicates} duplicates")
     if skipped_vacant > 0:
         msg_parts.append(f"Skipped {skipped_vacant} vacant plots")
+    if skipped_duplicate_gps > 0:
+        msg_parts.append(f"Skipped {skipped_duplicate_gps} duplicate GPS")
     
     return {
         "message": ". ".join(msg_parts) + ".",
@@ -4357,7 +4359,8 @@ async def copy_bills_to_properties(
         "batch_name": prop_batch_name,
         "total_added": len(properties),
         "skipped_duplicates": skipped_duplicates,
-        "skipped_vacant": skipped_vacant
+        "skipped_vacant": skipped_vacant,
+        "skipped_duplicate_gps": skipped_duplicate_gps
     }
 
 @api_router.post("/admin/bills/split-by-employees")
