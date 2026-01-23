@@ -2793,7 +2793,8 @@ async def submit_survey(
     remarks: str = Form(None),
     self_satisfied: str = Form(""),
     special_condition: str = Form(None),  # NEW: 'house_locked' or 'owner_denied'
-    # Self Certification OTP fields (when self_satisfied = 'no')
+    # Self Certification fields
+    self_cert_status: str = Form(None),  # 'done', 'later', 'deny', 'already_certified'
     self_cert_mobile: str = Form(None),
     self_cert_otp: str = Form(None),
     latitude: float = Form(...),
