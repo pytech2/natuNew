@@ -14,7 +14,7 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// PERFORMANCE: Memoized marker component to prevent re-renders
+// PERFORMANCE: Memoized marker component to prevent re-renders - SMALLER SIZE
 const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
   const markerColor = completed ? '#16a34a' : '#ef4444';
   const serialNum = property.bill_sr_no || property.serial_number || '-';
@@ -28,11 +28,11 @@ const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
     >
       <div className="relative cursor-pointer" style={{ transform: 'translateY(0)' }}>
         <svg 
-          width="32" 
-          height="40" 
+          width="24" 
+          height="30" 
           viewBox="0 0 36 44" 
           style={{ 
-            filter: withinReach && !completed ? 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.8))' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))'
+            filter: withinReach && !completed ? 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
           }}
         >
           <path 
@@ -43,12 +43,12 @@ const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
           />
         </svg>
         <div 
-          className="absolute top-1 left-0 right-0 flex items-center justify-center"
-          style={{ height: '24px' }}
+          className="absolute top-0.5 left-0 right-0 flex items-center justify-center"
+          style={{ height: '18px' }}
         >
           <span 
-            className={`font-bold text-white ${String(serialNum).length > 3 ? 'text-[10px]' : 'text-xs'}`}
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+            className="font-bold text-white"
+            style={{ fontSize: '8px', textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
           >
             {completed ? '✓' : serialNum}
           </span>
