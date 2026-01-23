@@ -743,6 +743,18 @@ export default function BillsPage() {
 
               <Button
                 variant="outline"
+                onClick={() => {
+                  setSelfCertDialog(true);
+                  fetchSelfCertStats();
+                }}
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Self-Certification
+              </Button>
+
+              <Button
+                variant="outline"
                 onClick={() => setDeleteAllDialog(true)}
                 disabled={pagination.total === 0}
                 className="border-red-500 text-red-600 hover:bg-red-50"
