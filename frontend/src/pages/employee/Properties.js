@@ -807,16 +807,16 @@ export default function Properties() {
             {/* Color Legend */}
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-blue-500 border border-white"></div>
-                <span className="text-blue-300">&lt;100m</span>
-              </div>
-              <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-red-500 border border-white"></div>
                 <span className="text-red-300">Pending</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-green-500 border border-white"></div>
-                <span className="text-green-300">Done</span>
+                <div className="w-3 h-3 rounded-full bg-green-600 border border-white"></div>
+                <span className="text-green-300">Done ✓</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-blue-300 animate-pulse"></div>
+                <span className="text-blue-300">&lt;100m</span>
               </div>
             </div>
             
