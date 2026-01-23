@@ -826,7 +826,7 @@ export default function Properties() {
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-blue-300 animate-pulse"></div>
-                <span className="text-blue-300">&lt;100m</span>
+                <span className="text-blue-300">&lt;40m</span>
               </div>
             </div>
             
