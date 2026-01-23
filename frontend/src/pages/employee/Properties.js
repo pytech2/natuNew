@@ -520,135 +520,150 @@ export default function Properties() {
               </div>
             </Marker>
           )})}
-          
-          {/* Popup for selected property - Detailed Card View */}
-          {selectedProperty && (
-            <Popup
-              latitude={selectedProperty.latitude}
-              longitude={selectedProperty.longitude}
-              anchor="bottom"
-              onClose={() => setSelectedProperty(null)}
-              closeButton={true}
-              closeOnClick={false}
-              maxWidth="320px"
-            >
-              <div className="min-w-[280px]">
-                {/* Header with Bill Serial Number */}
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-xs text-amber-700 font-medium">BILL SERIAL NUMBER</div>
-                      <div className="text-3xl font-bold text-red-500">
-                        {selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500">Property ID</div>
-                      <div className="text-sm font-semibold text-blue-600">{selectedProperty.property_id}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Property Details Grid */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <div className="text-xs text-gray-500">Owner</div>
-                    <div className="font-semibold text-gray-900">{selectedProperty.owner_name || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Mobile</div>
-                    {selectedProperty.mobile ? (
-                      <a href={`tel:${selectedProperty.mobile}`} className="font-semibold text-blue-600 underline">
-                        {selectedProperty.mobile}
-                      </a>
-                    ) : (
-                      <div className="text-gray-400">-</div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Colony</div>
-                    <div className="font-medium text-gray-800">{selectedProperty.colony || selectedProperty.ward || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Category</div>
-                    <div className="font-medium text-gray-800">{selectedProperty.category || 'Residential'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Total Area</div>
-                    <div className="font-medium text-gray-800">{selectedProperty.total_area || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Total Amount</div>
-                    <div className="font-bold text-red-600">₹{selectedProperty.amount || '0'}</div>
-                  </div>
-                </div>
-                
-                {/* Address */}
-                {selectedProperty.address && (
-                  <div className="mt-2 pt-2 border-t border-gray-100">
-                    <div className="text-xs text-gray-500">Address</div>
-                    <div className="text-sm text-gray-800">{selectedProperty.address}</div>
-                  </div>
-                )}
-                
-                {/* GPS & Distance */}
-                <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
-                  <div>
-                    <div className="text-xs text-blue-500">GPS Coordinates</div>
-                    <div className="text-xs font-mono text-gray-600">
-                      {selectedProperty.latitude?.toFixed(6)}, {selectedProperty.longitude?.toFixed(6)}
-                    </div>
-                  </div>
-                  {selectedProperty.distance && (
-                    <div className="text-right">
-                      <div className="text-xs text-emerald-600">Distance</div>
-                      <div className="font-bold text-emerald-700">{formatDistance(selectedProperty.distance)}</div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Status Badge */}
-                <div className="mt-2">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    selectedProperty.status === 'Pending' ? 'bg-red-100 text-red-700' : 
-                    selectedProperty.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' : 
-                    'bg-green-100 text-green-700'
-                  }`}>
-                    {selectedProperty.status}
-                  </span>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-2 mt-3">
-                  <button 
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
-                    onClick={() => {
-                      localStorage.setItem('surveyor_map_position', JSON.stringify({
-                        lat: selectedProperty.latitude,
-                        lng: selectedProperty.longitude,
-                        zoom: viewState.zoom,
-                        bearing: viewState.bearing
-                      }));
-                      navigate(`/employee/survey/${selectedProperty.id}`);
-                    }}
-                    data-testid="survey-btn"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Survey
-                  </button>
-                  <button 
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2.5 rounded-lg"
-                    onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.latitude},${selectedProperty.longitude}`, '_blank')}
-                    data-testid="navigate-btn"
-                  >
-                    <Navigation className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </Popup>
-          )}
         </Map>
       </div>
+
+      {/* CENTERED MODAL for selected property - Click outside to close */}
+      {selectedProperty && (
+        <div 
+          className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
+          onClick={() => setSelectedProperty(null)}
+          data-testid="property-modal-overlay"
+        >
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Modal Content - Stop propagation to prevent closing when clicking inside */}
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 max-h-[85vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Big Close Button */}
+            <button
+              onClick={() => setSelectedProperty(null)}
+              className="absolute top-3 right-3 z-10 w-10 h-10 bg-gray-100 hover:bg-red-100 rounded-full flex items-center justify-center transition-colors"
+              data-testid="close-modal-btn"
+            >
+              <X className="w-6 h-6 text-gray-600 hover:text-red-600" />
+            </button>
+            
+            <div className="p-4">
+              {/* Header with Bill Serial Number */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-xs text-amber-700 font-medium uppercase tracking-wide">Bill Serial Number</div>
+                    <div className="text-4xl font-bold text-red-500 mt-1">
+                      {selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">Property ID</div>
+                    <div className="text-sm font-semibold text-blue-600">{selectedProperty.property_id}</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status Badge - Prominent */}
+              <div className="mb-4">
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                  selectedProperty.status === 'Pending' ? 'bg-red-100 text-red-700' : 
+                  selectedProperty.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' : 
+                  'bg-green-100 text-green-700'
+                }`}>
+                  {selectedProperty.status === 'Completed' || selectedProperty.status === 'Approved' ? '✓ ' : ''}
+                  {selectedProperty.status}
+                </span>
+              </div>
+              
+              {/* Property Details Grid */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Owner</div>
+                  <div className="font-semibold text-gray-900">{selectedProperty.owner_name || '-'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Mobile</div>
+                  {selectedProperty.mobile ? (
+                    <a href={`tel:${selectedProperty.mobile}`} className="font-semibold text-blue-600 underline">
+                      {selectedProperty.mobile}
+                    </a>
+                  ) : (
+                    <div className="text-gray-400">-</div>
+                  )}
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Colony</div>
+                  <div className="font-medium text-gray-800">{selectedProperty.colony || selectedProperty.ward || '-'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Category</div>
+                  <div className="font-medium text-gray-800">{selectedProperty.category || 'Residential'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Total Area</div>
+                  <div className="font-medium text-gray-800">{selectedProperty.total_area || '-'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Amount</div>
+                  <div className="font-bold text-red-600 text-lg">₹{selectedProperty.amount || '0'}</div>
+                </div>
+              </div>
+              
+              {/* Address */}
+              {selectedProperty.address && (
+                <div className="mt-3 bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Address</div>
+                  <div className="text-sm text-gray-800">{selectedProperty.address}</div>
+                </div>
+              )}
+              
+              {/* GPS & Distance */}
+              <div className="mt-3 flex justify-between items-center bg-blue-50 rounded-lg p-3">
+                <div>
+                  <div className="text-xs text-blue-600 font-medium">GPS Coordinates</div>
+                  <div className="text-xs font-mono text-gray-600 mt-1">
+                    {selectedProperty.latitude?.toFixed(6)}, {selectedProperty.longitude?.toFixed(6)}
+                  </div>
+                </div>
+                {selectedProperty.distance && (
+                  <div className="text-right">
+                    <div className="text-xs text-emerald-600 font-medium">Distance</div>
+                    <div className="font-bold text-emerald-700 text-lg">{formatDistance(selectedProperty.distance)}</div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Action Buttons - Big */}
+              <div className="flex gap-3 mt-4">
+                <button 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-4 rounded-xl text-base font-semibold flex items-center justify-center gap-2 shadow-lg"
+                  onClick={() => {
+                    localStorage.setItem('surveyor_map_position', JSON.stringify({
+                      lat: selectedProperty.latitude,
+                      lng: selectedProperty.longitude,
+                      zoom: viewState.zoom,
+                      bearing: viewState.bearing
+                    }));
+                    navigate(`/employee/survey/${selectedProperty.id}`);
+                  }}
+                  data-testid="survey-btn"
+                >
+                  <FileText className="w-5 h-5" />
+                  Start Survey
+                </button>
+                <button 
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-4 rounded-xl shadow"
+                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.latitude},${selectedProperty.longitude}`, '_blank')}
+                  data-testid="navigate-btn"
+                >
+                  <Navigation className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FIXED UI OVERLAY */}
       <div className="fixed inset-0 z-[1000] pointer-events-none">
