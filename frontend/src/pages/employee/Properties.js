@@ -14,8 +14,8 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Create a GeoJSON circle polygon for 100m radius
-const createCircleGeoJSON = (centerLat, centerLng, radiusMeters = 100, points = 64) => {
+// Create a GeoJSON circle polygon for 40m radius
+const createCircleGeoJSON = (centerLat, centerLng, radiusMeters = 40, points = 64) => {
   const coords = [];
   const distanceX = radiusMeters / (111320 * Math.cos(centerLat * Math.PI / 180));
   const distanceY = radiusMeters / 110540;
