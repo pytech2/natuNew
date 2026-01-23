@@ -1285,6 +1285,25 @@ export default function BillsPage() {
                   </p>
                 </label>
               </div>
+
+              {/* Skip Duplicate GPS Option */}
+              <div className="flex items-center space-x-3 mt-3">
+                <input
+                  type="checkbox"
+                  id="skipDuplicateGPS"
+                  checked={skipDuplicateGPS}
+                  onChange={(e) => setSkipDuplicateGPS(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                />
+                <label htmlFor="skipDuplicateGPS" className="text-sm">
+                  <span className="font-medium">Skip Duplicate GPS Coordinates</span>
+                  <p className="text-xs text-slate-500">
+                    {skipDuplicateGPS 
+                      ? "Properties with same latitude/longitude will be skipped (only first one kept)" 
+                      : "All properties will be added including duplicate GPS locations"}
+                  </p>
+                </label>
+              </div>
             </div>
             
             <AlertDialogFooter>
