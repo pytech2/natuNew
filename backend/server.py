@@ -4312,6 +4312,13 @@ async def copy_bills_to_properties(
         else:
             bill_sr_no_display = str(bill_serial)
         
+        # Check if this property is self-certified
+        is_self_certified = bill_prop_id.upper() in self_certified_pids if bill_prop_id else False
+        if is_self_certified:
+            self_certified_count += 1
+        else:
+            not_self_certified_count += 1
+        
         prop = {
             "id": str(uuid.uuid4()),
             "batch_id": prop_batch_id,
@@ -4334,6 +4341,7 @@ async def copy_bills_to_properties(
             "assigned_employee_id": None,
             "assigned_employee_name": None,
             "status": "Pending",
+            "self_certified": is_self_certified,  # NEW: Self-certification status
             "created_at": datetime.now(timezone.utc).isoformat(),
             "source_bill_id": bill.get("id")  # Reference to original bill
         }
