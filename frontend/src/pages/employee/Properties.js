@@ -50,25 +50,23 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)}m` : `${(meters/1000).toFixed(1)}km`;
 
-// Marker colors based on status and distance
-const getMarkerColor = (status, distance = null) => {
-  // If within 100m, show BLUE color (reachable)
-  if (distance !== null && distance <= 100) {
-    return '#3b82f6'; // Blue - within reach
-  }
-  
+// Marker colors based on status - Completed/Approved are LOCKED (green)
+const getMarkerColor = (status) => {
   const colors = {
-    'Pending': '#ef4444',
-    'Completed': '#22c55e',
-    'Approved': '#22c55e',
-    'In Progress': '#eab308',
-    'Rejected': '#f97316',
+    'Pending': '#ef4444',      // Red - needs survey
+    'Completed': '#16a34a',    // Green - locked/done
+    'Approved': '#16a34a',     // Green - locked/done  
+    'In Progress': '#eab308',  // Yellow
+    'Rejected': '#f97316',     // Orange
   };
   return colors[status] || '#ef4444';
 };
 
 // Check if property is within 100m reach
 const isWithinReach = (distance) => distance !== null && distance <= 100;
+
+// Check if property is completed/locked
+const isCompleted = (status) => ['Completed', 'Approved'].includes(status);
 
 export default function Properties() {
   const navigate = useNavigate();
