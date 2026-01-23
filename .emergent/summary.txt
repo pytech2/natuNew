@@ -2,44 +2,40 @@
 
 **PRODUCT REQUIREMENTS:**
 - **Roles:** Super Admin, Surveyor, Supervisor, MC Officer with specific permissions.
-- **Admin Workflow:** Login, upload property data, manage users, assign properties, process PDF bills with data extraction and GPS-based route optimization, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., N42) and managing duplicate data.
-- **Surveyor Workflow:** Login, view assigned properties on a map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. A search bar is needed to find properties on the map.
+- **Admin Workflow:** Login, upload property data (PDF & Excel), manage users, assign properties (by area, custom count, and serial number range), process PDF bills with data extraction and GPS-based route optimization, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., N42), managing duplicate data (by property ID and GPS), and managing self-certified properties via an Excel upload.
+- **Surveyor Workflow:** Login, view assigned properties on a map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. A search bar is needed to find properties. The survey form logic should change based on whether a property is self-certified.
 - **Data Processing:**
-    - Skip vacant plots during PDF upload.
-    - Print the property's map serial number on generated bills.
+    - Skip vacant plots and properties with invalid owner names during PDF upload and property creation. This logic must be consistent.
+    - Print the property's map serial number (including N-prefix numbers) on generated bills.
     - Compress surveyor-taken photos to KB-range file sizes.
-- **Performance:** The application must be fast and handle 20+ concurrent surveyors.
+    - PDF file size should be optimized during generation to prevent bloating from 10MB to 400MB.
+    - Generated PDFs for single bills should be editable (text-based), not image-based.
+- **Performance:** The surveyor map must be fast and handle thousands of properties by only loading what is assigned. Property loading limits on the map should be high enough (e.g., 5000).
 - **Data Integrity:** All uploaded files must be stored reliably. Generated PDFs should be saved and be available for re-download.
 
 **User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST be prepared to understand and respond to instructions in both languages (e.g., app slow hai, dropdown काम नहीं कर रहा, pdf quality improve karo).
 
 **what currently exists?**
-A full-stack application with a FastAPI backend, React frontend, and MongoDB.
-- **Backend ():** The monolithic server now includes significant enhancements:
-    - A new data model () and endpoints to store and retrieve metadata for all generated PDFs.
-    - Endpoints for bulk un-assigning properties by area and for custom property distribution during bulk assignment.
-    - An endpoint to remove a single surveyor from a specific colony.
-    - Enhanced  endpoint to provide colony-wise progress breakdowns.
-    - PDF generation logic was updated to improve image quality and font clarity while optimizing file size.
+A full-stack application with a FastAPI backend, React frontend, and MongoDB. The application has extensive features for property tax management.
+- **Backend ():** The monolithic server handles all logic, including user auth, data upload (PDF/Excel), property management, PDF generation, and various API endpoints for the frontend. It was recently modified to support range-based assignment, handle N-prefix serial numbers, optimize PDF generation for size and quality, implement self-certification logic, and filter properties based on duplicate GPS coordinates.  was added for Excel processing.
 - **Frontend:**
-    - **Admin - Bills ():** Revamped UI with a two-column layout. A new left sidebar lists all generated PDFs by colony, allowing admins to re-download them at any time. The generation process now automatically saves metadata for this feature.
-    - **Admin - Map ():** Added filters for survey status (Pending, Completed, Rejected) and a filter for Surveyors. The View Survey Data popup is now a comprehensive form allowing admins to view and edit all submitted survey details.
-    - **Admin - Dashboard ():** The Employee Progress table now shows colony counts and includes a View Details button to see a surveyor's progress per colony, along with an option to remove them from that colony.
-    - **Admin - Properties ():** The assignment dialogs have been updated to support Bulk Unassign by Area and Custom Distribution for assigning a specific number of properties to each selected surveyor.
-    - **Surveyor - Survey ():** Image compression logic has been made more aggressive to reduce photo sizes significantly (targeting < 100KB), and the UI now displays the compressed file size to the surveyor.
+    - **Admin:** Pages for managing property batches (), assigning properties with advanced options (), viewing properties on a map with filters (), and a dashboard (). Recent changes include adding a UI to upload a self-certification Excel file and an option to remove properties with duplicate GPS coordinates. The PDF download section on the  page was removed per user request.
+    - **Surveyor:** A map to view assigned properties () with improved marker visibility and a 100m reachable radius highlight. A detailed survey form () for data collection, which was recently updated to handle a complex self-certification flow involving an OTP.
 
 **Last working item**:
-- **Last item agent was working:** Implementing Bulk Unassign by Area and Custom Distribution for bulk property assignment in  and the corresponding backend logic in .
+- **Last item agent was working:** The agent was in the middle of refining the self-certification workflow on the surveyor's survey form () based on detailed user feedback.
+    The required logic is:
+    1.  **For Self-Certified Properties:** The entire Self Satisfied section (including Yes/No buttons and the OTP form) should be hidden. The surveyor should be able to submit the survey directly after filling in other details and taking a photo.
+    2.  **For Non-Self-Certified Properties:** The Yes/No buttons for Self Satisfied should be hidden. The form should directly display the Self Certification Required section (with the link to the external portal and OTP input field), and this section must be mandatory for submission.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent to test the Assign Properties and Unassign Properties dialogs in . The test should verify that the new Custom Distribution input fields appear when multiple employees are selected and that the Bulk Unassign by Area option functions correctly.
+- **Which testing method agent to use?** Frontend testing agent to verify the conditional logic on the survey form (). The test should check both scenarios: one with a self-certified property and one without, confirming the UI elements appear/disappear as required.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
 - **Issue 1:** Git push fails due to large files in repository history. (P0 - BLOCKER)
 - **Issue 2:** Surveyor and Category dropdowns on the Admin Map are not working on the user's VPS. (P1 - High User Impact)
-- **Issue 3:** Hide duplicate and completed properties from map views. (P2)
-- **Issue 4:** The user's Hostinger VPS deployment is fragile and a recurring source of problems. (P3)
+- **Issue 3:** The user's Hostinger VPS deployment is fragile and a recurring source of problems. (P3)
 
 **Issues Detail:**
 - **Issue 1: Git push fails due to large files in repository history**
@@ -49,37 +45,33 @@ A full-stack application with a FastAPI backend, React frontend, and MongoDB.
 	 (https://github.com/newren/git-filter-repo/) instead.  See the
 	 filter-branch manual page for more details; to squelch this warning,
 	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch... to rewrite history, but the user's subsequent push still failed. This issue was ignored in the last session.
+Proceeding with filter-branch... to rewrite history, but this was not followed by a force push, so the user's subsequent pushes still failed. The issue was ignored throughout the last session.
     - **Next debug checklist:**
         1.  Instruct the user to try saving to GitHub again.
-        2.  If it fails, the next step is to execute a force push on behalf of the user: . This is necessary after rewriting history.
-        3.  Inform the user this is a one-time, necessary step to fix the repository.
+        2.  If it fails, the next step is to execute a force push on behalf of the user: .
+        3.  Inform the user this is a one-time, necessary step to fix the repository after history rewriting.
     - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The user cannot save any of the recent feature work to their GitHub repository.
-    - **Status:** IN PROGRESS
+    - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** N/A (Git operation)
     - **Blocked on other issue:** This is the primary blocker for saving progress.
 
 - **Issue 2: Surveyor and Category dropdowns not working on VPS**
-    - **Attempted fixes:**
-        - Backend code was updated to correctly return  from the  endpoint.
-        - Frontend code was updated to handle the new data structure.
-        - The agent provided numerous shell commands to the user to force-update code, clear caches, and restart services on their VPS.
-        - The issue was confirmed to be VPS-specific, as it works correctly in the preview environment.
+    - **Attempted fixes:** The agent provided numerous shell commands to the user to force-update code, clear caches, and restart services on their VPS. The issue was confirmed to be VPS-specific.
     - **Next debug checklist:**
         1.  Guide the user to clear their browser cache and perform a hard refresh ().
-        2.  Guide the user through a clean deployment: stop services (), clean build artifacts (), pull latest code (), reinstall/rebuild (), and restart services.
-        3.  Use  on the user's VPS to test the API endpoint directly and confirm if the backend is returning the correct data. This will isolate the problem to either the backend or a frontend caching/build issue.
-    - **Why fix this issue and what will be achieved with the fix?** The admin cannot filter properties by the assigned surveyor on the map, which is a key requested feature.
+        2.  Guide the user through a clean deployment script. A comprehensive one was provided in the last session.
+        3.  Use  on the user's VPS to test the API endpoint directly () and confirm if the backend is returning the correct data format. This will isolate the problem to either the backend or a frontend caching/build issue.
+    - **Why fix this issue and what will be achieved with the fix?** The admin cannot filter properties on the map, which is a key feature.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend (on user's environment)
     - **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: Complete Bulk Unassign and Custom Distribution Feature**
-    - **Where to resume:** The code has been added to  and . The task is pending testing and verification.
-    - **What will be achieved with this?** Admins will gain precise control over bulk property assignments and unassignments.
+- **Task 1: Complete the Self-Certification Survey Form Logic (P0)**
+    - **Where to resume:** In . The agent had started analyzing the file. The next step is to implement the conditional rendering logic described in the **Last working item**.
+    - **What will be achieved with this?** The surveyor workflow will correctly handle self-certified vs. non-self-certified properties, streamlining data collection for already-certified properties and enforcing OTP verification for others.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Frontend
     - **Blocked on something:** None
@@ -91,20 +83,33 @@ Proceeding with filter-branch... to rewrite history, but the user's subsequent p
 - **Future Tasks:**
     - Offline support for the surveyor's mobile interface.
     - Add a feature to download all split-employee PDFs as a single ZIP file.
-    - Add a UI feature to remove a single employee from a property assigned to multiple people.
     - Add a shortcut to open the survey form by clicking a map marker.
     - Implement Completed Colony access restrictions.
 
 **Completed work in this session**
-- **PDF Re-Download System:** Implemented a new feature where all generated PDFs (arranged by route, split by employee) are saved to a new  collection in the database. The  page now has a left sidebar listing these PDFs by colony for easy re-downloading.
-- **Admin Map Enhancements ():**
-    - Added filters for survey status (, , ).
-    - Added a filter dropdown for Surveyors.
-    - The View Survey Data popup was converted into a comprehensive, editable form, allowing admins to modify all survey fields.
-- **Surveyor Performance Dashboard ():** Enhanced the employee progress report to show colony-wise breakdowns and added functionality to remove a surveyor from a selected colony.
-- **Surveyor Image Compression ():** Greatly improved image compression on the surveyor form to reduce file sizes to the KB range, with a UI indicator for the final size.
-- **VPS PDF Download Fix:** Diagnosed and provided the fix for a recurring 404 error on the user's VPS by correcting the  path in their Nginx configuration to properly serve static PDF files.
-- **PDF Generation Quality:** Optimized the PDF generation code in  to produce clearer, print-ready documents with improved fonts while maintaining a small file size.
+- **Self-Certification System:** Implemented a full flow where an admin can upload an Excel/CSV file of self-certified property IDs. The system now marks properties as  during the Add to Properties step.
+- **Range-Based Assignment:** Admins can now assign properties to surveyors by specifying a serial number range (e.g., 1-200), which now correctly includes N-prefix properties (like N45).
+- **Duplicate GPS Skipping:** Added a checkbox in the Add to Properties dialog to let admins skip properties that have duplicate GPS coordinates.
+- **PDF Generation Overhaul:**
+    - **File Size:** Fixed a bug causing PDFs to bloat from ~10MB to ~400MB by using JPEG compression and direct page copying instead of high-res PNG rendering.
+    - **Data Skipping:** Made the logic for skipping vacant/invalid-owner properties consistent between Generate PDF and Add to Properties actions, resolving count mismatches.
+    - **Serial Numbers:** Fixed a bug where N-prefix serial numbers were not being printed on generated bills.
+    - **Editable PDFs:** Reverted a change that made all PDFs image-based. Single-bill PDFs are now text-based and editable again, while multi-bill pages remain image-based due to layout constraints.
+- **Map & UI/UX Improvements:**
+    - **Admin Map:**
+        - Page now loads the map directly without a blocking Select Colony screen.
+        - The property loading limit was increased from 2000 to 5000.
+        - The duplicate property check (by owner+mobile) was removed to ensure all unique properties are displayed.
+        - The Survey Data popup was resized, made closable by clicking outside, and the close button was fixed. It now shows original and survey GPS coordinates on a single line with distance.
+        - The Owner Changed section was removed from the Survey Data popup.
+        - Property ID was added to the marker popup.
+    - **Surveyor Map:**
+        - A 100m radius circle is now shown around the surveyor's location.
+        - Property markers within this radius turn blue.
+        - Marker numbers are larger and more visible.
+    - **Survey Form:** The Self Satisfied OTP flow was implemented. Relation options Tenant and Neighbour were changed to Kirayedar and Pdosi.
+    - **Login Page:** Removed the hardcoded Default Admin: admin / nastu123 text.
+    - **Bills Page:** Removed the Download PDFs side panel as requested.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1: Root cause of VPS deployment failures.**
@@ -144,7 +149,7 @@ Configuration fields: npm help 7 config
 npm@10.8.2 /usr/lib/node_modules/npm vs. yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.04s. conflicts, Node.js version mismatches, file permissions, or resource limitations on the user's Hostinger VPS. The user has been given many one-off commands, but a stable, repeatable deployment process is needed.
+Done in 0.02s. conflicts, Node.js version mismatches, file permissions, or resource limitations on the user's Hostinger VPS. A stable, repeatable deployment process is needed.
     - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process for the user, reducing friction and support time.
     - **Should Test frontend/backend/both after fix:** N/A (DevOps issue)
     - **Is recurring issue?** Y
@@ -158,79 +163,90 @@ Done in 0.04s. conflicts, Node.js version mismatches, file permissions, or resou
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, GridFS.
-- **Frontend:** React, MapLibre GL, React-Map-GL, Tailwind CSS, Shadcn UI, .
-- **File Handling:** Using blob-based downloads on the frontend to handle authenticated file requests, preventing direct URL exposure and bypassing auth issues.
+- **Backend:** FastAPI, MongoDB (Motor), PyMuPDF, reportlab, pandas for Excel/CSV reading.
+- **Frontend:** React, MapLibre GL, React-Map-GL, Tailwind CSS, Shadcn UI, , .
+- **File Handling:** Excel/CSV upload and parsing, blob-based file downloads on the frontend.
 
 **key DB schema**
-- **generated_pdfs** (New Collection): 
-- **submissions:** Schema effectively expanded to allow admin edits on fields like , , , etc.
-- **properties:** Logic now handles  (List[str]) for properties assigned to multiple surveyors.
+- **properties:** Schema now includes .
+- **submissions:** Schema now includes  and .
+- **self_certified_pids** (New Collection):  - Stores property IDs from the uploaded self-certification file.
 
 **changes in tech stack**
-- No changes to the core tech stack.
+- **** was introduced in the backend for reading the self-certification Excel file. The agent did not run Looking in indexes: https://pypi.org/simple, https://d33sy5i8bnduwe.cloudfront.net/simple/
+Requirement already satisfied: pandas in /root/.venv/lib/python3.11/site-packages (2.3.3)
+Requirement already satisfied: numpy>=1.23.2 in /root/.venv/lib/python3.11/site-packages (from pandas) (2.4.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /root/.venv/lib/python3.11/site-packages (from pandas) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /root/.venv/lib/python3.11/site-packages (from pandas) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /root/.venv/lib/python3.11/site-packages (from pandas) (2025.3)
+Requirement already satisfied: six>=1.5 in /root/.venv/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas) (1.17.0), so this will need to be done on the VPS.
 
 **All files of reference**
-- : Heavily modified for all new features.
-- : Completely restructured UI.
-- : Modified for filters and editable popups.
-- : Modified for detailed employee progress.
-- : Modified for advanced bulk assignment/unassignment.
-- : Modified for image compression.
+- : Modified extensively for almost every feature.
+- : Modified for self-cert upload and UI cleanup.
+- : Modified for range-based assignment.
+- : Modified for UX, popups, and data limits.
+- : Modified for surveyor map UI.
+- : Modified for self-certification and OTP logic.
+- : Modified to remove credentials.
 
 **Areas that need refactoring**:
-- **:** Still a high priority for refactoring. The file has grown significantly and should be broken down into FastAPI routers for better maintainability.
+- **:** This monolithic file has grown even larger and is a high-priority candidate for refactoring into a modular structure with FastAPI routers.
 
 **key api endpoints**
-- : Saves generated PDF metadata.
-- : Retrieves list of generated PDFs for the download sidebar.
-- : Updated to allow editing of all survey fields.
-- : New endpoint for bulk unassigning by area.
-- : Updated to handle custom property distribution counts.
-- : Updated to provide colony-wise breakdown for the dashboard.
-- : New endpoint to remove a surveyor from a colony.
-- : Updated projection to include .
-- : Updated for improved image quality and file size optimization.
+- : New endpoint to upload and process self-certification Excel/CSV file.
+- : New endpoint to get the count of certified PIDs.
+- : Updated to check for duplicate GPS and mark properties as .
+- : Updated to support serial number range assignment, including N-prefix properties.
+- : Updated to increase limit to 5000 and remove owner+mobile duplicate check.
+- : Updated to include the  flag in the response.
+- : Updated to accept and store OTP details for self-certification.
+- : Overhauled to optimize for file size and quality, and to fix data skipping inconsistencies.
 
 **Critical Info for New Agent**
-- **The git push failure is the #1 Blocker.** You must resolve this before the user can save any work. The next logical step is a . Address this first.
-- **The user's VPS deployment is extremely fragile.** Expect to provide clear, step-by-step shell commands for updates. The Surveyor dropdown not working issue is a direct symptom of this deployment problem. Be prepared to debug Nginx, Node.js build caches, and file permissions.
-- The feature Hide completed properties from map views has been requested for a long time and should be prioritized once the critical blockers are resolved.
-- The user is very responsive and provides feedback with screenshots. Pay close attention to them and be prepared to communicate in a mix of Hindi and English.
+- **The  failure is the #1 Blocker.** You must resolve this before the user can save any work. The next logical step is a . Address this first.
+- The user's VPS deployment is extremely fragile. The deployment script provided in the last session should be the single source of truth for updates. Be prepared to guide the user through it.
+- **The immediate task is to finish the self-certification UI logic in ** as per the user's last detailed request. This is a high-priority, in-progress feature.
+- The  library was used in the backend but was never installed. Remind the user to run Looking in indexes: https://pypi.org/simple, https://d33sy5i8bnduwe.cloudfront.net/simple/
+Requirement already satisfied: pandas in /root/.venv/lib/python3.11/site-packages (2.3.3)
+Requirement already satisfied: numpy>=1.23.2 in /root/.venv/lib/python3.11/site-packages (from pandas) (2.4.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /root/.venv/lib/python3.11/site-packages (from pandas) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /root/.venv/lib/python3.11/site-packages (from pandas) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /root/.venv/lib/python3.11/site-packages (from pandas) (2025.3)
+Requirement already satisfied: six>=1.5 in /root/.venv/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas) (1.17.0) in their backend virtual environment on the VPS.
 
 **documents and test reports created in this job**
-- 
-- 
-- 
+- None in this session. Previous handoff mentioned  and others.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. User requested improved PDF quality and smaller file size. (Completed)
-9. User requested image compression for surveyor photos. (Completed)
-8. User requested bulk unassign by area and custom distribution for bulk assign. (In Progress)
-7. User reported surveyor dropdown not working on the map. (In Progress)
-6. User reported surveyor dropdown still not working on VPS. (In Progress)
-5. User reported surveyor dropdown still not working and sent a screenshot of the database script output. (In Progress)
-4. User reported surveyor dropdown *still* not working and sent a screenshot of API test results. (In Progress)
-3. User sent a screenshot of Nginx config error on VPS regarding  path. (Resolved)
-2. User sent another screenshot of Nginx/file issues on VPS. (In Progress)
-1. User confirmed PDF download is working after Nginx fix, and then requested survey data popup enhancements. (This was then completed)
+10. **Request (Done):** Remove the Owner Changed box from the survey data popup.
+9. **Request (Done):** Fix data skipping mismatch between Generate PDF and Add to Properties.
+8. **Request (Done):** Ensure N-prefix serial numbers (e.g., N23) print on generated PDFs.
+7. **Request (Done):** Fix serial numbers not printing on PDF at all (reverted to image-based rendering to solve).
+6. **Query (Resolved):** Asked why property 3u6wdbq7 was being skipped. Agent investigated and confirmed it was not being skipped.
+5. **Request (Done):** Fix discrepancy where 767 properties existed but only 747 showed on the map. Agent fixed the duplicate removal logic.
+4. **Request (Done):** Remove the owner+mobile duplicate check and show all unique properties on the map.
+3. **Request (Done):** Increase the map property limit to 3000 (agent increased it to 5000).
+2. **Request (Done):** Implement range-based assignment and improve surveyor map performance for large datasets.
+1. **Request (In Progress):** Detailed clarification on how the self-certification flow should work on the surveyor's form, which is the current .
 
 **Project Health Check:**
 - **Broken:**
     - **Git Repository:** Pushing to the remote is broken, blocking all progress saving.
-    - **Production Deployment:** The user's VPS deployment is highly unreliable. Key features like the surveyor dropdown filter are confirmed broken on the VPS due to build/cache/sync issues.
+    - **Production Deployment:** The user's VPS deployment is highly unreliable. Key features like the surveyor dropdown filter are likely still broken on the VPS.
 - **Mocked:** None.
 
 **3rd Party Integrations**
-- **MapLibre GL & React-Map-GL:** Used for the interactive maps.
+- **MapLibre GL & React-Map-GL:** Used for interactive maps.
 - **PyMuPDF, reportlab:** Used for backend PDF processing.
-- **Nginx:** Used as a reverse proxy on the user's VPS (recurring source of issues).
+- **pandas:** Used for Excel/CSV file reading in the backend.
+- **Nginx:** Used as a reverse proxy on the user's VPS.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** The surveyor dropdown on the admin map is not working on the user's production environment.
+- **Known regressions:** None identified in this session, but the VPS dropdown issue from the previous session remains unresolved on the user's environment.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -239,5 +255,6 @@ Done in 0.04s. conflicts, Node.js version mismatches, file permissions, or resou
 - **MC Officer:**  / 
 
 **What agent forgot to execute**
-- The agent did not resolve the P0 ** blocker** from the previous handoff summary, instead prioritizing new feature requests.
-- The agent did not implement the long-pending feature request: **Hide duplicate and completed properties from map views.**</analysis>
+- The agent consistently forgot to resolve the P0 ** blocker** from the previous handoff summary, instead prioritizing new feature requests. This is the most critical oversight.
+- The agent did not install the new  dependency in the environment. It only added the code.
+- The agent did not address the long-pending Hide duplicate and completed properties from map views feature.</analysis>
