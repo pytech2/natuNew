@@ -4688,37 +4688,6 @@ async def download_generated_pdf(filename: str, current_user: dict = Depends(get
 async def root():
     return {"message": "NSTU Property Tax Manager API"}
 
-@api_router.post("/init-admin")
-async def init_admin():
-    """Initialize default admin user if not exists"""
-    existing = await db.users.find_one({"username": "admin"})
-    if existing:
-        return {"message": "Admin already exists"}
-    
-    admin_doc = {
-        "id": str(uuid.uuid4()),
-        "username": "admin",
-        "password_hash": hash_password("admin123"),
-        "name": "Super Admin",
-        "role": "ADMIN",
-        "assigned_area": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.users.insert_one(admin_doc)
-    return {"message": "Admin user created", "username": "admin", "password": "admin123"}
-
-# Include the router
-app.include_router(api_router)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # ==============================================
 # SELF CERTIFICATION ENDPOINTS
 # ==============================================
@@ -4812,6 +4781,37 @@ async def clear_self_certification(current_user: dict = Depends(get_current_user
     return {
         "message": f"Cleared {result.deleted_count} self-certified PIDs"
     }
+
+@api_router.post("/init-admin")
+async def init_admin():
+    """Initialize default admin user if not exists"""
+    existing = await db.users.find_one({"username": "admin"})
+    if existing:
+        return {"message": "Admin already exists"}
+    
+    admin_doc = {
+        "id": str(uuid.uuid4()),
+        "username": "admin",
+        "password_hash": hash_password("admin123"),
+        "name": "Super Admin",
+        "role": "ADMIN",
+        "assigned_area": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(admin_doc)
+    return {"message": "Admin user created", "username": "admin", "password": "admin123"}
+
+# Include the router
+app.include_router(api_router)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Logging
 logging.basicConfig(
