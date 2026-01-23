@@ -460,7 +460,7 @@ export default function Properties() {
           )}
           
           {/* Property markers - Google Maps style pins */}
-          {sortedProperties.map((property) => {
+          {visibleMarkers.map((property) => {
             const withinReach = isWithinReach(property.distance);
             const completed = isCompleted(property.status);
             const markerColor = getMarkerColor(property.status);
