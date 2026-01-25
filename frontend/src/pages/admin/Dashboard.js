@@ -120,11 +120,11 @@ export default function Dashboard() {
       setEmployeeProgress(progressRes.data);
       setSubmissionStats(submissionsRes.data);
       
-      // Calculate attendance stats - API returns 'attendance' not 'records'
-      const attendanceData = attendanceRes.data?.attendance || attendanceRes.data?.records || [];
+      // Calculate attendance stats - API returns 'attendance' and 'total'
+      const attendanceTotal = attendanceRes.data?.total || 0;
       const totalEmployees = progressRes.data?.length || 0;
       setAttendanceStats({
-        present: attendanceData.length,
+        present: attendanceTotal,  // Use total count from API
         total: totalEmployees
       });
     } catch (error) {
