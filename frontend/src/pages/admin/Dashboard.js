@@ -209,36 +209,136 @@ export default function Dashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div data-testid="admin-dashboard" className="space-y-6">
-        {/* Today's Stats - Highlighted */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-            <CardContent className="py-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-xl">
-                  <CalendarCheck className="w-8 h-8" />
-                </div>
-                <div>
-                  <p className="text-emerald-100 text-sm font-medium">Today Completed Properties</p>
-                  <p className="text-4xl font-heading font-bold">{stats?.today_completed || 0}</p>
+        {/* Date Filter Section */}
+        <Card className="bg-white">
+          <CardContent className="py-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-sm font-medium text-slate-600">Filter by Date:</span>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={dateFilter === 'today' ? 'default' : 'outline'}
+                  onClick={() => setDateFilter('today')}
+                  className={dateFilter === 'today' ? 'bg-blue-600' : ''}
+                >
+                  Today
+                </Button>
+                <Button
+                  size="sm"
+                  variant={dateFilter === 'yesterday' ? 'default' : 'outline'}
+                  onClick={() => setDateFilter('yesterday')}
+                  className={dateFilter === 'yesterday' ? 'bg-blue-600' : ''}
+                >
+                  Yesterday
+                </Button>
+                <Button
+                  size="sm"
+                  variant={dateFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setDateFilter('all')}
+                  className={dateFilter === 'all' ? 'bg-blue-600' : ''}
+                >
+                  All Time
+                </Button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={customDate}
+                    onChange={(e) => {
+                      setCustomDate(e.target.value);
+                      setDateFilter('custom');
+                    }}
+                    className="px-3 py-1.5 text-sm border rounded-md"
+                  />
                 </div>
               </div>
-            </CardContent>
+              {loading && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Main Stats - Property Status */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="stat-card border-l-4 border-l-slate-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <FileSpreadsheet className="w-5 h-5 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total Properties</p>
+                <p className="text-2xl font-bold font-heading text-slate-700">{stats?.total || 0}</p>
+              </div>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <CardContent className="py-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-xl">
-                  <MapPin className="w-8 h-8" />
-                </div>
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Completed Colony</p>
-                  <p className="text-4xl font-heading font-bold">{stats?.today_wards || 0}</p>
-                </div>
+          <Card className="stat-card border-l-4 border-l-green-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
-            </CardContent>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Approved</p>
+                <p className="text-2xl font-bold font-heading text-green-600">{stats?.approved || 0}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="stat-card border-l-4 border-l-amber-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Pending</p>
+                <p className="text-2xl font-bold font-heading text-amber-600">{stats?.pending || 0}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="stat-card border-l-4 border-l-red-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Rejected</p>
+                <p className="text-2xl font-bold font-heading text-red-600">{stats?.rejected || 0}</p>
+              </div>
+            </div>
           </Card>
         </div>
+
+        {/* Survey Submissions Stats */}
+        <Card className="shadow-lg border-0 bg-gradient-to-r from-slate-50 to-blue-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-heading text-base flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-blue-600" />
+              Survey Submissions Status
+              <span className="text-xs font-normal text-slate-500 ml-2">
+                ({dateFilter === 'today' ? 'Today' : dateFilter === 'yesterday' ? 'Yesterday' : dateFilter === 'all' ? 'All Time' : customDate})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm border">
+                <p className="text-xs text-slate-500 font-medium">Total Surveys</p>
+                <p className="text-2xl font-bold text-blue-600">{submissionStats.total || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+                <p className="text-xs text-amber-600 font-medium">Portal Pending</p>
+                <p className="text-2xl font-bold text-amber-600">{submissionStats.pending || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-green-200">
+                <p className="text-xs text-green-600 font-medium">Approved</p>
+                <p className="text-2xl font-bold text-green-600">{submissionStats.approved || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-red-200">
+                <p className="text-xs text-red-600 font-medium">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">{submissionStats.rejected || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Attendance Card */}
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/attendance')}>
@@ -271,13 +371,31 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Overall Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Employees Count */}
+        <div className="grid grid-cols-2 gap-4">
           <Card className="stat-card">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-lg">
-                <FileSpreadsheet className="w-5 h-5 text-slate-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="w-5 h-5 text-blue-600" />
               </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total Employees</p>
+                <p className="text-2xl font-bold font-heading text-blue-600">{stats?.employees || 0}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="stat-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <FolderOpen className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total Colonies</p>
+                <p className="text-2xl font-bold font-heading text-purple-600">{stats?.colonies || 0}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total</p>
                 <p className="text-2xl font-bold font-heading text-slate-900">{stats?.total_properties || 0}</p>
