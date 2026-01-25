@@ -3504,6 +3504,11 @@ async def upload_pdf_bills(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
     
+    # Build upload message
+    upload_message = f"Uploaded {len(bills)} bills. Skipped {skipped_count} records with NA/empty owner names."
+    if skipped_vacant > 0:
+        upload_message += f" Skipped {skipped_vacant} vacant plots."
+    
     # Insert bills into database
     if bills:
         await db.bills.insert_many(bills)
@@ -3512,7 +3517,8 @@ async def upload_pdf_bills(
             "skipped_na_empty": skipped_count,
             "skipped_vacant": skipped_vacant,
             "na_serial_count": na_serial_count,
-            "total_skipped": skipped_count + skipped_vacant
+            "total_skipped": skipped_count + skipped_vacant,
+            "upload_message": upload_message
         }
     
     await db.batches.insert_one(batch_doc)
@@ -3539,7 +3545,7 @@ async def upload_pdf_bills(
         "skipped_vacant": skipped_vacant,
         "na_serial_bills": na_serial_count,
         "colonies": colonies,
-        "message": f"Successfully extracted {len(bills)} bills from PDF. Skipped {skipped_count} NA/empty owners, {skipped_vacant} vacant plots. {na_serial_count} bills have N/A serial numbers."
+        "message": upload_message
     }
 
 @api_router.get("/admin/bills")
