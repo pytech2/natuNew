@@ -397,7 +397,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Charts Section */
+        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Employee Performance Bar Chart */}
           <Card className="shadow-lg border-0 bg-white">
