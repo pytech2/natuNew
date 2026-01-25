@@ -1204,69 +1204,108 @@ export default function PropertyMap() {
               </div>
             ) : surveyData ? (
               <div className="space-y-4">
-                {/* Bill Details Header - Matching Survey Form Style */}
-                <Card className="border-2 border-amber-200 bg-amber-50">
-                  <CardContent className="py-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-xs text-amber-600 font-medium">BILL SERIAL NUMBER</p>
-                        <p className="text-4xl font-bold text-red-500">
-                          {selectedProperty?.bill_sr_no || selectedProperty?.serial_number || '-'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-slate-500">Property ID</p>
-                        <p className="text-lg font-mono font-bold text-blue-600">{selectedProperty?.property_id}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Property Header - Property ID BIG, Serial Number small */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Property ID</div>
+                  <div className="text-2xl font-bold text-blue-700 mt-1">{selectedProperty?.property_id || '-'}</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-gray-500">Sr. No:</span>
+                    <span className="font-bold text-red-600">{selectedProperty?.bill_sr_no || selectedProperty?.serial_number || '-'}</span>
+                  </div>
+                </div>
 
-                {/* Property Details Grid - Matching Survey Form */}
-                <Card className="bg-slate-50">
-                  <CardHeader className="py-2 pb-1">
-                    <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
-                      <Home className="w-4 h-4" /> Property Details (From Bill)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-slate-500">Owner</p>
-                        <p className="font-semibold text-slate-900">{selectedProperty?.owner_name || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Mobile</p>
-                        <p className="font-mono font-medium text-blue-600">{selectedProperty?.mobile || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Colony</p>
-                        <p className="font-medium">{selectedProperty?.colony || selectedProperty?.ward || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Category</p>
-                        <p className="font-medium">{selectedProperty?.category || 'Residential'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Total Area</p>
-                        <p className="font-medium">{selectedProperty?.total_area || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500">Total Amount</p>
-                        <p className="font-bold text-red-600">₹{selectedProperty?.amount || selectedProperty?.total_outstanding || '0'}</p>
-                      </div>
-                    </div>
-                    {selectedProperty?.address && (
-                      <div className="mt-2 pt-2 border-t border-slate-200">
-                        <p className="text-xs text-slate-500">Address</p>
-                        <p className="text-sm text-slate-800">{selectedProperty?.address}</p>
-                      </div>
+                {/* Status Badge */}
+                <div>
+                  {getStatusBadge(surveyData.status)}
+                </div>
+
+                {/* Property Details Grid - Same as Surveyor Map */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Owner</div>
+                    <div className="font-semibold text-gray-900">{selectedProperty?.owner_name || '-'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Owner Mobile</div>
+                    {selectedProperty?.mobile ? (
+                      <a href={`tel:${selectedProperty.mobile}`} className="font-semibold text-blue-600 underline">
+                        {selectedProperty.mobile}
+                      </a>
+                    ) : (
+                      <div className="text-gray-400">-</div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Colony</div>
+                    <div className="font-medium text-gray-800">{selectedProperty?.colony || selectedProperty?.ward || '-'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Total Area</div>
+                    <div className="font-medium text-gray-800">{selectedProperty?.total_area || '-'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Category</div>
+                    <div className="font-medium text-gray-800">{selectedProperty?.category || 'Residential'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Amount</div>
+                    <div className="font-bold text-red-600 text-lg">₹{selectedProperty?.amount || '0'}</div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                {selectedProperty?.address && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Address</div>
+                    <div className="text-sm text-gray-800">{selectedProperty.address}</div>
+                  </div>
+                )}
+
+                {/* Survey Details */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Survey Details</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Receiver Name</div>
+                      <div className="font-medium">{surveyData.receiver_name || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Receiver Mobile</div>
+                      <div className="font-mono">{surveyData.receiver_mobile || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Relation</div>
+                      <div className="font-medium">{surveyData.relation || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Self Certification</div>
+                      <div className="font-medium">{surveyData.self_cert_status || surveyData.self_satisfied || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Employee</div>
+                      <div className="font-medium">{surveyData.employee_name}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Submit Date</div>
+                      <div className="font-medium text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special Condition */}
+                {surveyData.special_condition && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="text-xs text-amber-600 font-medium">Special Condition</div>
+                    <div className="font-semibold text-amber-800">
+                      {surveyData.special_condition === 'house_locked' ? 'House Locked' : 
+                       surveyData.special_condition === 'owner_denied' ? 'Owner Denied' : 
+                       surveyData.special_condition}
+                    </div>
+                  </div>
+                )}
 
                 {/* Combined GPS Coordinates - Original & Survey in ONE line with Distance */}
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
                     {/* Original GPS */}
                     <div className="flex items-center gap-1.5">
@@ -1295,7 +1334,7 @@ export default function PropertyMap() {
                         <Navigation className="w-3 h-3 text-amber-600" />
                         <span className="font-semibold text-amber-700">
                           {(() => {
-                            const R = 6371000; // Earth radius in meters
+                            const R = 6371000;
                             const lat1 = selectedProperty.latitude * Math.PI / 180;
                             const lat2 = surveyData.latitude * Math.PI / 180;
                             const dLat = (surveyData.latitude - selectedProperty.latitude) * Math.PI / 180;
@@ -1313,11 +1352,48 @@ export default function PropertyMap() {
                   </div>
                 </div>
 
-                {/* Special Conditions */}
-                {(surveyData.special_condition || surveyData.self_certified !== undefined) && (
-                  <Card className="bg-blue-50 border-blue-200">
-                    <CardContent className="py-3">
-                      <div className="flex items-center gap-4">
+                {/* Remarks */}
+                {surveyData.remarks && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Remarks</div>
+                    <p className="text-gray-800">{surveyData.remarks}</p>
+                  </div>
+                )}
+
+                {/* Review Remarks */}
+                {surveyData.review_remarks && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="text-xs text-red-600 font-medium">Rejection Remarks</div>
+                    <p className="text-red-800">{surveyData.review_remarks}</p>
+                  </div>
+                )}
+
+                {/* Photos */}
+                {surveyData.photos && surveyData.photos.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-2">Photos</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {surveyData.photos.filter((photo, index, self) => 
+                        index === self.findIndex(p => p.file_url === photo.file_url)
+                      ).map((photo, idx) => (
+                        <div key={idx} className="relative">
+                          <img
+                            src={`${API_URL.replace('/api', '')}${photo.file_url}`}
+                            alt={photo.photo_type}
+                            className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90"
+                            onClick={() => window.open(`${API_URL.replace('/api', '')}${photo.file_url}`, '_blank')}
+                          />
+                          <span className="absolute top-1 left-1 px-2 py-0.5 bg-black/50 text-white text-xs rounded">
+                            {photo.photo_type === 'HOUSE' ? 'PROPERTY' : photo.photo_type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Approve/Reject Actions */}
+                {surveyData.status !== 'Approved' && surveyData.status !== 'Rejected' && (
                         {surveyData.special_condition && (
                           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
                             surveyData.special_condition === 'house_locked' 
