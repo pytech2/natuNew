@@ -417,36 +417,37 @@ export default function Submissions() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Property ID</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Employee</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Receiver</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Relation</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">GPS</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Submitted</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Sr. No</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Property ID</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Owner</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Owner Mobile</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Colony</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Receiver</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Receiver Mobile</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Relation</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Employee</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Submit Date</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {submissions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 font-mono text-sm font-medium text-blue-600">{sub.property_id}</td>
-                        <td className="px-4 py-3 text-sm">{sub.employee_name}</td>
-                        <td className="px-4 py-3 text-sm">{sub.receiver_name || '-'}</td>
-                        <td className="px-4 py-3 text-sm">{sub.relation || '-'}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1 text-emerald-600">
-                            <MapPin className="w-3 h-3" />
-                            <span className="text-xs font-mono">
-                              {sub.latitude?.toFixed(4)}, {sub.longitude?.toFixed(4)}
-                            </span>
-                          </div>
+                      <tr key={sub.id} className="hover:bg-slate-50 transition-colors text-sm">
+                        <td className="px-3 py-3 font-bold text-red-600">{sub.bill_sr_no || sub.serial_number || '-'}</td>
+                        <td className="px-3 py-3 font-mono font-medium text-blue-600">{sub.property_id}</td>
+                        <td className="px-3 py-3">{sub.property_owner_name || '-'}</td>
+                        <td className="px-3 py-3 font-mono text-xs">{sub.property_mobile || '-'}</td>
+                        <td className="px-3 py-3 text-xs">{sub.colony || sub.property_ward || '-'}</td>
+                        <td className="px-3 py-3">{sub.receiver_name || '-'}</td>
+                        <td className="px-3 py-3 font-mono text-xs">{sub.receiver_mobile || '-'}</td>
+                        <td className="px-3 py-3 text-xs">{sub.relation || '-'}</td>
+                        <td className="px-3 py-3 text-xs">{sub.employee_name}</td>
+                        <td className="px-3 py-3 text-xs text-slate-500">
+                          {new Date(sub.submitted_at).toLocaleDateString('en-IN')} {new Date(sub.submitted_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="px-4 py-3">{getStatusBadge(sub.status)}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
-                          {new Date(sub.submitted_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">{getStatusBadge(sub.status)}</td>
+                        <td className="px-3 py-3">
                           <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
