@@ -4627,33 +4627,39 @@ async def split_bills_by_specific_employees(
             output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
             new_page = output_pdf[-1]
             
+            # Get page dimensions
             rect = new_page.rect
             rotation = new_page.rotation
             
-            # Search for BillSrNo to place serial number nearby
-            bill_sr_positions = new_page.search_for("BillSrNo")
-            
-            if bill_sr_positions:
-                pos = bill_sr_positions[0]
-                if rotation == 90:
-                    sn_x = pos.x0
-                    sn_y = pos.y1 + 10
-                else:
-                    sn_x = pos.x1 + 50
-                    sn_y = pos.y0 + 15
-            else:
-                if rotation == 90:
-                    sn_x = rect.width - 60
-                    sn_y = 80
-                elif rotation == 270:
-                    sn_x = 60
-                    sn_y = rect.height - 80
-                else:
-                    sn_x = rect.width - 80
-                    sn_y = 60
-            
+            # Get the serial number text
             sn_text = get_display_serial(bill)
-            new_page.insert_text((sn_x, sn_y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
+            
+            # Calculate position - TOP RIGHT CORNER (clearly visible)
+            if rotation == 90:
+                sn_x = rect.width - 80
+                sn_y = 60
+            elif rotation == 270:
+                sn_x = 30
+                sn_y = rect.height - 60
+            else:
+                # Normal orientation - top right
+                sn_x = rect.width - 100
+                sn_y = 50
+            
+            # Draw white background rectangle for visibility
+            text_width = len(sn_text) * sn_font_size * 0.6
+            bg_rect = fitz.Rect(sn_x - 5, sn_y - sn_font_size, sn_x + text_width + 5, sn_y + 10)
+            new_page.draw_rect(bg_rect, color=(1, 0, 0), fill=(1, 1, 1), width=2)
+            
+            # Draw serial number text in RED BOLD
+            new_page.insert_text(
+                (sn_x, sn_y), 
+                sn_text, 
+                fontsize=sn_font_size, 
+                color=sn_rgb, 
+                fontname="helv",  # Helvetica - more reliable font
+                rotate=rotation
+            )
         
         output_pdf.save(
             str(output_path),
