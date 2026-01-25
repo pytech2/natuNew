@@ -14,7 +14,7 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// PERFORMANCE: Memoized marker component to prevent re-renders - SMALLER SIZE
+// PERFORMANCE: Memoized marker component to prevent re-renders - TINY SIZE
 const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
   const markerColor = completed ? '#16a34a' : '#ef4444';
   const serialNum = property.bill_sr_no || property.serial_number || '-';
@@ -26,29 +26,29 @@ const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
       anchor="bottom"
       onClick={onClick}
     >
-      <div className="relative cursor-pointer" style={{ transform: 'translateY(0)' }}>
+      <div className="cursor-pointer">
         <svg 
-          width="24" 
-          height="30" 
+          width="18" 
+          height="22" 
           viewBox="0 0 36 44" 
           style={{ 
-            filter: withinReach && !completed ? 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
+            filter: withinReach && !completed ? 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' : 'drop-shadow(0 1px 1px rgba(0,0,0,0.25))'
           }}
         >
           <path 
             d="M18 0C8.06 0 0 8.06 0 18c0 12.6 18 26 18 26s18-13.4 18-26C36 8.06 27.94 0 18 0z" 
             fill={markerColor}
             stroke="#fff"
-            strokeWidth="2"
+            strokeWidth="2.5"
           />
         </svg>
         <div 
-          className="absolute top-0.5 left-0 right-0 flex items-center justify-center"
-          style={{ height: '18px' }}
+          className="absolute top-0 left-0 right-0 flex items-center justify-center"
+          style={{ height: '14px', marginTop: '1px' }}
         >
           <span 
             className="font-bold text-white"
-            style={{ fontSize: '8px', textShadow: '0 1px 1px rgba(0,0,0,0.5)' }}
+            style={{ fontSize: '6px', textShadow: '0 0 1px rgba(0,0,0,0.5)' }}
           >
             {completed ? '✓' : serialNum}
           </span>
