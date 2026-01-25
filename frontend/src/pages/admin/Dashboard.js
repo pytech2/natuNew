@@ -58,10 +58,6 @@ export default function Dashboard() {
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   
-  // Date Filter State
-  const [dateFilter, setDateFilter] = useState('today'); // 'today', 'yesterday', 'all', 'custom'
-  const [customDate, setCustomDate] = useState('');
-  
   // Employee Colony Detail Dialog
   const [colonyDialog, setColonyDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -73,48 +69,27 @@ export default function Dashboard() {
   const [colonyToRemove, setColonyToRemove] = useState(null);
   const [removing, setRemoving] = useState(false);
 
-  // Get date string based on filter
-  const getDateParam = () => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    switch(dateFilter) {
-      case 'today':
-        return today.toISOString().split('T')[0];
-      case 'yesterday':
-        return yesterday.toISOString().split('T')[0];
-      case 'custom':
-        return customDate || today.toISOString().split('T')[0];
-      case 'all':
-      default:
-        return ''; // Empty means all time
-    }
-  };
-
   useEffect(() => {
     fetchData();
-  }, [dateFilter, customDate]);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const dateParam = getDateParam();
-      const dateQuery = dateParam ? `?date=${dateParam}` : '';
       const todayDate = new Date().toISOString().split('T')[0];
       
       const [statsRes, progressRes, attendanceRes, submissionsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/dashboard${dateQuery}`, {
+        axios.get(`${API_URL}/admin/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API_URL}/admin/employee-progress${dateQuery}`, {
+        axios.get(`${API_URL}/admin/employee-progress`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        // Always fetch today's attendance for the attendance card
+        // Fetch today's attendance for the attendance card
         axios.get(`${API_URL}/admin/attendance?date=${todayDate}&limit=100`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { attendance: [], total: 0 } })),
-        axios.get(`${API_URL}/admin/submission-stats${dateQuery}`, {
+        axios.get(`${API_URL}/admin/submission-stats`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } }))
       ]);
@@ -122,8 +97,8 @@ export default function Dashboard() {
       setEmployeeProgress(progressRes.data);
       setSubmissionStats(submissionsRes.data);
       
-      // Calculate attendance stats - use total from API response
-      const attendanceTotal = attendanceRes.data?.total || attendanceRes.data?.attendance?.length || 0;
+      // Calculate attendance stats - use attendance array length for present count
+      const attendanceTotal = attendanceRes.data?.attendance?.length || 0;
       const totalEmployees = progressRes.data?.length || 0;
       setAttendanceStats({
         present: attendanceTotal,
