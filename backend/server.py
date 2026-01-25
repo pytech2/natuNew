@@ -3647,6 +3647,64 @@ async def get_batch_stats(
         ]
     }
 
+@api_router.get("/admin/bills/colony-stats/{colony_name}")
+async def get_colony_stats(
+    colony_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get statistics for a specific colony including skip information"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from urllib.parse import unquote
+    colony_name = unquote(colony_name)
+    
+    # Get total bills in colony
+    total_bills = await db.bills.count_documents({"colony": colony_name})
+    
+    # Get NA serial count
+    na_serial_count = await db.bills.count_documents({"colony": colony_name, "serial_na": True})
+    
+    # Get valid serial count
+    valid_serial_count = await db.bills.count_documents({"colony": colony_name, "serial_na": {"$ne": True}, "serial_number": {"$gt": 0}})
+    
+    # Get bills with GPS
+    with_gps = await db.bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
+    
+    # Get category breakdown
+    category_pipeline = [
+        {"$match": {"colony": colony_name}},
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    category_stats = await db.bills.aggregate(category_pipeline).to_list(None)
+    
+    # Get batch info for this colony (to get skip stats)
+    batch_ids = await db.bills.distinct("batch_id", {"colony": colony_name})
+    skip_stats = {"skipped_na_empty": 0, "skipped_vacant": 0, "na_serial_count": na_serial_count}
+    
+    for batch_id in batch_ids:
+        if batch_id:
+            batch = await db.batches.find_one({"id": batch_id}, {"_id": 0, "skip_stats": 1})
+            if batch and batch.get("skip_stats"):
+                # Aggregate skip stats from all batches
+                bs = batch["skip_stats"]
+                skip_stats["skipped_na_empty"] += bs.get("skipped_na_empty", 0)
+                skip_stats["skipped_vacant"] += bs.get("skipped_vacant", 0)
+    
+    return {
+        "colony": colony_name,
+        "total_bills": total_bills,
+        "na_serial_count": na_serial_count,
+        "valid_serial_count": valid_serial_count,
+        "with_gps": with_gps,
+        "skip_stats": skip_stats,
+        "category_breakdown": [
+            {"category": stat["_id"] or "Unknown", "count": stat["count"]}
+            for stat in category_stats
+        ]
+    }
+
 @api_router.put("/admin/bills/{bill_id}")
 async def update_bill(
     bill_id: str,
