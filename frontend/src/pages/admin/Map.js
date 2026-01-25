@@ -1037,10 +1037,11 @@ export default function PropertyMap() {
                             {getStatusBadge(property.status)}
                           </div>
                           
-                          {/* Property ID */}
-                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
-                            <span className="font-medium">ID:</span>
-                            <span className="font-mono">{property.property_id || '-'}</span>
+                          {/* Property ID - Same size as Serial */}
+                          <div className="pb-1 mb-1 border-b border-gray-200">
+                            <span className="text-base font-bold text-blue-600">
+                              ID: {property.property_id || '-'}
+                            </span>
                           </div>
                           
                           {/* Owner & Mobile */}
