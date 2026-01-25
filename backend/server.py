@@ -4556,14 +4556,6 @@ async def copy_bills_to_properties(
         if bill_prop_id:
             existing_property_ids.add(bill_prop_id)
     
-    # Insert properties
-    if properties:
-        await db.properties.insert_many(properties)
-        prop_batch_doc["total_records"] = len(properties)
-        await db.batches.update_one({"id": prop_batch_id}, {"$set": {"total_records": len(properties)}})
-    
-    await db.batches.insert_one(prop_batch_doc)
-    
     # Build detailed message
     msg_parts = [f"Successfully added {len(properties)} bills to properties"]
     if self_certified_count > 0:
@@ -4576,6 +4568,33 @@ async def copy_bills_to_properties(
         msg_parts.append(f"Skipped {skipped_vacant} vacant plots")
     if skipped_duplicate_gps > 0:
         msg_parts.append(f"Skipped {skipped_duplicate_gps} duplicate GPS")
+    
+    # Save detailed stats to batch
+    add_to_properties_stats = {
+        "total_added": len(properties),
+        "self_certified": self_certified_count,
+        "not_self_certified": not_self_certified_count,
+        "skipped_duplicates": skipped_duplicates,
+        "skipped_vacant": skipped_vacant,
+        "skipped_duplicate_gps": skipped_duplicate_gps,
+        "message": ". ".join(msg_parts) + "."
+    }
+    
+    # Insert properties
+    if properties:
+        await db.properties.insert_many(properties)
+        prop_batch_doc["total_records"] = len(properties)
+        prop_batch_doc["add_to_properties_stats"] = add_to_properties_stats
+        await db.batches.update_one({"id": prop_batch_id}, {"$set": {"total_records": len(properties)}})
+    
+    # Also update the source PDF batch with these stats
+    if batch_id:
+        await db.batches.update_one(
+            {"id": batch_id},
+            {"$set": {"add_to_properties_stats": add_to_properties_stats}}
+        )
+    
+    await db.batches.insert_one(prop_batch_doc)
     
     return {
         "message": ". ".join(msg_parts) + ".",
