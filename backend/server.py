@@ -1999,19 +1999,36 @@ async def list_areas(current_user: dict = Depends(get_current_user)):
     return {"areas": areas}
 
 @api_router.get("/admin/submission-stats")
-async def get_submission_stats(current_user: dict = Depends(get_current_user)):
-    """Get submission statistics for dashboard"""
+async def get_submission_stats(
+    date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
+    current_user: dict = Depends(get_current_user)
+):
+    """Get submission statistics for dashboard with optional date filter"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    total = await db.submissions.count_documents({})
-    pending = await db.submissions.count_documents({"status": "Pending"})
-    approved = await db.submissions.count_documents({"status": "Approved"})
-    rejected = await db.submissions.count_documents({"status": "Rejected"})
+    # Build date filter
+    query = {}
+    if date:
+        date_start = f"{date}T00:00:00"
+        date_end = f"{date}T23:59:59"
+        query["submitted_at"] = {"$gte": date_start, "$lte": date_end}
+    
+    total = await db.submissions.count_documents(query)
+    
+    pending_query = {**query, "status": "Pending"}
+    approved_query = {**query, "status": "Approved"}
+    completed_query = {**query, "status": "Completed"}
+    rejected_query = {**query, "status": "Rejected"}
+    
+    pending = await db.submissions.count_documents(pending_query)
+    approved = await db.submissions.count_documents(approved_query)
+    completed = await db.submissions.count_documents(completed_query)
+    rejected = await db.submissions.count_documents(rejected_query)
     
     return {
         "total": total,
-        "pending": pending,
+        "pending": pending + completed,  # Pending review = Pending + Completed (not yet approved)
         "approved": approved,
         "rejected": rejected
     }
