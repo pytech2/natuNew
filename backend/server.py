@@ -4546,21 +4546,22 @@ async def split_bills_by_specific_employees(
             })
     
     def get_display_serial(bill):
-        """Get display serial number (like N34 for N/A serials)"""
-        # First check if bill_sr_no is already set correctly
+        """Get display serial number (like N8 for N/A serials near serial 8)"""
+        # First check if bill_sr_no is already set correctly (e.g., "N42", "156")
         existing_sr = bill.get("bill_sr_no", "")
-        if existing_sr and str(existing_sr) not in ["0", "N0", ""]:
-            return str(existing_sr)
+        if existing_sr and str(existing_sr).strip() not in ["0", "N0", "", "None"]:
+            return str(existing_sr).strip()
         
-        bill_serial = bill.get("serial_number", 0)
-        is_serial_na = bill.get("serial_na", False) or bill_serial == 0
+        bill_serial = bill.get("serial_number") or 0
+        is_serial_na = bill.get("serial_na", False) or bill_serial == 0 or bill_serial is None
         
         if is_serial_na:
+            # Find nearest property with valid serial based on GPS
             nearest_serial = 0
             if valid_serials_with_gps and bill.get("latitude") and bill.get("longitude"):
                 min_distance = float('inf')
-                bill_lat = bill["latitude"]
-                bill_lng = bill["longitude"]
+                bill_lat = float(bill["latitude"])
+                bill_lng = float(bill["longitude"])
                 
                 for vs in valid_serials_with_gps:
                     dist = ((vs["lat"] - bill_lat) ** 2 + (vs["lng"] - bill_lng) ** 2) ** 0.5
@@ -4568,11 +4569,16 @@ async def split_bills_by_specific_employees(
                         min_distance = dist
                         nearest_serial = vs["serial"]
             elif valid_serials_with_gps:
+                # Fallback to first valid serial if no GPS on this bill
                 nearest_serial = valid_serials_with_gps[0]["serial"]
             
-            return f"N{nearest_serial}"
+            # Return N-prefix with nearest serial (e.g., N8, N21)
+            if nearest_serial > 0:
+                return f"N{nearest_serial}"
+            else:
+                return "N/A"
         else:
-            return str(bill_serial)
+            return str(int(bill_serial))
     
     for emp_idx, emp in enumerate(employees):
         start_idx = emp_idx * bills_per_employee
