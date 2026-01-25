@@ -34,7 +34,8 @@ import {
   Eye,
   Trash2,
   Loader2,
-  Download
+  Download,
+  ClipboardCheck
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
