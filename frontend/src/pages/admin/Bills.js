@@ -821,6 +821,31 @@ export default function BillsPage() {
                 <AlertTriangle className="w-5 h-5 text-blue-600" />
                 <h3 className="font-semibold text-blue-800">Colony Statistics: {colonyStats.colony}</h3>
               </div>
+              
+              {/* Upload Messages */}
+              {colonyStats.upload_messages && colonyStats.upload_messages.length > 0 && (
+                <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-sm font-medium text-amber-800 mb-2">📤 PDF Upload History:</p>
+                  {colonyStats.upload_messages.map((um, idx) => (
+                    <p key={idx} className="text-sm text-amber-700">
+                      <span className="font-medium">{um.batch_name}:</span> {um.message}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
+              {/* Add to Properties Messages */}
+              {colonyStats.add_to_properties_messages && colonyStats.add_to_properties_messages.length > 0 && (
+                <div className="mb-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <p className="text-sm font-medium text-emerald-800 mb-2">📋 Add to Properties History:</p>
+                  {colonyStats.add_to_properties_messages.map((apm, idx) => (
+                    <p key={idx} className="text-sm text-emerald-700">
+                      <span className="font-medium">{apm.batch_name}:</span> {apm.message}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-2xl font-bold text-blue-600">{colonyStats.total_bills || 0}</p>
