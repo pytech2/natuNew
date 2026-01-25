@@ -584,39 +584,25 @@ export default function Survey() {
           </Card>
         ) : (
           <>
-        {/* Property Info Card - Shows all required fields */}
+        {/* Property Info Card - Property ID BIG, Serial Number small */}
         <Card className="border-2 border-blue-200">
           <CardHeader className="pb-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
-            <CardTitle className="text-sm font-mono uppercase tracking-wider flex items-center justify-between">
-              <span>Property Information</span>
-              {/* Bill Serial Number - Prominently displayed */}
-              <div className="bg-white text-blue-600 px-3 py-1 rounded-full font-bold text-lg">
-                Sr. No: {property?.bill_sr_no || property?.serial_number || '-'}
-              </div>
+            <CardTitle className="text-sm font-mono uppercase tracking-wider">
+              Property Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm pt-3">
-            {/* Serial Number Banner */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-amber-700 text-xs font-semibold">BILL SERIAL NUMBER</span>
-                  <p className="text-2xl font-bold text-amber-600">
-                    {property?.bill_sr_no || property?.serial_number || '-'}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500 text-xs">Property ID</span>
-                  <p className="font-mono font-medium text-blue-600">{property?.property_id}</p>
-                </div>
+            {/* Property ID - BIG and prominent */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+              <span className="text-blue-600 text-xs font-semibold">PROPERTY ID</span>
+              <p className="text-2xl font-bold text-blue-700">{property?.property_id || '-'}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-gray-500 text-xs">Sr. No:</span>
+                <span className="font-medium text-gray-700">{property?.bill_sr_no || property?.serial_number || '-'}</span>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-slate-500 text-xs">Property ID</span>
-                <p className="font-mono font-medium">{property?.property_id}</p>
-              </div>
               <div>
                 <span className="text-slate-500 text-xs">Owner</span>
                 <p className="font-medium">{property?.owner_name || '-'}</p>
@@ -641,7 +627,7 @@ export default function Survey() {
                 <span className="text-slate-500 text-xs">Total Amount</span>
                 <p className="font-medium text-red-600">₹{property?.amount || '0'}</p>
               </div>
-              <div>
+              <div className="col-span-2">
                 <span className="text-slate-500 text-xs">Address</span>
                 <p className="font-medium text-xs">{property?.address || '-'}</p>
               </div>
