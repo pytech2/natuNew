@@ -4099,24 +4099,40 @@ async def split_bills_by_employee(
             output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
             new_page = output_pdf[-1]
             
-            # Find BillSrNo position and place serial number after it
-            bill_sr_positions = new_page.search_for("BillSrNo")
+            # Get page dimensions
             rect = new_page.rect
             rotation = new_page.rotation
             
-            if bill_sr_positions:
-                bill_sr_rect = bill_sr_positions[0]
-                if rotation == 90:
-                    x = bill_sr_rect.x0
-                    y = bill_sr_rect.y1 + 5
-                else:
-                    x = bill_sr_rect.x1 + 35
-                    y = bill_sr_rect.y0
-            else:
-                x, y = rect.width - 100, 50
-            
+            # Get the serial number text
             sn_text = get_display_serial(bill)
-            new_page.insert_text((x, y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
+            
+            # Calculate position - TOP RIGHT CORNER (clearly visible)
+            # Position varies based on page rotation
+            if rotation == 90:
+                x = rect.width - 80
+                y = 60
+            elif rotation == 270:
+                x = 30
+                y = rect.height - 60
+            else:
+                # Normal orientation - top right
+                x = rect.width - 100
+                y = 50
+            
+            # Draw white background rectangle for visibility
+            text_width = len(sn_text) * sn_font_size * 0.6
+            bg_rect = fitz.Rect(x - 5, y - sn_font_size, x + text_width + 5, y + 10)
+            new_page.draw_rect(bg_rect, color=(1, 0, 0), fill=(1, 1, 1), width=2)
+            
+            # Draw serial number text in RED BOLD
+            new_page.insert_text(
+                (x, y), 
+                sn_text, 
+                fontsize=sn_font_size, 
+                color=sn_rgb, 
+                fontname="helv",  # Helvetica - more reliable font
+                rotate=rotation
+            )
         
         output_pdf.save(
             str(output_path),
