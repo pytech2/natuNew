@@ -173,6 +173,22 @@ export default function BillsPage() {
     }
   };
 
+  const fetchColonyStats = async (colonyName) => {
+    if (!colonyName || colonyName.trim() === '') {
+      setColonyStats(null);
+      return;
+    }
+    try {
+      const response = await axios.get(`${API_URL}/admin/bills/colony-stats/${encodeURIComponent(colonyName.trim())}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setColonyStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch colony stats:', error);
+      setColonyStats(null);
+    }
+  };
+
   const fetchColonies = async () => {
     try {
       const response = await axios.get(`${API_URL}/admin/bills/colonies`, {
