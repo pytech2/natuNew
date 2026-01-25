@@ -186,53 +186,6 @@ export default function Dashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div data-testid="admin-dashboard" className="space-y-6">
-        {/* Date Filter Section */}
-        <Card className="bg-white">
-          <CardContent className="py-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="text-sm font-medium text-slate-600">Filter by Date:</span>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={dateFilter === 'today' ? 'default' : 'outline'}
-                  onClick={() => setDateFilter('today')}
-                  className={dateFilter === 'today' ? 'bg-blue-600' : ''}
-                >
-                  Today
-                </Button>
-                <Button
-                  size="sm"
-                  variant={dateFilter === 'yesterday' ? 'default' : 'outline'}
-                  onClick={() => setDateFilter('yesterday')}
-                  className={dateFilter === 'yesterday' ? 'bg-blue-600' : ''}
-                >
-                  Yesterday
-                </Button>
-                <Button
-                  size="sm"
-                  variant={dateFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setDateFilter('all')}
-                  className={dateFilter === 'all' ? 'bg-blue-600' : ''}
-                >
-                  All Time
-                </Button>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={customDate}
-                    onChange={(e) => {
-                      setCustomDate(e.target.value);
-                      setDateFilter('custom');
-                    }}
-                    className="px-3 py-1.5 text-sm border rounded-md"
-                  />
-                </div>
-              </div>
-              {loading && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Main Stats - Property Status */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="stat-card border-l-4 border-l-slate-500">
@@ -290,9 +243,6 @@ export default function Dashboard() {
             <CardTitle className="font-heading text-base flex items-center gap-2">
               <ClipboardCheck className="w-5 h-5 text-blue-600" />
               Survey Submissions Status
-              <span className="text-xs font-normal text-slate-500 ml-2">
-                ({dateFilter === 'today' ? 'Today' : dateFilter === 'yesterday' ? 'Yesterday' : dateFilter === 'all' ? 'All Time' : customDate})
-              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
