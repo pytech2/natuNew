@@ -2003,6 +2003,24 @@ async def list_areas(current_user: dict = Depends(get_current_user)):
     
     return {"areas": areas}
 
+@api_router.get("/admin/submission-stats")
+async def get_submission_stats(current_user: dict = Depends(get_current_user)):
+    """Get submission statistics for dashboard"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    total = await db.submissions.count_documents({})
+    pending = await db.submissions.count_documents({"status": "Pending"})
+    approved = await db.submissions.count_documents({"status": "Approved"})
+    rejected = await db.submissions.count_documents({"status": "Rejected"})
+    
+    return {
+        "total": total,
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected
+    }
+
 @api_router.get("/admin/submissions")
 async def list_submissions(
     batch_id: Optional[str] = None,
