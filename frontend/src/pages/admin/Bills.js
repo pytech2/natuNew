@@ -63,6 +63,7 @@ export default function BillsPage() {
   const [colonies, setColonies] = useState([]);
   const [batches, setBatches] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [batchStats, setBatchStats] = useState(null);  // Batch skip statistics
   
   // Filters
   const [filters, setFilters] = useState({
