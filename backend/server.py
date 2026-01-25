@@ -2085,6 +2085,8 @@ async def list_submissions(
                 sub["property_amount"] = prop.get("amount", "")
                 sub["property_ward"] = prop.get("ward", "")
                 sub["colony"] = prop.get("colony") or prop.get("ward", "")
+                sub["total_area"] = prop.get("total_area", "")
+                sub["category"] = prop.get("category", "")
                 # Add serial number info
                 sub["serial_number"] = prop.get("serial_number", 0)
                 sub["bill_sr_no"] = prop.get("bill_sr_no", "")
