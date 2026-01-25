@@ -1393,7 +1393,7 @@ export default function PropertyMap() {
                 )}
 
                 {/* Approve/Reject Actions */}
-                {surveyData.status !== 'Approved' && surveyData.status !== 'Rejected' && (
+                {(!surveyData.status || surveyData.status === 'Pending' || surveyData.status === 'Completed') && (
                                 type="radio"
                                 name="special_condition"
                                 value="owner_denied"
