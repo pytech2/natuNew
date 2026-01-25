@@ -155,6 +155,22 @@ export default function BillsPage() {
     }
   };
 
+  const fetchBatchStats = async (batchId) => {
+    if (!batchId) {
+      setBatchStats(null);
+      return;
+    }
+    try {
+      const response = await axios.get(`${API_URL}/admin/bills/batch-stats/${batchId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBatchStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch batch stats:', error);
+      setBatchStats(null);
+    }
+  };
+
   const fetchColonies = async () => {
     try {
       const response = await axios.get(`${API_URL}/admin/bills/colonies`, {
