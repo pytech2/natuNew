@@ -519,53 +519,120 @@ export default function Submissions() {
             </DialogHeader>
 
             {selectedSubmission && (
-              <div className="space-y-6">
-                {/* Survey Info - Same fields as Surveyor page */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Receiver Name</label>
-                    <p className="font-medium">{selectedSubmission.receiver_name || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Receiver Mobile</label>
-                    <p className="font-medium font-mono">{selectedSubmission.receiver_mobile || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Relation with Owner</label>
-                    <p className="font-medium">{selectedSubmission.relation || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Correct Colony Name</label>
-                    <p className="font-medium">{selectedSubmission.correct_colony_name || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Self Satisfied</label>
-                    <p className="font-medium">{selectedSubmission.self_satisfied || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Submitted By</label>
-                    <p className="font-medium">{selectedSubmission.employee_name}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Submitted At</label>
-                    <p className="font-medium text-sm">{new Date(selectedSubmission.submitted_at).toLocaleString()}</p>
+              <div className="space-y-4">
+                {/* Property Info Header - Same format as Surveyor Map */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Property ID</div>
+                  <div className="text-2xl font-bold text-blue-700 mt-1">{selectedSubmission.property_id || '-'}</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-gray-500">Sr. No:</span>
+                    <span className="font-bold text-red-600">{selectedSubmission.bill_sr_no || selectedSubmission.serial_number || '-'}</span>
                   </div>
                 </div>
 
-                {/* GPS */}
-                <div className="p-4 bg-emerald-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-5 h-5 text-emerald-600" />
-                    <span className="font-medium text-emerald-800">GPS Location</span>
+                {/* Status Badge */}
+                <div>
+                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                    selectedSubmission.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 
+                    selectedSubmission.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {selectedSubmission.status === 'Approved' ? '✓ ' : ''}
+                    {selectedSubmission.status}
+                  </span>
+                </div>
+
+                {/* Property Details Grid - Same as Surveyor Map */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Owner</div>
+                    <div className="font-semibold text-gray-900">{selectedSubmission.property_owner_name || '-'}</div>
                   </div>
-                  <p className="font-mono text-emerald-700">
-                    Lat: {selectedSubmission.latitude?.toFixed(6)}, Long: {selectedSubmission.longitude?.toFixed(6)}
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Owner Mobile</div>
+                    {selectedSubmission.property_mobile ? (
+                      <a href={`tel:${selectedSubmission.property_mobile}`} className="font-semibold text-blue-600 underline">
+                        {selectedSubmission.property_mobile}
+                      </a>
+                    ) : (
+                      <div className="text-gray-400">-</div>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Colony</div>
+                    <div className="font-medium text-gray-800">{selectedSubmission.colony || selectedSubmission.property_ward || '-'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Total Area</div>
+                    <div className="font-medium text-gray-800">{selectedSubmission.total_area || '-'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Category</div>
+                    <div className="font-medium text-gray-800">{selectedSubmission.category || 'Residential'}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Amount</div>
+                    <div className="font-bold text-red-600 text-lg">₹{selectedSubmission.property_amount || '0'}</div>
+                  </div>
+                </div>
+
+                {/* Receiver Details */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Survey Details</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Receiver Name</div>
+                      <div className="font-medium">{selectedSubmission.receiver_name || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Receiver Mobile</div>
+                      <div className="font-mono">{selectedSubmission.receiver_mobile || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Relation</div>
+                      <div className="font-medium">{selectedSubmission.relation || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Self Certification</div>
+                      <div className="font-medium">{selectedSubmission.self_cert_status || selectedSubmission.self_satisfied || '-'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Employee</div>
+                      <div className="font-medium">{selectedSubmission.employee_name}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Submit Date</div>
+                      <div className="font-medium text-xs">{new Date(selectedSubmission.submitted_at).toLocaleString('en-IN')}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special Condition */}
+                {selectedSubmission.special_condition && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="text-xs text-amber-600 font-medium">Special Condition</div>
+                    <div className="font-semibold text-amber-800">
+                      {selectedSubmission.special_condition === 'house_locked' ? 'House Locked' : 
+                       selectedSubmission.special_condition === 'owner_denied' ? 'Owner Denied' : 
+                       selectedSubmission.special_condition}
+                    </div>
+                  </div>
+                )}
+
+                {/* GPS */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-blue-800">GPS Location</span>
+                  </div>
+                  <p className="font-mono text-sm text-gray-700">
+                    {selectedSubmission.latitude?.toFixed(6)}, {selectedSubmission.longitude?.toFixed(6)}
                   </p>
                   <a
                     href={`https://www.google.com/maps?q=${selectedSubmission.latitude},${selectedSubmission.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-emerald-600 hover:underline inline-flex items-center gap-1 mt-1"
+                    className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1 mt-1"
                   >
                     View on Google Maps <ExternalLink className="w-3 h-3" />
                   </a>
@@ -573,23 +640,23 @@ export default function Submissions() {
 
                 {/* Remarks */}
                 {selectedSubmission.remarks && (
-                  <div>
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-500">Remarks</label>
-                    <p className="mt-1 p-3 bg-slate-50 rounded-lg">{selectedSubmission.remarks}</p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Remarks</div>
+                    <p className="text-gray-800">{selectedSubmission.remarks}</p>
                   </div>
                 )}
 
                 {/* Review Remarks */}
                 {selectedSubmission.review_remarks && (
                   <div className="p-4 bg-red-50 rounded-lg">
-                    <label className="text-xs font-mono uppercase tracking-wider text-red-600">Rejection Remarks</label>
+                    <div className="text-xs text-red-600 font-medium">Rejection Remarks</div>
                     <p className="mt-1 text-red-800">{selectedSubmission.review_remarks}</p>
                   </div>
                 )}
 
                 {/* Photos */}
                 <div>
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-500 mb-3 block">Photos (with GPS & Timestamp)</label>
+                  <label className="text-xs font-mono uppercase tracking-wider text-slate-500 mb-3 block">Photos</label>
                   <div className="grid grid-cols-2 gap-4">
                     {/* Filter out duplicate photos (same file_url) and show only unique photos */}
                     {selectedSubmission.photos?.filter((photo, index, self) => 
