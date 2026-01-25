@@ -3813,24 +3813,49 @@ async def generate_arranged_pdf(
             # Add serial number overlay if enabled (draw directly on copied page)
             if should_print_serial:
                 serial_text = get_display_serial(bill)
+                font_size = 20
                 
-                # Position: TOP RIGHT of page, ABOVE the bill content (outside bill border)
-                # Place it in the white margin area at the very top
-                page_width = new_page.rect.width
-                font_size = 24  # Large and clear
-                text_width = len(serial_text) * font_size * 0.6
+                # Get page rotation to position text correctly
+                rotation = new_page.rotation
                 
-                x_pos = page_width - text_width - 20  # Right side with margin
-                y_pos = 25  # Very top of page, in the margin area
-                
-                # Draw RED bold text - HORIZONTAL
-                new_page.insert_text(
-                    (x_pos, y_pos),
-                    serial_text,
-                    fontsize=font_size,
-                    fontname="helv",
-                    color=(1, 0, 0)
-                )
+                if rotation == 90:
+                    # Page is rotated 90 degrees - place text at top of VISUAL page
+                    # In rotated coordinates, the visual "top-right" is different
+                    x_pos = new_page.rect.width - 50  # Near the visual top
+                    y_pos = 15  # Left margin in rotated view
+                    # Text needs to be rotated to appear horizontal
+                    new_page.insert_text(
+                        (x_pos, y_pos),
+                        serial_text,
+                        fontsize=font_size,
+                        fontname="helv",
+                        color=(1, 0, 0),
+                        rotate=90  # Rotate text to match page orientation
+                    )
+                elif rotation == 270:
+                    x_pos = 50
+                    y_pos = new_page.rect.height - 15
+                    new_page.insert_text(
+                        (x_pos, y_pos),
+                        serial_text,
+                        fontsize=font_size,
+                        fontname="helv",
+                        color=(1, 0, 0),
+                        rotate=270
+                    )
+                else:
+                    # Normal orientation - top right
+                    page_width = new_page.rect.width
+                    text_width = len(serial_text) * font_size * 0.6
+                    x_pos = page_width - text_width - 20
+                    y_pos = 25
+                    new_page.insert_text(
+                        (x_pos, y_pos),
+                        serial_text,
+                        fontsize=font_size,
+                        fontname="helv",
+                        color=(1, 0, 0)
+                    )
             
             included_count += 1
     else:
