@@ -3607,6 +3607,46 @@ async def get_bill_colonies(
     
     return {"colonies": sorted(colonies)}
 
+@api_router.get("/admin/bills/batch-stats/{batch_id}")
+async def get_batch_stats(
+    batch_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get batch statistics including skip information"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    batch = await db.batches.find_one({"id": batch_id}, {"_id": 0})
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    
+    # Get colony-wise stats
+    pipeline = [
+        {"$match": {"batch_id": batch_id}},
+        {"$group": {
+            "_id": "$colony",
+            "total": {"$sum": 1},
+            "na_serial": {"$sum": {"$cond": ["$serial_na", 1, 0]}},
+            "valid_serial": {"$sum": {"$cond": ["$serial_na", 0, 1]}}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    colony_stats = await db.bills.aggregate(pipeline).to_list(None)
+    
+    return {
+        "batch": batch,
+        "skip_stats": batch.get("skip_stats", {}),
+        "colony_stats": [
+            {
+                "colony": stat["_id"] or "Unknown",
+                "total_bills": stat["total"],
+                "na_serial_bills": stat["na_serial"],
+                "valid_serial_bills": stat["valid_serial"]
+            }
+            for stat in colony_stats
+        ]
+    }
+
 @api_router.put("/admin/bills/{bill_id}")
 async def update_bill(
     bill_id: str,
