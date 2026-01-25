@@ -3357,7 +3357,12 @@ async def upload_pdf_bills(
         "uploaded_by": current_user["id"],
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "status": "ACTIVE",
-        "total_records": 0
+        "total_records": 0,
+        "skip_stats": {
+            "skipped_na_empty": 0,
+            "skipped_vacant": 0,
+            "na_serial_count": 0
+        }
     }
     
     # Helper function to check if owner name is valid (not NA or empty)
