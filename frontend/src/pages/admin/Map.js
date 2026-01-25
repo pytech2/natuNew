@@ -525,7 +525,7 @@ export default function PropertyMap() {
     }
   };
 
-  // Approve survey
+  // Approve survey - stays on same position
   const handleApproveSurvey = async () => {
     if (!surveyData) return;
     
@@ -538,14 +538,16 @@ export default function PropertyMap() {
       });
       
       toast.success('Survey approved');
-      setSurveyDialog(false);
+      // Update local state without closing dialog or changing map position
+      setSurveyData(prev => ({ ...prev, status: 'Approved' }));
+      // Refresh properties in background
       filters.colony && fetchPropertiesByColony(filters.colony);
     } catch (error) {
       toast.error('Failed to approve survey');
     }
   };
 
-  // Reject survey
+  // Reject survey - stays on same position
   const handleRejectSurvey = async () => {
     if (!surveyData || !rejectRemarks.trim()) {
       toast.error('Please provide rejection remarks');
@@ -563,8 +565,10 @@ export default function PropertyMap() {
       
       toast.success('Survey rejected');
       setRejectDialog(false);
-      setSurveyDialog(false);
       setRejectRemarks('');
+      // Update local state without closing main dialog
+      setSurveyData(prev => ({ ...prev, status: 'Rejected' }));
+      // Refresh properties in background
       filters.colony && fetchPropertiesByColony(filters.colony);
     } catch (error) {
       toast.error('Failed to reject survey');
