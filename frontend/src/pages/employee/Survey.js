@@ -448,7 +448,7 @@ export default function Survey() {
       formDataObj.append('receiver_name', formData.receiver_name || (specialCondition === 'house_locked' ? 'House Locked' : specialCondition === 'owner_denied' ? 'Owner Denied' : ''));
       formDataObj.append('receiver_mobile', formData.receiver_mobile || '');
       formDataObj.append('relation', formData.relation || (canSkipRequiredFields ? 'N/A' : ''));
-      formDataObj.append('remarks', formData.remarks || (specialCondition ? `Special Condition: ${specialCondition === 'house_locked' ? 'House Locked' : 'Owner Denied'}` : ''));
+      formDataObj.append('remarks', formData.remarks || ''); // Only user-entered remarks, no auto text
       formDataObj.append('special_condition', specialCondition || '');
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
