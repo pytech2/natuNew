@@ -4026,6 +4026,45 @@ async def split_bills_by_employee(
     
     src_pdf = fitz.open(str(original_pdf_path))
     
+    # Build serial number lookup from ALL bills for N/A serials
+    valid_serials_with_gps = []
+    for b in all_bills:
+        if not b.get("serial_na", False) and b.get("serial_number", 0) > 0 and b.get("latitude") and b.get("longitude"):
+            valid_serials_with_gps.append({
+                "serial": b["serial_number"],
+                "lat": b["latitude"],
+                "lng": b["longitude"]
+            })
+    
+    def get_display_serial(bill):
+        """Get display serial number (like N34 for N/A serials)"""
+        # First check if bill_sr_no is already set correctly
+        existing_sr = bill.get("bill_sr_no", "")
+        if existing_sr and str(existing_sr) not in ["0", "N0", ""]:
+            return str(existing_sr)
+        
+        bill_serial = bill.get("serial_number", 0)
+        is_serial_na = bill.get("serial_na", False) or bill_serial == 0
+        
+        if is_serial_na:
+            nearest_serial = 0
+            if valid_serials_with_gps and bill.get("latitude") and bill.get("longitude"):
+                min_distance = float('inf')
+                bill_lat = bill["latitude"]
+                bill_lng = bill["longitude"]
+                
+                for vs in valid_serials_with_gps:
+                    dist = ((vs["lat"] - bill_lat) ** 2 + (vs["lng"] - bill_lng) ** 2) ** 0.5
+                    if dist < min_distance:
+                        min_distance = dist
+                        nearest_serial = vs["serial"]
+            elif valid_serials_with_gps:
+                nearest_serial = valid_serials_with_gps[0]["serial"]
+            
+            return f"N{nearest_serial}"
+        else:
+            return str(bill_serial)
+    
     for emp_idx in range(employee_count):
         start_idx = emp_idx * bills_per_employee
         end_idx = min(start_idx + bills_per_employee, total_bills)
@@ -4064,7 +4103,7 @@ async def split_bills_by_employee(
             else:
                 x, y = rect.width - 100, 50
             
-            sn_text = f"{bill['serial_number']}"
+            sn_text = get_display_serial(bill)
             new_page.insert_text((x, y), sn_text, fontsize=sn_font_size, color=sn_rgb, fontname="hebo", rotate=rotation)
         
         output_pdf.save(
