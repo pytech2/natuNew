@@ -3508,8 +3508,25 @@ async def upload_pdf_bills(
     if bills:
         await db.bills.insert_many(bills)
         batch_doc["total_records"] = len(bills)
+        batch_doc["skip_stats"] = {
+            "skipped_na_empty": skipped_count,
+            "skipped_vacant": skipped_vacant,
+            "na_serial_count": na_serial_count,
+            "total_skipped": skipped_count + skipped_vacant
+        }
     
     await db.batches.insert_one(batch_doc)
+    
+    # Get unique colonies with their bill counts
+    colony_stats = {}
+    for b in bills:
+        colony_name = b.get("colony", "").strip()
+        if colony_name:
+            if colony_name not in colony_stats:
+                colony_stats[colony_name] = {"total": 0, "na_serial": 0}
+            colony_stats[colony_name]["total"] += 1
+            if b.get("serial_na"):
+                colony_stats[colony_name]["na_serial"] += 1
     
     # Get unique colonies
     colonies = list(set([b.get("colony", "").strip() for b in bills if b.get("colony")]))
