@@ -101,6 +101,7 @@ export default function Dashboard() {
     try {
       const dateParam = getDateParam();
       const dateQuery = dateParam ? `?date=${dateParam}` : '';
+      const todayDate = new Date().toISOString().split('T')[0];
       
       const [statsRes, progressRes, attendanceRes, submissionsRes] = await Promise.all([
         axios.get(`${API_URL}/admin/dashboard${dateQuery}`, {
@@ -109,9 +110,10 @@ export default function Dashboard() {
         axios.get(`${API_URL}/admin/employee-progress${dateQuery}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API_URL}/admin/attendance?date=${dateParam || new Date().toISOString().split('T')[0]}`, {
+        // Always fetch today's attendance for the attendance card
+        axios.get(`${API_URL}/admin/attendance?date=${todayDate}&limit=100`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { records: [] } })),
+        }).catch(() => ({ data: { attendance: [], total: 0 } })),
         axios.get(`${API_URL}/admin/submission-stats${dateQuery}`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } }))
@@ -120,11 +122,11 @@ export default function Dashboard() {
       setEmployeeProgress(progressRes.data);
       setSubmissionStats(submissionsRes.data);
       
-      // Calculate attendance stats - API returns 'attendance' and 'total'
-      const attendanceTotal = attendanceRes.data?.total || 0;
+      // Calculate attendance stats - use total from API response
+      const attendanceTotal = attendanceRes.data?.total || attendanceRes.data?.attendance?.length || 0;
       const totalEmployees = progressRes.data?.length || 0;
       setAttendanceStats({
-        present: attendanceTotal,  // Use total count from API
+        present: attendanceTotal,
         total: totalEmployees
       });
     } catch (error) {
