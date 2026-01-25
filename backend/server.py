@@ -3685,18 +3685,39 @@ async def get_colony_stats(
     ]
     category_stats = await db.bills.aggregate(category_pipeline).to_list(None)
     
-    # Get batch info for this colony (to get skip stats)
+    # Get batch info for this colony (to get skip stats and messages)
     batch_ids = await db.bills.distinct("batch_id", {"colony": colony_name})
     skip_stats = {"skipped_na_empty": 0, "skipped_vacant": 0, "na_serial_count": na_serial_count}
+    upload_messages = []
+    add_to_properties_messages = []
     
     for batch_id in batch_ids:
         if batch_id:
-            batch = await db.batches.find_one({"id": batch_id}, {"_id": 0, "skip_stats": 1})
-            if batch and batch.get("skip_stats"):
-                # Aggregate skip stats from all batches
-                bs = batch["skip_stats"]
-                skip_stats["skipped_na_empty"] += bs.get("skipped_na_empty", 0)
-                skip_stats["skipped_vacant"] += bs.get("skipped_vacant", 0)
+            batch = await db.batches.find_one(
+                {"id": batch_id}, 
+                {"_id": 0, "name": 1, "skip_stats": 1, "add_to_properties_stats": 1}
+            )
+            if batch:
+                batch_name = batch.get("name", "Unknown Batch")
+                # Get PDF upload stats
+                if batch.get("skip_stats"):
+                    bs = batch["skip_stats"]
+                    skip_stats["skipped_na_empty"] += bs.get("skipped_na_empty", 0)
+                    skip_stats["skipped_vacant"] += bs.get("skipped_vacant", 0)
+                    if bs.get("upload_message"):
+                        upload_messages.append({
+                            "batch_name": batch_name,
+                            "message": bs["upload_message"]
+                        })
+                # Get Add to Properties stats
+                if batch.get("add_to_properties_stats"):
+                    aps = batch["add_to_properties_stats"]
+                    if aps.get("message"):
+                        add_to_properties_messages.append({
+                            "batch_name": batch_name,
+                            "message": aps["message"],
+                            "stats": aps
+                        })
     
     return {
         "colony": colony_name,
@@ -3705,6 +3726,8 @@ async def get_colony_stats(
         "valid_serial_count": valid_serial_count,
         "with_gps": with_gps,
         "skip_stats": skip_stats,
+        "upload_messages": upload_messages,
+        "add_to_properties_messages": add_to_properties_messages,
         "category_breakdown": [
             {"category": stat["_id"] or "Unknown", "count": stat["count"]}
             for stat in category_stats
