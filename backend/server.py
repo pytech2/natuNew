@@ -4609,14 +4609,20 @@ async def split_bills_by_specific_employees(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Position: TOP RIGHT of page, ABOVE the bill content (outside bill border)
-            page_width = new_page.rect.width
-            text_width = len(sn_text) * sn_font_size * 0.6
+            # Find BillSrNo position to place serial number relative to it
+            bill_sr = new_page.search_for("BillSrNo")
             
-            sn_x = page_width - text_width - 20  # Right side with margin
-            sn_y = 25  # Very top of page, in the margin area
+            if bill_sr:
+                pos = bill_sr[0]
+                # Place text to the LEFT of BillSrNo (which appears ABOVE in rotated view)
+                sn_x = pos.x0 - 30
+                sn_y = pos.y0 + 10
+            else:
+                # Fallback position
+                sn_x = 50
+                sn_y = 100
             
-            # Draw serial number text in RED - HORIZONTAL
+            # Draw serial number text in RED
             new_page.insert_text(
                 (sn_x, sn_y), 
                 sn_text, 
