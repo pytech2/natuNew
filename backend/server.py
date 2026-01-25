@@ -4106,32 +4106,27 @@ async def split_bills_by_employee(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Calculate position - TOP RIGHT CORNER (clearly visible)
-            # Position varies based on page rotation
-            if rotation == 90:
-                x = rect.width - 80
-                y = 60
-            elif rotation == 270:
-                x = 30
-                y = rect.height - 60
+            # Search for "BillSrNo" text to place serial number right after it
+            bill_sr_positions = new_page.search_for("BillSrNo")
+            
+            if bill_sr_positions:
+                # Found BillSrNo text - place serial number right after it
+                pos = bill_sr_positions[0]
+                # Position right after "BillSrNo.:" text
+                x = pos.x1 + 5  # Just after the text
+                y = pos.y1 - 2  # Align vertically
             else:
-                # Normal orientation - top right
+                # Fallback to top right corner
                 x = rect.width - 100
                 y = 50
             
-            # Draw white background rectangle for visibility
-            text_width = len(sn_text) * sn_font_size * 0.6
-            bg_rect = fitz.Rect(x - 5, y - sn_font_size, x + text_width + 5, y + 10)
-            new_page.draw_rect(bg_rect, color=(1, 0, 0), fill=(1, 1, 1), width=2)
-            
-            # Draw serial number text in RED BOLD
+            # Draw serial number text in RED BOLD (no background, just the number)
             new_page.insert_text(
                 (x, y), 
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
-                fontname="helv",  # Helvetica - more reliable font
-                rotate=rotation
+                fontname="helv"
             )
         
         output_pdf.save(
