@@ -1845,7 +1845,10 @@ async def admin_dashboard(
     }
 
 @api_router.get("/admin/employee-progress")
-async def get_employee_progress(current_user: dict = Depends(get_current_user)):
+async def get_employee_progress(
+    date: str = None,  # Optional date filter
+    current_user: dict = Depends(get_current_user)
+):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -1856,9 +1859,11 @@ async def get_employee_progress(current_user: dict = Depends(get_current_user)):
     
     for emp in employees:
         total = await db.properties.count_documents({"assigned_employee_id": emp["id"]})
-        completed = await db.properties.count_documents({
+        
+        # Count approved properties (Completed + Approved = done)
+        approved = await db.properties.count_documents({
             "assigned_employee_id": emp["id"],
-            "status": "Completed"
+            "status": {"$in": ["Completed", "Approved"]}
         })
         
         # Today's completed for this employee
@@ -1868,11 +1873,15 @@ async def get_employee_progress(current_user: dict = Depends(get_current_user)):
             "status": {"$ne": "Rejected"}
         })
         
-        # Overall completed (all time)
-        overall_completed = await db.submissions.count_documents({
-            "employee_id": emp["id"],
-            "status": {"$ne": "Rejected"}
-        })
+        # If date filter provided, use that instead
+        if date:
+            date_start = f"{date}T00:00:00"
+            date_end = f"{date}T23:59:59"
+            today_completed = await db.submissions.count_documents({
+                "employee_id": emp["id"],
+                "submitted_at": {"$gte": date_start, "$lte": date_end},
+                "status": {"$ne": "Rejected"}
+            })
         
         # Get assigned colonies for this employee
         assigned_colonies = await db.properties.distinct("ward", {"assigned_employee_id": emp["id"]})
@@ -1883,10 +1892,9 @@ async def get_employee_progress(current_user: dict = Depends(get_current_user)):
             "employee_name": emp["name"],
             "role": emp["role"],
             "total_assigned": total,
-            "completed": completed,
-            "pending": total - completed,
+            "completed": approved,  # Using approved (done) count
+            "pending": total - approved,
             "today_completed": today_completed,
-            "overall_completed": overall_completed,
             "assigned_colonies": assigned_colonies,
             "colony_count": len(assigned_colonies)
         })
