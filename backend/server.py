@@ -569,8 +569,12 @@ async def get_employee_map_properties(
         "property_id": 1,
         "owner_name": 1,
         "colony": 1,
+        "ward": 1,
         "mobile": 1,
         "amount": 1,
+        "total_area": 1,
+        "category": 1,
+        "address": 1,
         "self_certified": 1
     }
     
