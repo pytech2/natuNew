@@ -3813,49 +3813,29 @@ async def generate_arranged_pdf(
             # Add serial number overlay if enabled (draw directly on copied page)
             if should_print_serial:
                 serial_text = get_display_serial(bill)
-                font_size = 20
+                font_size = 14
                 
-                # Get page rotation to position text correctly
-                rotation = new_page.rotation
+                # Find BillSrNo position to place serial number relative to it
+                bill_sr = new_page.search_for("BillSrNo")
                 
-                if rotation == 90:
-                    # Page is rotated 90 degrees - place text at top of VISUAL page
-                    # In rotated coordinates, the visual "top-right" is different
-                    x_pos = new_page.rect.width - 50  # Near the visual top
-                    y_pos = 15  # Left margin in rotated view
-                    # Text needs to be rotated to appear horizontal
-                    new_page.insert_text(
-                        (x_pos, y_pos),
-                        serial_text,
-                        fontsize=font_size,
-                        fontname="helv",
-                        color=(1, 0, 0),
-                        rotate=90  # Rotate text to match page orientation
-                    )
-                elif rotation == 270:
-                    x_pos = 50
-                    y_pos = new_page.rect.height - 15
-                    new_page.insert_text(
-                        (x_pos, y_pos),
-                        serial_text,
-                        fontsize=font_size,
-                        fontname="helv",
-                        color=(1, 0, 0),
-                        rotate=270
-                    )
+                if bill_sr:
+                    pos = bill_sr[0]
+                    # Place text to the LEFT of BillSrNo (which appears ABOVE in rotated view)
+                    x_pos = pos.x0 - 30
+                    y_pos = pos.y0 + 10
                 else:
-                    # Normal orientation - top right
-                    page_width = new_page.rect.width
-                    text_width = len(serial_text) * font_size * 0.6
-                    x_pos = page_width - text_width - 20
-                    y_pos = 25
-                    new_page.insert_text(
-                        (x_pos, y_pos),
-                        serial_text,
-                        fontsize=font_size,
-                        fontname="helv",
-                        color=(1, 0, 0)
-                    )
+                    # Fallback position
+                    x_pos = 50
+                    y_pos = 100
+                
+                # Insert text (no rotation needed - PyMuPDF handles it)
+                new_page.insert_text(
+                    (x_pos, y_pos),
+                    serial_text,
+                    fontsize=font_size,
+                    fontname="helv",
+                    color=(1, 0, 0)
+                )
             
             included_count += 1
     else:
