@@ -3815,29 +3815,28 @@ async def generate_arranged_pdf(
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
-                # Search for "BillSrNo" text to place serial number right after it
+                # Search for "BillSrNo" text to place serial number ABOVE it
                 bill_sr_positions = new_page.search_for("BillSrNo")
                 
                 if bill_sr_positions:
-                    # Found BillSrNo text - place serial number on SAME LINE, after the colon
+                    # Found BillSrNo text - place serial number ABOVE it
                     pos = bill_sr_positions[0]
-                    x_pos = pos.x1 + 25  # Right after "BillSrNo.:" with some space
-                    y_pos = pos.y0 + 12  # Same line (top of text + small offset for baseline)
-                    font_size = 12  # Match document font size
+                    x_pos = pos.x0  # Same x position as BillSrNo
+                    y_pos = pos.y0 - 5  # ABOVE the BillSrNo text
+                    font_size = 14
                 else:
                     # Fallback: top-right corner
                     font_size = 20
-                    text_width = len(serial_text) * font_size * 0.55
-                    x_pos = new_page.rect.width - text_width - 15
-                    y_pos = 30
+                    x_pos = new_page.rect.width - 80
+                    y_pos = 80
                 
                 # RED bold text - clear and readable
                 new_page.insert_text(
                     (x_pos, y_pos),
                     serial_text,
                     fontsize=font_size,
-                    fontname="helv",  # Helvetica
-                    color=(1, 0, 0)  # Red
+                    fontname="helv",
+                    color=(1, 0, 0)
                 )
             
             included_count += 1
