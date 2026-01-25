@@ -832,15 +832,24 @@ export default function Survey() {
                       <div className="flex items-start gap-2">
                         <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-semibold text-orange-800">Self Certification Status *</p>
-                          <p className="text-xs text-orange-700 mt-1">
-                            Select the self-certification status for this property
-                          </p>
+                          <p className="text-sm font-semibold text-orange-800">Self Certification *</p>
                         </div>
                       </div>
                       
-                      {/* Radio Button Options */}
-                      <div className="space-y-2">
+                      {/* ULB Portal Link - FIRST/TOP */}
+                      <a 
+                        href="https://property.ulbharyana.gov.in/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                        data-testid="ulb-portal-link"
+                      >
+                        <ExternalLink className="w-5 h-5" />
+                        Open ULB Haryana Portal
+                      </a>
+                      
+                      {/* Radio Button Options - No OTP fields */}
+                      <div className="space-y-2 pt-2">
                         {/* Option 1: Self Certified - Done */}
                         <label 
                           className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
@@ -860,7 +869,6 @@ export default function Survey() {
                           />
                           <div className="flex-1">
                             <span className="font-semibold text-green-700">Self Certified - Done</span>
-                            <p className="text-xs text-gray-500">Owner completed self-certification on portal</p>
                           </div>
                           <CheckCircle className={`w-5 h-5 ${selfCertStatus === 'done' ? 'text-green-600' : 'text-gray-300'}`} />
                         </label>
@@ -884,7 +892,6 @@ export default function Survey() {
                           />
                           <div className="flex-1">
                             <span className="font-semibold text-yellow-700">Owner Do Later</span>
-                            <p className="text-xs text-gray-500">Owner will complete self-certification later</p>
                           </div>
                           <AlertTriangle className={`w-5 h-5 ${selfCertStatus === 'later' ? 'text-yellow-600' : 'text-gray-300'}`} />
                         </label>
@@ -908,46 +915,13 @@ export default function Survey() {
                           />
                           <div className="flex-1">
                             <span className="font-semibold text-red-700">Deny</span>
-                            <p className="text-xs text-gray-500">Owner denied/refused self-certification</p>
                           </div>
                           <XCircle className={`w-5 h-5 ${selfCertStatus === 'deny' ? 'text-red-600' : 'text-gray-300'}`} />
                         </label>
                       </div>
-                      
-                      {/* Show OTP fields only when "Done" is selected */}
-                      {selfCertStatus === 'done' && (
-                        <div className="pt-3 border-t border-orange-200 space-y-3">
-                          {/* External Link */}
-                          <a 
-                            href="https://property.ulbharyana.gov.in/" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                            data-testid="ulb-portal-link"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            Open ULB Haryana Portal
-                          </a>
-                          
-                          <p className="text-xs text-orange-700 font-medium">
-                            Enter OTP details received from portal:
-                          </p>
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-orange-700">Mobile Number *</Label>
-                              <Input
-                                value={selfCertMobile}
-                                onChange={(e) => setSelfCertMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                placeholder="10-digit mobile"
-                                maxLength={10}
-                                className="h-9 border-orange-300 focus:border-orange-500"
-                                data-testid="self-cert-mobile"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-orange-700">OTP Code *</Label>
-                              <Input
+                    </CardContent>
+                  </Card>
+                )}
                                 value={selfCertOtp}
                                 onChange={(e) => setSelfCertOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 placeholder="6-digit OTP"
