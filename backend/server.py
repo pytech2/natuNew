@@ -4039,17 +4039,18 @@ async def split_bills_by_employee(
             })
     
     def get_display_serial(bill):
-        """Get display serial number (like N8 for N/A serials near serial 8)"""
-        # First check if bill_sr_no is already set correctly (e.g., "N42", "156")
-        existing_sr = bill.get("bill_sr_no", "")
-        if existing_sr and str(existing_sr).strip() not in ["0", "N0", "", "None"]:
-            return str(existing_sr).strip()
-        
+        """Get display serial number:
+        - If bill has a valid serial_number (not 0, not NA) → use that number (e.g., 7, 42)
+        - If serial is NA/blank/0 → find nearest property with valid serial based on GPS and prefix with N (e.g., N7)
+        """
         bill_serial = bill.get("serial_number") or 0
         is_serial_na = bill.get("serial_na", False) or bill_serial == 0 or bill_serial is None
         
-        if is_serial_na:
-            # Find nearest property with valid serial based on GPS
+        if not is_serial_na and bill_serial > 0:
+            # Has valid serial number - use it directly (e.g., 7, 42, 156)
+            return str(int(bill_serial))
+        else:
+            # Serial is NA/blank - find nearest property based on GPS and prefix with N
             nearest_serial = 0
             if valid_serials_with_gps and bill.get("latitude") and bill.get("longitude"):
                 min_distance = float('inf')
@@ -4062,16 +4063,12 @@ async def split_bills_by_employee(
                         min_distance = dist
                         nearest_serial = vs["serial"]
             elif valid_serials_with_gps:
-                # Fallback to first valid serial if no GPS on this bill
                 nearest_serial = valid_serials_with_gps[0]["serial"]
             
-            # Return N-prefix with nearest serial (e.g., N8, N21)
             if nearest_serial > 0:
                 return f"N{nearest_serial}"
             else:
                 return "N/A"
-        else:
-            return str(int(bill_serial))
     
     for emp_idx in range(employee_count):
         start_idx = emp_idx * bills_per_employee
