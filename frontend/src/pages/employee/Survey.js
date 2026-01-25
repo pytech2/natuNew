@@ -922,27 +922,6 @@ export default function Survey() {
                     </CardContent>
                   </Card>
                 )}
-                                value={selfCertOtp}
-                                onChange={(e) => setSelfCertOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                placeholder="6-digit OTP"
-                                maxLength={6}
-                                className="h-9 border-orange-300 focus:border-orange-500 font-mono text-center tracking-widest"
-                                data-testid="self-cert-otp"
-                              />
-                            </div>
-                          </div>
-                          
-                          {selfCertMobile.length === 10 && selfCertOtp.length >= 4 && (
-                            <div className="p-2 bg-green-100 rounded-lg flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              <span className="text-xs text-green-700 font-medium">OTP recorded ✓</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
 
                 <div className="space-y-2">
                   <Label>Remarks</Label>
