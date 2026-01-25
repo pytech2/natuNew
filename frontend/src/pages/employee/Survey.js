@@ -731,8 +731,23 @@ export default function Survey() {
                 {canSkipRequiredFields && (
                   <div className="p-3 bg-white rounded-lg border border-amber-300">
                     <p className="text-xs text-amber-800 font-medium">
-                      ✓ You can submit without photo, signature, and receiver details
+                      ✓ You can submit without receiver details
                     </p>
+                  </div>
+                )}
+                
+                {/* Remarks field for special conditions */}
+                {canSkipRequiredFields && (
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-amber-700">Remarks (Optional)</Label>
+                    <Textarea
+                      value={formData.remarks}
+                      onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                      placeholder="Add any additional remarks..."
+                      rows={2}
+                      className="border-amber-300"
+                      data-testid="special-remarks-input"
+                    />
                   </div>
                 )}
               </CardContent>
