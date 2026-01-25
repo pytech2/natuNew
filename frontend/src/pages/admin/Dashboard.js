@@ -398,12 +398,39 @@ export default function Dashboard() {
         {/* Employee Progress Report Table - Modern Style */}
         <Card className="shadow-lg border-0 bg-white">
           <CardHeader className="border-b border-slate-100">
-            <CardTitle className="font-heading text-lg flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-emerald-600" />
-              </div>
-              Employee Progress Report
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-heading text-lg flex items-center gap-2">
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-emerald-600" />
+                </div>
+                Employee Progress Report
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  // Download as CSV
+                  const headers = ['Employee', 'Role', 'Today', 'Completed', 'Pending', 'Progress %'];
+                  const sortedData = [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0));
+                  const rows = sortedData.map(emp => {
+                    const percentage = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
+                    return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.today_completed, emp.completed, emp.pending, percentage + '%'];
+                  });
+                  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `employee_progress_${new Date().toISOString().split('T')[0]}.csv`;
+                  a.click();
+                  toast.success('Downloaded employee progress report');
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {employeeProgress.length > 0 ? (
@@ -413,7 +440,6 @@ export default function Dashboard() {
                     <tr>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Colonies</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Today</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Completed</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending</th>
@@ -422,7 +448,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {employeeProgress.map((emp, idx) => {
+                    {[...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0)).map((emp, idx) => {
                       const percentage = emp.total_assigned > 0 
                         ? Math.round((emp.completed / emp.total_assigned) * 100) 
                         : 0;
@@ -445,11 +471,6 @@ export default function Dashboard() {
                               'bg-blue-100 text-blue-700'
                             }`}>
                               {ROLE_LABELS[emp.role] || emp.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm">
-                              {emp.colony_count || 0}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
