@@ -4086,27 +4086,17 @@ async def split_bills_by_employee(
             output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
             new_page = output_pdf[-1]
             
-            # Get page dimensions
-            rect = new_page.rect
-            rotation = new_page.rotation
-            
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Search for "BillSrNo" text to place serial number ABOVE it
-            bill_sr_positions = new_page.search_for("BillSrNo")
+            # Position: TOP RIGHT of page, ABOVE the bill content (outside bill border)
+            page_width = new_page.rect.width
+            text_width = len(sn_text) * sn_font_size * 0.6
             
-            if bill_sr_positions:
-                # Found BillSrNo text - place serial number ABOVE it
-                pos = bill_sr_positions[0]
-                x = pos.x0  # Same x position as BillSrNo
-                y = pos.y0 - 5  # ABOVE the BillSrNo text
-            else:
-                # Fallback to top right corner
-                x = rect.width - 80
-                y = 80
+            x = page_width - text_width - 20  # Right side with margin
+            y = 25  # Very top of page, in the margin area
             
-            # Draw serial number text in RED
+            # Draw serial number text in RED - HORIZONTAL
             new_page.insert_text(
                 (x, y), 
                 sn_text, 
