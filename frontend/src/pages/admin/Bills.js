@@ -792,6 +792,53 @@ export default function BillsPage() {
           </CardContent>
         </Card>
 
+        {/* Batch Skip Stats - Show when a batch is selected */}
+        {batchStats && batchStats.skip_stats && (
+          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <h3 className="font-semibold text-amber-800">Upload Statistics for: {batchStats.batch?.name}</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-blue-600">{batchStats.batch?.total_records || 0}</p>
+                  <p className="text-xs text-slate-500">Total Uploaded</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-amber-600">{batchStats.skip_stats?.skipped_na_empty || 0}</p>
+                  <p className="text-xs text-slate-500">Skipped (NA/Empty)</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-orange-600">{batchStats.skip_stats?.skipped_vacant || 0}</p>
+                  <p className="text-xs text-slate-500">Skipped (Vacant)</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-purple-600">{batchStats.skip_stats?.na_serial_count || 0}</p>
+                  <p className="text-xs text-slate-500">N/A Serial Numbers</p>
+                </div>
+              </div>
+              {batchStats.colony_stats && batchStats.colony_stats.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-amber-800 mb-2">Colony-wise Breakdown:</p>
+                  <div className="max-h-32 overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {batchStats.colony_stats.map((cs, idx) => (
+                        <div key={idx} className="bg-white rounded px-3 py-2 text-sm flex justify-between items-center">
+                          <span className="font-medium truncate">{cs.colony}</span>
+                          <span className="text-slate-500 ml-2">
+                            {cs.total_bills} bills ({cs.na_serial_bills} N/A)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="stat-card">
