@@ -432,18 +432,6 @@ export default function Survey() {
           toast.error('Please select self-certification status');
           return;
         }
-        
-        // If "Done" is selected, OTP is required
-        if (selfCertStatus === 'done') {
-          if (!selfCertMobile || selfCertMobile.length !== 10) {
-            toast.error('Please enter valid 10-digit mobile number for self-certification');
-            return;
-          }
-          if (!selfCertOtp || selfCertOtp.length < 4) {
-            toast.error('Please enter OTP received from ULB Haryana portal');
-            return;
-          }
-        }
       }
     }
 
