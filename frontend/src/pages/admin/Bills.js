@@ -706,7 +706,10 @@ export default function BillsPage() {
 
               <Select
                 value={filters.colony}
-                onValueChange={(value) => setFilters({ ...filters, colony: value })}
+                onValueChange={(value) => {
+                  setFilters({ ...filters, colony: value });
+                  fetchColonyStats(value.trim());
+                }}
               >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Select Colony" />
