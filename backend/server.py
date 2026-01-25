@@ -3819,11 +3819,11 @@ async def generate_arranged_pdf(
                 bill_sr_positions = new_page.search_for("BillSrNo")
                 
                 if bill_sr_positions:
-                    # Found BillSrNo text - place serial number right after it
+                    # Found BillSrNo text - place serial number on SAME LINE, after the colon
                     pos = bill_sr_positions[0]
-                    x_pos = pos.x1 + 8  # Right after "BillSrNo.:" 
-                    y_pos = pos.y1 - 5  # Align with baseline
-                    font_size = 14  # Match document font size
+                    x_pos = pos.x1 + 25  # Right after "BillSrNo.:" with some space
+                    y_pos = pos.y0 + 12  # Same line (top of text + small offset for baseline)
+                    font_size = 12  # Match document font size
                 else:
                     # Fallback: top-right corner
                     font_size = 20
