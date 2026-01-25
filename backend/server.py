@@ -3815,31 +3815,29 @@ async def generate_arranged_pdf(
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 
-                # Draw serial number in top-right corner - clear, bold
-                font_size = 20  # Larger for better visibility
-                text_width = len(serial_text) * font_size * 0.55
+                # Search for "BillSrNo" text to place serial number right after it
+                bill_sr_positions = new_page.search_for("BillSrNo")
                 
-                # Position: top-right area of the page
-                x_pos = new_page.rect.width - text_width - 15
-                y_pos = 10
-                
-                rect = fitz.Rect(
-                    x_pos - 5,
-                    y_pos,
-                    new_page.rect.width - 8,
-                    y_pos + font_size + 8
-                )
-                
-                # White background with red border
-                new_page.draw_rect(rect, color=(1, 0, 0), fill=(1, 1, 1), width=1.0)
+                if bill_sr_positions:
+                    # Found BillSrNo text - place serial number right after it
+                    pos = bill_sr_positions[0]
+                    x_pos = pos.x1 + 8  # Right after "BillSrNo.:" 
+                    y_pos = pos.y1 - 5  # Align with baseline
+                    font_size = 14  # Match document font size
+                else:
+                    # Fallback: top-right corner
+                    font_size = 20
+                    text_width = len(serial_text) * font_size * 0.55
+                    x_pos = new_page.rect.width - text_width - 15
+                    y_pos = 30
                 
                 # RED bold text - clear and readable
                 new_page.insert_text(
-                    (x_pos, y_pos + font_size),
+                    (x_pos, y_pos),
                     serial_text,
                     fontsize=font_size,
-                    fontname="hebo",  # Helvetica Bold for clarity
-                    color=(1, 0, 0)  # Red to match map markers
+                    fontname="helv",  # Helvetica
+                    color=(1, 0, 0)  # Red
                 )
             
             included_count += 1
