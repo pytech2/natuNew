@@ -4099,21 +4099,20 @@ async def split_bills_by_employee(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Search for "BillSrNo" text to place serial number right after it
+            # Search for "BillSrNo" text to place serial number ABOVE it
             bill_sr_positions = new_page.search_for("BillSrNo")
             
             if bill_sr_positions:
-                # Found BillSrNo text - place serial number right after it
+                # Found BillSrNo text - place serial number ABOVE it
                 pos = bill_sr_positions[0]
-                # Position right after "BillSrNo.:" text
-                x = pos.x1 + 5  # Just after the text
-                y = pos.y1 - 2  # Align vertically
+                x = pos.x0  # Same x position as BillSrNo
+                y = pos.y0 - 5  # ABOVE the BillSrNo text
             else:
                 # Fallback to top right corner
-                x = rect.width - 100
-                y = 50
+                x = rect.width - 80
+                y = 80
             
-            # Draw serial number text in RED BOLD (no background, just the number)
+            # Draw serial number text in RED
             new_page.insert_text(
                 (x, y), 
                 sn_text, 
