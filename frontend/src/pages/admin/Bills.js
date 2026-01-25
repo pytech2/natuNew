@@ -813,6 +813,53 @@ export default function BillsPage() {
           </CardContent>
         </Card>
 
+        {/* Colony Stats - Show when a colony is selected */}
+        {colonyStats && (
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-blue-800">Colony Statistics: {colonyStats.colony}</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-blue-600">{colonyStats.total_bills || 0}</p>
+                  <p className="text-xs text-slate-500">Total Bills</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-emerald-600">{colonyStats.valid_serial_count || 0}</p>
+                  <p className="text-xs text-slate-500">Valid Serial</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-amber-600">{colonyStats.na_serial_count || 0}</p>
+                  <p className="text-xs text-slate-500">N/A Serial</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-purple-600">{colonyStats.with_gps || 0}</p>
+                  <p className="text-xs text-slate-500">With GPS</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-red-600">{colonyStats.skip_stats?.skipped_na_empty || 0}</p>
+                  <p className="text-xs text-slate-500">Skipped (NA/Empty)</p>
+                </div>
+              </div>
+              {colonyStats.category_breakdown && colonyStats.category_breakdown.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-blue-800 mb-2">Category Breakdown:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {colonyStats.category_breakdown.map((cat, idx) => (
+                      <span key={idx} className="bg-white rounded-full px-3 py-1 text-sm shadow-sm">
+                        <span className="font-medium">{cat.category}</span>
+                        <span className="text-slate-500 ml-1">({cat.count})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Batch Skip Stats - Show when a batch is selected */}
         {batchStats && batchStats.skip_stats && (
           <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
