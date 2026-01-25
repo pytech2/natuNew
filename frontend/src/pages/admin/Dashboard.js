@@ -306,6 +306,36 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Submission Stats - Below main stats */}
+        <Card className="shadow-lg border-0 bg-gradient-to-r from-slate-50 to-blue-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-heading text-base flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-blue-600" />
+              Survey Submissions Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm border">
+                <p className="text-xs text-slate-500 font-medium">Total Surveys</p>
+                <p className="text-2xl font-bold text-blue-600">{submissionStats.total || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+                <p className="text-xs text-amber-600 font-medium">Portal Pending</p>
+                <p className="text-2xl font-bold text-amber-600">{submissionStats.pending || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-green-200">
+                <p className="text-xs text-green-600 font-medium">Approved</p>
+                <p className="text-2xl font-bold text-green-600">{submissionStats.approved || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-red-200">
+                <p className="text-xs text-red-600 font-medium">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">{submissionStats.rejected || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Charts Section FIRST - Modern Card Style */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Employee Performance Bar Chart */}
