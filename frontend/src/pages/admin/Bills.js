@@ -670,7 +670,10 @@ export default function BillsPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <Select
                     value={filters.batch_id}
-                    onValueChange={(value) => setFilters({ ...filters, batch_id: value })}
+                    onValueChange={(value) => {
+                      setFilters({ ...filters, batch_id: value });
+                      fetchBatchStats(value.trim());
+                    }}
                   >
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select Batch" />
