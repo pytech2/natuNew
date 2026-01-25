@@ -52,6 +52,7 @@ export default function Dashboard() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+  const [submissionStats, setSubmissionStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [employeeProgress, setEmployeeProgress] = useState([]);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -73,7 +74,7 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const [statsRes, progressRes, attendanceRes] = await Promise.all([
+      const [statsRes, progressRes, attendanceRes, submissionsRes] = await Promise.all([
         axios.get(`${API_URL}/admin/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
@@ -82,10 +83,14 @@ export default function Dashboard() {
         }),
         axios.get(`${API_URL}/admin/attendance?date=${new Date().toISOString().split('T')[0]}`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { records: [] } }))
+        }).catch(() => ({ data: { records: [] } })),
+        axios.get(`${API_URL}/admin/submission-stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } }))
       ]);
       setStats(statsRes.data);
       setEmployeeProgress(progressRes.data);
+      setSubmissionStats(submissionsRes.data);
       
       // Calculate attendance stats
       const records = attendanceRes.data?.records || [];
