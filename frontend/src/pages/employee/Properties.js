@@ -577,23 +577,17 @@ export default function Properties() {
             </button>
             
             <div className="p-4">
-              {/* Header with Bill Serial Number */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-xs text-amber-700 font-medium uppercase tracking-wide">Bill Serial Number</div>
-                    <div className="text-4xl font-bold text-red-500 mt-1">
-                      {selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">Property ID</div>
-                    <div className="text-sm font-semibold text-blue-600">{selectedProperty.property_id}</div>
-                  </div>
+              {/* Header - Property ID BIG, Serial Number small */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Property ID</div>
+                <div className="text-2xl font-bold text-blue-700 mt-1">{selectedProperty.property_id || '-'}</div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-gray-500">Sr. No:</span>
+                  <span className="text-sm font-medium text-gray-700">{selectedProperty.bill_sr_no || selectedProperty.serial_number || '-'}</span>
                 </div>
               </div>
               
-              {/* Status Badge - Prominent */}
+              {/* Status Badge */}
               <div className="mb-4">
                 <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
                   selectedProperty.status === 'Pending' ? 'bg-red-100 text-red-700' : 
@@ -626,12 +620,12 @@ export default function Properties() {
                   <div className="font-medium text-gray-800">{selectedProperty.colony || selectedProperty.ward || '-'}</div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-xs text-gray-500 mb-1">Category</div>
-                  <div className="font-medium text-gray-800">{selectedProperty.category || 'Residential'}</div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs text-gray-500 mb-1">Total Area</div>
                   <div className="font-medium text-gray-800">{selectedProperty.total_area || '-'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Category</div>
+                  <div className="font-medium text-gray-800">{selectedProperty.category || 'Residential'}</div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs text-gray-500 mb-1">Amount</div>
@@ -650,7 +644,7 @@ export default function Properties() {
               {/* GPS & Distance */}
               <div className="mt-3 flex justify-between items-center bg-blue-50 rounded-lg p-3">
                 <div>
-                  <div className="text-xs text-blue-600 font-medium">GPS Coordinates</div>
+                  <div className="text-xs text-blue-600 font-medium">GPS</div>
                   <div className="text-xs font-mono text-gray-600 mt-1">
                     {selectedProperty.latitude?.toFixed(6)}, {selectedProperty.longitude?.toFixed(6)}
                   </div>
