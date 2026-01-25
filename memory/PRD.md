@@ -1,93 +1,84 @@
-# NSTU India - Property Tax Survey App
+# NSTU India Property Tax Management System - PRD
 
-## Latest Update: Jan 20, 2026
+## Original Problem Statement
+Full-stack web application for NSTU India Private Limited to manage property tax notice distribution and surveys. Features multiple user roles (Admin, Surveyor, Supervisor, MC Officer), bulk data upload via Excel and PDF, property assignment, surveyor mobile interface for data collection (including photos with GPS watermarks), and admin dashboard for progress tracking, review/approval, and data export.
 
-### Performance Optimizations ✅
-- **Backend Caching**: 60s TTL for map data, 5min for colonies
-- **GZip Compression**: Enabled for all responses
-- **MongoDB Indexes**: 20+ indexes on all collections
-- **Connection Pool**: 50 max connections
-- **20 concurrent users**: 0.6s response time
+## Core Requirements
 
-### Surveyor Map Features ✅ (UPDATED - MapLibre)
-- **MapLibre GL** - Free, fast map library with NATIVE 360° rotation
-- **Native Two-Finger Rotation** - Built-in gesture support, no hacks needed
-- **Fullscreen Satellite Map** - Google satellite tiles via MapLibre
-- **NO PROPERTY LIMIT** - Shows ALL assigned properties (100, 2000, 5000+)
-- **Compass Auto-Rotate** - Map follows device compass heading
-- **GPS Tracking** - Real-time location with blue pulsing dot
-- **Position Persistence** - Map center, zoom, bearing saved to localStorage
-- **Fast Loading** - Cached API responses + lightweight markers
+### User Roles & Permissions
+- **Super Admin**: Full system access, user management, data upload/export
+- **Surveyor**: View assigned properties, mark attendance, submit surveys with photos
+- **Supervisor**: Review surveyor work, manage assignments
+- **MC Officer**: Portal access, verification tasks
 
-### Admin Map UX ✅ (Jan 21, 2026)
-- **Direct Map Access** - Map opens immediately without blocking screens
-- **Inline Colony Selector** - Compact banner with dropdown, no modal required
-- **Conditional UI** - Stats and filters appear only after colony selection
-- **Dynamic Header** - Shows selected colony name or prompts to select
+### Key Workflows
+1. **Admin Workflow**: Login, upload property data (Excel/PDF), manage users, assign properties, track progress, review submissions, export data
+2. **Surveyor Workflow**: Login, mark attendance, view assigned properties on map, submit surveys with mandatory photos
+3. **Dashboard**: Real-time stats, employee progress tracking, submission management
 
-### How 360° Rotation Works (MapLibre Native)
-- Two-finger twist on mobile → Map rotates smoothly
-- `touchZoomRotate={true}` and `dragRotate={true}` enabled
-- Bearing (rotation angle) shown in compass indicator
-- Reset to North (N↑) button when rotated
+## Tech Stack
+- **Backend**: FastAPI, MongoDB (Motor), Pydantic, reportlab, pandas, openpyxl
+- **Frontend**: React, React Hooks, MapLibre GL, React-Map-GL, Tailwind CSS, Shadcn UI, axios
+- **Deployment**: User's Hostinger VPS with Nginx reverse proxy
 
-### API Endpoints (Optimized)
-| Endpoint | Purpose | Cache |
-|----------|---------|-------|
-| `/api/map/colonies` | Colony list | 5 min |
-| `/api/map/properties` | Admin map markers | 60s |
-| `/api/map/employee-properties` | Surveyor map markers | 60s |
-| `/api/file/{id}` | Serve files from GridFS | 24h |
-
-### Database Stats
-- Total Properties: 1408
-- Colonies: 2
-
-## VPS Deployment Commands
-
-```bash
-# 1. Navigate to app folder
-cd /var/www/nstu-app
-
-# 2. Pull latest code
-git fetch origin
-git reset --hard origin/main
-
-# 3. Backend setup
-cd backend
-source venv/bin/activate
-pip install -r requirements.txt
-pkill -f uvicorn
-nohup python -m uvicorn server:app --host 0.0.0.0 --port 8001 --workers 4 > backend.log 2>&1 &
-cd ..
-
-# 4. Frontend build
-cd frontend
-npm install --legacy-peer-deps
-npm run build
-cd ..
-
-# 5. Nginx config (add if not present)
-sudo tee -a /etc/nginx/nginx.conf << 'EOF'
-# Inside http { } block:
-client_max_body_size 50M;
-gzip on;
-gzip_types text/plain application/json application/javascript text/css;
-EOF
-
-# 6. Reload nginx
-sudo nginx -t && sudo systemctl reload nginx
-
-# 7. Verify
-curl http://localhost:8001/api/map/colonies
+## Architecture
+```
+/app/
+├── backend/
+│   ├── server.py         # Monolithic FastAPI server
+│   ├── requirements.txt
+│   └── .env
+├── frontend/
+│   └── src/
+│       ├── pages/admin/   # Dashboard, Map, Submissions, etc.
+│       └── pages/employee/ # Properties, Survey
+└── deploy.sh             # VPS deployment script
 ```
 
-## Test Credentials
-- **Admin**: `admin` / `nastu123`
-- **Surveyor**: `surveyor1` / `test123`
+## What's Been Implemented
 
-## Files Changed
-- `/app/backend/server.py` - Caching, GZip, optimized queries
-- `/app/frontend/src/pages/employee/Properties.js` - Fullscreen satellite map
-- `/app/frontend/src/pages/admin/Map.js` - Colony selection first
-- `/app/frontend/src/pages/admin/Bills.js` - Skip duplicates option
+### January 25, 2026
+- ✅ Removed date filter (Today/Yesterday/All Time/Custom Date) from Dashboard - user requested removal as it wasn't working properly
+- ✅ Fixed attendance count logic to use `attendance.length` directly
+
+### Previous Session Completed Work
+- Dashboard with date filters (now removed), submission stats, employee progress
+- Survey form with self-certification radio buttons, remarks for special conditions
+- Surveyor map with optimized performance, Google-style pins, 40m radius
+- Data consistency across views (Surveyor Map, Admin Map, Submissions)
+- VPS deployment script (deploy.sh)
+
+## Known Issues
+
+### P0 - Critical
+1. **Git Push Blocker**: Repository has large files in history preventing push. User needs to run `git push origin main --force`
+
+### P1 - High Priority  
+2. **Dashboard Property Count Mismatch**: User reported potential discrepancies between "Completed" vs "Approved" totals
+3. **Surveyor/Category Dropdowns**: Not working on user's Hostinger VPS
+
+### P3 - Lower Priority
+4. **VPS Deployment Fragility**: Recurring issues with user's Hostinger environment
+
+## Upcoming Tasks
+- [ ] Implement "Hide Completed Properties" toggle on map pages
+- [ ] Backend refactoring - split server.py into modular routers
+
+## Future/Backlog
+- [ ] Offline support for surveyor mobile interface
+- [ ] Download all split-employee PDFs as ZIP
+- [ ] Survey form shortcut from map marker click
+- [ ] "Completed Colony" access restrictions
+
+## Test Credentials
+- Admin: `admin` / `nastu123`
+- Surveyor: `surveyor1` / `test123`
+- Supervisor: `a` / `test123`
+- MC Officer: `1234567890` / `test123`
+
+## Key API Endpoints
+- `GET /api/admin/dashboard` - Dashboard stats
+- `GET /api/admin/submission-stats` - Submission counts
+- `GET /api/admin/employee-progress` - Employee progress data
+- `GET /api/admin/attendance` - Attendance records
+- `POST /api/employee/submit/{property_id}` - Survey submission
