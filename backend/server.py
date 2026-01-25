@@ -1807,50 +1807,41 @@ async def list_wards(current_user: dict = Depends(get_current_user)):
 
 # ============== DASHBOARD ROUTES ==============
 
-@api_router.get("/admin/dashboard", response_model=DashboardStats)
-async def admin_dashboard(current_user: dict = Depends(get_current_user)):
+@api_router.get("/admin/dashboard")
+async def admin_dashboard(
+    date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
+    current_user: dict = Depends(get_current_user)
+):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    today_start = get_today_start().isoformat()
+    # Build date filter for submissions
+    date_filter = {}
+    if date:
+        # Filter submissions by date
+        date_start = f"{date}T00:00:00"
+        date_end = f"{date}T23:59:59"
+        date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
     
+    # Property counts (always all time for total)
     total = await db.properties.count_documents({})
-    completed = await db.properties.count_documents({"status": "Completed"})
+    approved = await db.properties.count_documents({"status": "Approved"})
+    completed = await db.properties.count_documents({"status": "Completed"})  # Surveyed but not yet approved
     pending = await db.properties.count_documents({"status": "Pending"})
-    in_progress = await db.properties.count_documents({"status": "In Progress"})
     rejected = await db.properties.count_documents({"status": "Rejected"})
     employees = await db.users.count_documents({"role": {"$ne": "ADMIN"}})
-    batches = await db.batches.count_documents({"status": "ACTIVE"})
     
-    # Today's completed
-    today_completed = await db.submissions.count_documents({
-        "submitted_at": {"$gte": today_start},
-        "status": {"$ne": "Rejected"}
-    })
-    
-    # Today's unique wards (now called "colonies")
-    today_submissions = await db.submissions.find(
-        {"submitted_at": {"$gte": today_start}},
-        {"property_record_id": 1, "_id": 0}
-    ).to_list(10000)
-    
-    today_prop_ids = [s["property_record_id"] for s in today_submissions]
-    if today_prop_ids:
-        today_wards = await db.properties.distinct("ward", {"id": {"$in": today_prop_ids}})
-        today_wards_count = len([w for w in today_wards if w])
-    else:
-        today_wards_count = 0
+    # Get unique colonies count
+    colonies = await db.properties.distinct("colony")
+    colonies_count = len([c for c in colonies if c])
     
     return {
-        "total_properties": total,
-        "completed": completed,
+        "total": total,
+        "approved": approved + completed,  # Combined: Approved + Completed (both mean survey done)
         "pending": pending,
-        "in_progress": in_progress,
         "rejected": rejected,
         "employees": employees,
-        "batches": batches,
-        "today_completed": today_completed,
-        "today_wards": today_wards_count
+        "colonies": colonies_count
     }
 
 @api_router.get("/admin/employee-progress")
