@@ -453,14 +453,9 @@ export default function Survey() {
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
       
-      // Self Certification data
+      // Self Certification data - No OTP fields
       if (property?.self_certified !== true) {
-        // Non-self-certified: send status and OTP if done
         formDataObj.append('self_cert_status', selfCertStatus || ''); // done, later, deny
-        if (selfCertStatus === 'done') {
-          formDataObj.append('self_cert_mobile', selfCertMobile || '');
-          formDataObj.append('self_cert_otp', selfCertOtp || '');
-        }
         formDataObj.append('self_satisfied', selfCertStatus === 'done' ? 'yes' : 'no');
       } else {
         formDataObj.append('self_cert_status', 'already_certified');
