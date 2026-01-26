@@ -4103,12 +4103,10 @@ async def generate_arranged_pdf(
                 font_size = 18  # Larger for visibility
                 
                 # TOP RIGHT CORNER - HORIZONTAL
-                # For rotated pages (90 degrees), we need to adjust coordinates
+                # For 90-degree rotated pages, visual top-right is at high X, low Y
                 if rotation == 90:
-                    # Page is rotated 90 degrees clockwise
-                    # Visual top-right is at high X, low Y in page coordinates
-                    x_pos = rect.width - 60
-                    y_pos = 25
+                    x_pos = 500  # Near visual top-right
+                    y_pos = 20
                 elif rotation == 270:
                     x_pos = 60
                     y_pos = rect.height - 25
@@ -4123,35 +4121,42 @@ async def generate_arranged_pdf(
                     serial_text,
                     fontsize=font_size,
                     fontname="helv",
-                    color=(1, 0, 0),
-                    rotate=rotation  # Match page rotation for horizontal text
+                    color=(1, 0, 0)
                 )
             
             # Add Hindi message if NOT self-certified
             is_self_certified = bill.get("self_certified", False)
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
-                hindi_font_size = 12
                 
-                # Position: Below serial number or in top area
+                # Load FreeSans font for Hindi support
+                import os
+                font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+                if os.path.exists(font_file):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+                    font_name = 'freesans'
+                else:
+                    font_name = 'helv'
+                    hindi_msg = "Self Certify Your Property"  # Fallback to English
+                
+                # Position: Below serial number
                 if rotation == 90:
-                    msg_x = rect.width - 200
-                    msg_y = 45
+                    msg_x = 280
+                    msg_y = 20
                 elif rotation == 270:
                     msg_x = 60
                     msg_y = rect.height - 45
                 else:
-                    msg_x = rect.width - 250
+                    msg_x = rect.width - 300
                     msg_y = 45
                 
                 # Insert Hindi message in BLUE
                 new_page.insert_text(
                     (msg_x, msg_y),
                     hindi_msg,
-                    fontsize=hindi_font_size,
-                    fontname="helv",
-                    color=(0, 0, 0.8),  # Dark blue
-                    rotate=rotation
+                    fontsize=12,
+                    fontname=font_name,
+                    color=(0, 0, 0.8)
                 )
             
             included_count += 1
