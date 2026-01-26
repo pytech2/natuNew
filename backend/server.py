@@ -4969,30 +4969,57 @@ async def split_bills_by_specific_employees(
             output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
             new_page = output_pdf[-1]
             
+            # Get page rotation and dimensions
+            rotation = new_page.rotation
+            rect = new_page.rect
+            
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Find BillSrNo position to place serial number relative to it
-            bill_sr = new_page.search_for("BillSrNo")
-            
-            if bill_sr:
-                pos = bill_sr[0]
-                # Place text to the LEFT of BillSrNo (which appears ABOVE in rotated view)
-                sn_x = pos.x0 - 30
-                sn_y = pos.y0 + 10
+            # TOP RIGHT CORNER - HORIZONTAL
+            if rotation == 90:
+                sn_x = rect.width - 60
+                sn_y = 25
+            elif rotation == 270:
+                sn_x = 60
+                sn_y = rect.height - 25
             else:
-                # Fallback position
-                sn_x = 50
-                sn_y = 100
+                sn_x = rect.width - 80
+                sn_y = 25
             
-            # Draw serial number text in RED
+            # Draw serial number text in RED - top right horizontal
             new_page.insert_text(
                 (sn_x, sn_y), 
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
-                fontname="helv"
+                fontname="helv",
+                rotate=rotation
             )
+            
+            # Add Hindi message if NOT self-certified
+            is_self_certified = bill.get("self_certified", False)
+            if not is_self_certified:
+                hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
+                
+                if rotation == 90:
+                    msg_x = rect.width - 200
+                    msg_y = 45
+                elif rotation == 270:
+                    msg_x = 60
+                    msg_y = rect.height - 45
+                else:
+                    msg_x = rect.width - 250
+                    msg_y = 45
+                
+                new_page.insert_text(
+                    (msg_x, msg_y),
+                    hindi_msg,
+                    fontsize=12,
+                    fontname="helv",
+                    color=(0, 0, 0.8),
+                    rotate=rotation
+                )
         
         output_pdf.save(
             str(output_path),
