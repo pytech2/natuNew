@@ -92,6 +92,7 @@ export default function Submissions() {
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [colonyFilter, setColonyFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');  // Search by serial, property ID, owner name
   const [employees, setEmployees] = useState([]);
   const [colonies, setColonies] = useState([]);
   const [editData, setEditData] = useState({});
