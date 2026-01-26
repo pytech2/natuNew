@@ -842,7 +842,7 @@ export default function PropertyMap() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        placeholder="ID, Name..."
+                        placeholder="Serial No, ID, Name..."
                         value={filters.search}
                         onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                         className="pl-10"
