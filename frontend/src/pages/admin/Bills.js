@@ -1861,6 +1861,11 @@ export default function BillsPage() {
                       className="w-4 h-4"
                     />
                     <span className="text-emerald-600">Self-Certified Only</span>
+                    {colonyStats && (
+                      <span className="text-xs text-slate-500 ml-1">
+                        ({bills.filter(b => b.self_certified).length} bills)
+                      </span>
+                    )}
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1872,8 +1877,20 @@ export default function BillsPage() {
                       className="w-4 h-4"
                     />
                     <span className="text-amber-600">Not Self-Certified Only</span>
+                    {colonyStats && (
+                      <span className="text-xs text-slate-500 ml-1">
+                        ({bills.filter(b => !b.self_certified).length} bills)
+                      </span>
+                    )}
                   </label>
                 </div>
+              </div>
+              
+              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="text-sm text-amber-700">
+                  <AlertTriangle className="w-4 h-4 inline mr-1" />
+                  Note: If no bills match the selected filter, you will see an error message.
+                </p>
               </div>
             </div>
             <DialogFooter>
