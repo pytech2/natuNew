@@ -4422,18 +4422,18 @@ async def split_bills_by_employee(
             
             # TOP RIGHT CORNER - HORIZONTAL
             if rotation == 90:
-                x = rect.width - 60
-                y = 25
+                sn_x = 500  # Near visual top-right
+                sn_y = 20
             elif rotation == 270:
-                x = 60
-                y = rect.height - 25
+                sn_x = 60
+                sn_y = rect.height - 25
             else:
-                x = rect.width - 80
-                y = 25
+                sn_x = rect.width - 80
+                sn_y = 25
             
             # Draw serial number text in RED - top right horizontal
             new_page.insert_text(
-                (x, y), 
+                (sn_x, sn_y), 
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
