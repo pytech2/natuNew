@@ -395,11 +395,15 @@ export default function PropertyMap() {
     
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
+      const searchNum = filters.search.trim();
       filtered = filtered.filter(p => 
         p.property_id?.toLowerCase().includes(searchLower) ||
         p.owner_name?.toLowerCase().includes(searchLower) ||
         p.address?.toLowerCase().includes(searchLower) ||
-        p.mobile?.includes(filters.search)
+        p.mobile?.includes(filters.search) ||
+        // Search by serial number
+        String(p.serial_number || '').includes(searchNum) ||
+        p.bill_sr_no?.toLowerCase().includes(searchLower)
       );
     }
     
