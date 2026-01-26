@@ -3813,6 +3813,8 @@ async def get_colony_stats(
         "na_serial_count": na_serial_count,
         "valid_serial_count": valid_serial_count,
         "with_gps": with_gps,
+        "self_certified_count": self_certified_count,
+        "not_self_certified_count": not_self_certified_count,
         "skip_stats": skip_stats,
         "upload_messages": upload_messages,
         "add_to_properties_messages": add_to_properties_messages,
