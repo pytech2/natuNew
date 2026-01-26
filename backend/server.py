@@ -3575,8 +3575,18 @@ async def export_bills_excel(
     # Get bills
     bills = await db.bills.find(query, {"_id": 0}).to_list(None)
     
+    # Get count for the filter description
+    filter_desc = "All Bills"
+    if self_cert_filter == "self_certified":
+        filter_desc = "Self-Certified Only"
+    elif self_cert_filter == "not_self_certified":
+        filter_desc = "Not Self-Certified Only"
+    
     if not bills:
-        raise HTTPException(status_code=404, detail="No bills found with the specified filters")
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No bills found for '{filter_desc}' filter. Colony: {colony or 'All'}. Please check if there are any {filter_desc.lower()} records."
+        )
     
     # Create DataFrame
     df_data = []
