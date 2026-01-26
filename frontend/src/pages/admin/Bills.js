@@ -1814,6 +1814,92 @@ export default function BillsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Excel Download Dialog */}
+        <Dialog open={excelDialog} onOpenChange={setExcelDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-green-600 flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5" />
+                Download Excel
+              </DialogTitle>
+              <DialogDescription>
+                Download bills data as Excel file with optional filtering.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-600 mb-2">Current Selection:</p>
+                <p className="font-medium">
+                  {filters.colony?.trim() ? filters.colony : 'All Colonies'}
+                  {filters.batch_id?.trim() ? ` • Batch Selected` : ''}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">{pagination.total} bills will be exported</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Filter by Self-Certification:</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="excelFilter"
+                      value="all"
+                      checked={excelFilter === 'all'}
+                      onChange={(e) => setExcelFilter(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    <span>All Bills</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="excelFilter"
+                      value="self_certified"
+                      checked={excelFilter === 'self_certified'}
+                      onChange={(e) => setExcelFilter(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-emerald-600">Self-Certified Only</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="excelFilter"
+                      value="not_self_certified"
+                      checked={excelFilter === 'not_self_certified'}
+                      onChange={(e) => setExcelFilter(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-amber-600">Not Self-Certified Only</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setExcelDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExcelDownload}
+                disabled={downloadingExcel}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {downloadingExcel ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Excel
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
