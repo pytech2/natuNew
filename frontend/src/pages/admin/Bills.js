@@ -118,6 +118,11 @@ export default function BillsPage() {
   const [skipVacantPlots, setSkipVacantPlots] = useState(false); // Skip vacant/empty plots
   const [skipDuplicateGPS, setSkipDuplicateGPS] = useState(false); // Skip duplicate lat/lng
 
+  // Excel Export state
+  const [excelDialog, setExcelDialog] = useState(false);
+  const [excelFilter, setExcelFilter] = useState('all'); // 'all', 'self_certified', 'not_self_certified'
+  const [downloadingExcel, setDownloadingExcel] = useState(false);
+
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
   const [selfCertFile, setSelfCertFile] = useState(null);
