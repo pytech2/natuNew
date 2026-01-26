@@ -140,6 +140,7 @@ export default function Submissions() {
       if (employeeIdFilter || employeeFilter) params.append('employee_id', employeeIdFilter || employeeFilter);
       if (colonyFilter) params.append('colony', colonyFilter);
       if (dateFilter) params.append('date_from', dateFilter);
+      if (searchFilter) params.append('search', searchFilter);
 
       const response = await axios.get(`${API_URL}/admin/submissions?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
