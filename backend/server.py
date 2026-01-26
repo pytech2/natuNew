@@ -3548,6 +3548,77 @@ async def upload_pdf_bills(
         "message": upload_message
     }
 
+@api_router.get("/admin/bills/export-excel")
+async def export_bills_excel(
+    batch_id: Optional[str] = None,
+    colony: Optional[str] = None,
+    self_cert_filter: Optional[str] = None,  # 'self_certified', 'not_self_certified', 'all'
+    current_user: dict = Depends(get_current_user)
+):
+    """Export bills to Excel with optional self-certification filter"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Build query
+    query = {}
+    if batch_id and batch_id.strip():
+        query["batch_id"] = batch_id.strip()
+    if colony and colony.strip():
+        query["colony"] = colony.strip()
+    
+    # Apply self-certification filter
+    if self_cert_filter == "self_certified":
+        query["self_certified"] = True
+    elif self_cert_filter == "not_self_certified":
+        query["$or"] = [{"self_certified": False}, {"self_certified": {"$exists": False}}]
+    
+    # Get bills
+    bills = await db.bills.find(query, {"_id": 0}).to_list(None)
+    
+    if not bills:
+        raise HTTPException(status_code=404, detail="No bills found with the specified filters")
+    
+    # Create DataFrame
+    df_data = []
+    for bill in bills:
+        df_data.append({
+            "Serial No": bill.get("serial_number", ""),
+            "Bill Sr No": bill.get("bill_sr_no", ""),
+            "Property ID": bill.get("property_id", ""),
+            "Owner Name": bill.get("owner_name", ""),
+            "Mobile": bill.get("mobile", ""),
+            "Colony": bill.get("colony", ""),
+            "Category": bill.get("category", ""),
+            "Plot Address": bill.get("plot_address", ""),
+            "Total Area": bill.get("total_area", ""),
+            "Total Outstanding": bill.get("total_outstanding", ""),
+            "Self Certified": "Yes" if bill.get("self_certified") else "No",
+            "Serial NA": "Yes" if bill.get("serial_na") else "No",
+            "Latitude": bill.get("latitude", ""),
+            "Longitude": bill.get("longitude", "")
+        })
+    
+    df = pd.DataFrame(df_data)
+    
+    # Generate filename
+    filter_suffix = ""
+    if self_cert_filter == "self_certified":
+        filter_suffix = "_self_certified"
+    elif self_cert_filter == "not_self_certified":
+        filter_suffix = "_not_self_certified"
+    
+    colony_suffix = f"_{colony.replace(' ', '_')}" if colony and colony.strip() else ""
+    filename = f"bills_export{colony_suffix}{filter_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    export_path = UPLOAD_DIR / filename
+    
+    df.to_excel(str(export_path), index=False)
+    
+    return FileResponse(
+        path=str(export_path),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=filename
+    )
+
 @api_router.get("/admin/bills")
 async def list_bills(
     batch_id: Optional[str] = None,
