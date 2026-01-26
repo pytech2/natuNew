@@ -4093,31 +4093,65 @@ async def generate_arranged_pdf(
             output_pdf.insert_pdf(src_pdf, from_page=page_num, to_page=page_num)
             new_page = output_pdf[-1]  # Get the newly inserted page
             
+            # Get page rotation and dimensions
+            rotation = new_page.rotation
+            rect = new_page.rect
+            
             # Add serial number overlay if enabled (draw directly on copied page)
             if should_print_serial:
                 serial_text = get_display_serial(bill)
-                font_size = 14
+                font_size = 18  # Larger for visibility
                 
-                # Find BillSrNo position to place serial number relative to it
-                bill_sr = new_page.search_for("BillSrNo")
-                
-                if bill_sr:
-                    pos = bill_sr[0]
-                    # Place text to the LEFT of BillSrNo (which appears ABOVE in rotated view)
-                    x_pos = pos.x0 - 30
-                    y_pos = pos.y0 + 10
+                # TOP RIGHT CORNER - HORIZONTAL
+                # For rotated pages (90 degrees), we need to adjust coordinates
+                if rotation == 90:
+                    # Page is rotated 90 degrees clockwise
+                    # Visual top-right is at high X, low Y in page coordinates
+                    x_pos = rect.width - 60
+                    y_pos = 25
+                elif rotation == 270:
+                    x_pos = 60
+                    y_pos = rect.height - 25
                 else:
-                    # Fallback position
-                    x_pos = 50
-                    y_pos = 100
+                    # Normal orientation
+                    x_pos = rect.width - 80
+                    y_pos = 25
                 
-                # Insert text (no rotation needed - PyMuPDF handles it)
+                # Insert serial number - RED BOLD in top right
                 new_page.insert_text(
                     (x_pos, y_pos),
                     serial_text,
                     fontsize=font_size,
                     fontname="helv",
-                    color=(1, 0, 0)
+                    color=(1, 0, 0),
+                    rotate=rotation  # Match page rotation for horizontal text
+                )
+            
+            # Add Hindi message if NOT self-certified
+            is_self_certified = bill.get("self_certified", False)
+            if not is_self_certified:
+                hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
+                hindi_font_size = 12
+                
+                # Position: Below serial number or in top area
+                if rotation == 90:
+                    msg_x = rect.width - 200
+                    msg_y = 45
+                elif rotation == 270:
+                    msg_x = 60
+                    msg_y = rect.height - 45
+                else:
+                    msg_x = rect.width - 250
+                    msg_y = 45
+                
+                # Insert Hindi message in BLUE
+                new_page.insert_text(
+                    (msg_x, msg_y),
+                    hindi_msg,
+                    fontsize=hindi_font_size,
+                    fontname="helv",
+                    color=(0, 0, 0.8),  # Dark blue
+                    rotate=rotation
                 )
             
             included_count += 1
