@@ -4437,8 +4437,7 @@ async def split_bills_by_employee(
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
-                fontname="helv",
-                rotate=rotation
+                fontname="helv"
             )
             
             # Add Hindi message if NOT self-certified
@@ -4446,23 +4445,31 @@ async def split_bills_by_employee(
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 
+                import os
+                font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+                if os.path.exists(font_file):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+                    font_name = 'freesans'
+                else:
+                    font_name = 'helv'
+                    hindi_msg = "Self Certify Your Property"
+                
                 if rotation == 90:
-                    msg_x = rect.width - 200
-                    msg_y = 45
+                    msg_x = 280
+                    msg_y = 20
                 elif rotation == 270:
                     msg_x = 60
                     msg_y = rect.height - 45
                 else:
-                    msg_x = rect.width - 250
+                    msg_x = rect.width - 300
                     msg_y = 45
                 
                 new_page.insert_text(
                     (msg_x, msg_y),
                     hindi_msg,
                     fontsize=12,
-                    fontname="helv",
-                    color=(0, 0, 0.8),
-                    rotate=rotation
+                    fontname=font_name,
+                    color=(0, 0, 0.8)
                 )
         
         output_pdf.save(
