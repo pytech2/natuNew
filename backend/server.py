@@ -3758,6 +3758,13 @@ async def get_colony_stats(
     # Get bills with GPS
     with_gps = await db.bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
     
+    # Get self-certified counts
+    self_certified_count = await db.bills.count_documents({"colony": colony_name, "self_certified": True})
+    not_self_certified_count = await db.bills.count_documents({
+        "colony": colony_name, 
+        "$or": [{"self_certified": False}, {"self_certified": {"$exists": False}}]
+    })
+    
     # Get category breakdown
     category_pipeline = [
         {"$match": {"colony": colony_name}},
