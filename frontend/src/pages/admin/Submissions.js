@@ -331,7 +331,18 @@ export default function Submissions() {
         {/* Filters */}
         <Card>
           <CardContent className="py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              {/* Search Filter */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-500">Search</label>
+                <Input
+                  placeholder="Serial No, Property ID, Name..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+              
               {/* Employee Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">Employee</label>
