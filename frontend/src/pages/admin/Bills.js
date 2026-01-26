@@ -338,6 +338,53 @@ export default function BillsPage() {
     }
   };
 
+  const handleExcelDownload = async () => {
+    setDownloadingExcel(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.batch_id && filters.batch_id.trim()) {
+        params.append('batch_id', filters.batch_id.trim());
+      }
+      if (filters.colony && filters.colony.trim()) {
+        params.append('colony', filters.colony.trim());
+      }
+      if (excelFilter !== 'all') {
+        params.append('self_cert_filter', excelFilter);
+      }
+
+      const response = await axios.get(`${API_URL}/admin/bills/export-excel?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from header or generate one
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'bills_export.xlsx';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=(.+)/);
+        if (match) filename = match[1];
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Excel file downloaded successfully');
+      setExcelDialog(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to download Excel');
+    } finally {
+      setDownloadingExcel(false);
+    }
+  };
+
   const handleArrangeByRoute = () => {
     // Show confirmation dialog instead of immediately arranging
     setGpsArrangeDialog(true);
