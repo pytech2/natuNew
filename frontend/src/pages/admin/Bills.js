@@ -807,6 +807,16 @@ export default function BillsPage() {
                 <Users className="w-4 h-4 mr-2" />
                 Split by Employee
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setExcelDialog(true)}
+                disabled={pagination.total === 0}
+                className="border-green-500 text-green-600 hover:bg-green-50"
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Download Excel
+              </Button>
             </div>
 
             {/* Second row of actions */}
