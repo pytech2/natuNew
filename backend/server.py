@@ -4990,8 +4990,8 @@ async def split_bills_by_specific_employees(
             
             # TOP RIGHT CORNER - HORIZONTAL
             if rotation == 90:
-                sn_x = rect.width - 60
-                sn_y = 25
+                sn_x = 500  # Near visual top-right
+                sn_y = 20
             elif rotation == 270:
                 sn_x = 60
                 sn_y = rect.height - 25
@@ -5005,8 +5005,7 @@ async def split_bills_by_specific_employees(
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
-                fontname="helv",
-                rotate=rotation
+                fontname="helv"
             )
             
             # Add Hindi message if NOT self-certified
