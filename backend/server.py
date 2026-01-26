@@ -2049,6 +2049,7 @@ async def list_submissions(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     colony: Optional[str] = None,  # Colony filter
+    search: Optional[str] = None,  # Search by serial number, property ID, owner name
     page: int = 1,
     limit: int = 50,
     current_user: dict = Depends(get_current_user)
@@ -2071,6 +2072,44 @@ async def list_submissions(
         else:
             query["submitted_at"] = {"$lte": date_to}
     
+    # If search is provided, first find matching property IDs
+    search_property_ids = None
+    if search and search.strip():
+        search_term = search.strip()
+        # Search in properties collection
+        search_query = {
+            "$or": [
+                {"id": {"$regex": search_term, "$options": "i"}},
+                {"owner_name": {"$regex": search_term, "$options": "i"}},
+                {"mobile": {"$regex": search_term, "$options": "i"}},
+                {"bill_sr_no": {"$regex": search_term, "$options": "i"}}
+            ]
+        }
+        # Try to search by serial number if it's a number
+        try:
+            serial_num = int(search_term)
+            search_query["$or"].append({"serial_number": serial_num})
+        except ValueError:
+            pass
+        
+        matching_properties = await db.properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
+        search_property_ids = [p["id"] for p in matching_properties]
+        
+        if search_property_ids:
+            if "property_record_id" in query:
+                # Intersect with existing filter
+                query["property_record_id"]["$in"] = list(set(query["property_record_id"]["$in"]) & set(search_property_ids))
+            else:
+                query["property_record_id"] = {"$in": search_property_ids}
+        else:
+            # No matching properties found
+            return {
+                "submissions": [],
+                "total": 0,
+                "page": page,
+                "pages": 0
+            }
+    
     # If colony filter is provided, first get property IDs in that colony
     property_ids_in_colony = None
     if colony and colony.strip():
@@ -2080,7 +2119,12 @@ async def list_submissions(
         ).to_list(None)
         property_ids_in_colony = [p["id"] for p in properties_in_colony]
         if property_ids_in_colony:
-            query["property_record_id"] = {"$in": property_ids_in_colony}
+            if "property_record_id" in query:
+                # Intersect with existing filter
+                existing_ids = set(query["property_record_id"].get("$in", []))
+                query["property_record_id"]["$in"] = list(existing_ids & set(property_ids_in_colony)) if existing_ids else property_ids_in_colony
+            else:
+                query["property_record_id"] = {"$in": property_ids_in_colony}
         else:
             # No properties in this colony, return empty
             return {
