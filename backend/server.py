@@ -4103,17 +4103,21 @@ async def generate_arranged_pdf(
                 font_size = 18  # Larger for visibility
                 
                 # TOP RIGHT CORNER - HORIZONTAL
-                # For 90-degree rotated pages, visual top-right is at high X, low Y
+                # For rotated pages, use rotate parameter to make text appear horizontal
                 if rotation == 90:
-                    x_pos = 500  # Near visual top-right
-                    y_pos = 20
+                    # For 90-degree rotated page: high X, low Y with rotate=90
+                    x_pos = rect.width - 80
+                    y_pos = 25
+                    text_rotate = 90  # Counter-rotate to appear horizontal
                 elif rotation == 270:
-                    x_pos = 60
+                    x_pos = 80
                     y_pos = rect.height - 25
+                    text_rotate = 270
                 else:
                     # Normal orientation
                     x_pos = rect.width - 80
                     y_pos = 25
+                    text_rotate = 0
                 
                 # Insert serial number - RED BOLD in top right
                 new_page.insert_text(
@@ -4121,7 +4125,8 @@ async def generate_arranged_pdf(
                     serial_text,
                     fontsize=font_size,
                     fontname="helv",
-                    color=(1, 0, 0)
+                    color=(1, 0, 0),
+                    rotate=text_rotate
                 )
             
             # Add Hindi message if NOT self-certified
@@ -4130,7 +4135,6 @@ async def generate_arranged_pdf(
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 
                 # Load FreeSans font for Hindi support
-                import os
                 font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
                 if os.path.exists(font_file):
                     new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
@@ -4139,16 +4143,19 @@ async def generate_arranged_pdf(
                     font_name = 'helv'
                     hindi_msg = "Self Certify Your Property"  # Fallback to English
                 
-                # Position: Below serial number
+                # Position: To the left of serial number (same row)
                 if rotation == 90:
-                    msg_x = 280
-                    msg_y = 20
+                    msg_x = rect.width - 320  # Shifted left from serial
+                    msg_y = 25
+                    text_rotate = 90
                 elif rotation == 270:
-                    msg_x = 60
-                    msg_y = rect.height - 45
+                    msg_x = 80
+                    msg_y = rect.height - 60
+                    text_rotate = 270
                 else:
-                    msg_x = rect.width - 300
-                    msg_y = 45
+                    msg_x = rect.width - 320
+                    msg_y = 25
+                    text_rotate = 0
                 
                 # Insert Hindi message in BLUE
                 new_page.insert_text(
@@ -4156,7 +4163,8 @@ async def generate_arranged_pdf(
                     hindi_msg,
                     fontsize=12,
                     fontname=font_name,
-                    color=(0, 0, 0.8)
+                    color=(0, 0, 0.8),
+                    rotate=text_rotate
                 )
             
             included_count += 1
