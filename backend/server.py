@@ -5004,54 +5004,34 @@ async def split_bills_by_specific_employees(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # TOP RIGHT CORNER - HORIZONTAL TEXT
-            # For rotated pages, transform visual coords to internal coords
-            if rotation == 90:
-                visual_point = fitz.Point(rect.width - 100, 30)
-                internal_point = visual_point * new_page.derotation_matrix
-                text_rotate = 90
-            elif rotation == 270:
-                visual_point = fitz.Point(100, rect.height - 30)
-                internal_point = visual_point * new_page.derotation_matrix
-                text_rotate = 270
-            else:
-                internal_point = fitz.Point(rect.width - 100, 30)
-                text_rotate = 0
-            
-            # Draw serial number text in RED - top right horizontal
-            new_page.insert_text(
-                internal_point, 
-                sn_text, 
-                fontsize=sn_font_size, 
-                color=sn_rgb, 
-                fontname="helv",
-                rotate=text_rotate
-            )
-            
-            # Add Hindi message if NOT self-certified
+            # Add Hindi message FIRST (left side), then serial number (right side)
+            # Both at top with 50px padding
             is_self_certified = bill.get("self_certified", False)
+            
+            # Load FreeSans font for Hindi support
+            font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+            if os.path.exists(font_file):
+                new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+                font_name = 'freesans'
+            else:
+                font_name = 'helv'
+            
+            # Add Hindi message if NOT self-certified (LEFT side)
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
-                
-                # Load Hindi font
-                font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-                if os.path.exists(font_file):
-                    new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
-                    font_name = 'freesans'
-                else:
-                    font_name = 'helv'
+                if font_name == 'helv':
                     hindi_msg = "Self Certify Your Property"
                 
                 if rotation == 90:
-                    visual_msg_point = fitz.Point(rect.width - 400, 30)
+                    visual_msg_point = fitz.Point(320, 50)
                     internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 90
                 elif rotation == 270:
-                    visual_msg_point = fitz.Point(100, rect.height - 60)
+                    visual_msg_point = fitz.Point(rect.width - 320, rect.height - 50)
                     internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 270
                 else:
-                    internal_msg_point = fitz.Point(rect.width - 400, 30)
+                    internal_msg_point = fitz.Point(50, 50)
                     msg_rotate = 0
                 
                 new_page.insert_text(
@@ -5062,6 +5042,28 @@ async def split_bills_by_specific_employees(
                     color=(0, 0, 0.8),
                     rotate=msg_rotate
                 )
+            
+            # Add serial number (RIGHT side)
+            if rotation == 90:
+                visual_point = fitz.Point(rect.width - 80, 50)
+                internal_point = visual_point * new_page.derotation_matrix
+                text_rotate = 90
+            elif rotation == 270:
+                visual_point = fitz.Point(80, rect.height - 50)
+                internal_point = visual_point * new_page.derotation_matrix
+                text_rotate = 270
+            else:
+                internal_point = fitz.Point(rect.width - 80, 50)
+                text_rotate = 0
+            
+            new_page.insert_text(
+                internal_point, 
+                sn_text, 
+                fontsize=sn_font_size, 
+                color=sn_rgb, 
+                fontname="helv",
+                rotate=text_rotate
+            )
         
         output_pdf.save(
             str(output_path),
