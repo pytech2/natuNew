@@ -4136,7 +4136,7 @@ async def generate_arranged_pdf(
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 if font_name == 'helv':
-                    hindi_msg = "Self Certify Your Property"
+                    hindi_msg = "Please Self Certify Your Property"
                 
                 # Position: LEFT side at top with 50px padding
                 if rotation == 90:
@@ -4466,7 +4466,7 @@ async def split_bills_by_employee(
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 if font_name == 'helv':
-                    hindi_msg = "Self Certify Your Property"
+                    hindi_msg = "Please Self Certify Your Property"
                 
                 if rotation == 90:
                     visual_msg_point = fitz.Point(320, 50)
@@ -5043,7 +5043,7 @@ async def split_bills_by_specific_employees(
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 if font_name == 'helv':
-                    hindi_msg = "Self Certify Your Property"
+                    hindi_msg = "Please Self Certify Your Property"
                 
                 if rotation == 90:
                     visual_msg_point = fitz.Point(320, 50)
