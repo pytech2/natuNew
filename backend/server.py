@@ -3567,6 +3567,10 @@ async def upload_pdf_bills(
     upload_message = f"Uploaded {len(bills)} bills. Skipped {skipped_count} records with NA/empty owner names."
     if skipped_vacant > 0:
         upload_message += f" Skipped {skipped_vacant} vacant plots."
+    if self_certified_count > 0:
+        upload_message += f" {self_certified_count} self-certified."
+    if not_self_certified_count > 0:
+        upload_message += f" {not_self_certified_count} not self-certified."
     
     # Insert bills into database
     if bills:
@@ -3577,6 +3581,8 @@ async def upload_pdf_bills(
             "skipped_vacant": skipped_vacant,
             "na_serial_count": na_serial_count,
             "total_skipped": skipped_count + skipped_vacant,
+            "self_certified_count": self_certified_count,
+            "not_self_certified_count": not_self_certified_count,
             "upload_message": upload_message
         }
     
@@ -3603,6 +3609,8 @@ async def upload_pdf_bills(
         "skipped_bills": skipped_count,
         "skipped_vacant": skipped_vacant,
         "na_serial_bills": na_serial_count,
+        "self_certified": self_certified_count,
+        "not_self_certified": not_self_certified_count,
         "colonies": colonies,
         "message": upload_message
     }
