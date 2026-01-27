@@ -5005,15 +5005,19 @@ async def split_bills_by_specific_employees(
             sn_text = get_display_serial(bill)
             
             # TOP RIGHT CORNER - HORIZONTAL
+            # For rotated pages, use rotate parameter to make text appear horizontal
             if rotation == 90:
-                sn_x = 500  # Near visual top-right
-                sn_y = 20
+                sn_x = rect.width - 80
+                sn_y = 25
+                text_rotate = 90
             elif rotation == 270:
-                sn_x = 60
+                sn_x = 80
                 sn_y = rect.height - 25
+                text_rotate = 270
             else:
                 sn_x = rect.width - 80
                 sn_y = 25
+                text_rotate = 0
             
             # Draw serial number text in RED - top right horizontal
             new_page.insert_text(
@@ -5021,7 +5025,8 @@ async def split_bills_by_specific_employees(
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
-                fontname="helv"
+                fontname="helv",
+                rotate=text_rotate
             )
             
             # Add Hindi message if NOT self-certified
@@ -5029,23 +5034,35 @@ async def split_bills_by_specific_employees(
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
                 
-                if rotation == 90:
-                    msg_x = rect.width - 200
-                    msg_y = 45
-                elif rotation == 270:
-                    msg_x = 60
-                    msg_y = rect.height - 45
+                # Load Hindi font
+                font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+                if os.path.exists(font_file):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+                    font_name = 'freesans'
                 else:
-                    msg_x = rect.width - 250
-                    msg_y = 45
+                    font_name = 'helv'
+                    hindi_msg = "Self Certify Your Property"
+                
+                if rotation == 90:
+                    msg_x = rect.width - 320
+                    msg_y = 25
+                    msg_rotate = 90
+                elif rotation == 270:
+                    msg_x = 80
+                    msg_y = rect.height - 60
+                    msg_rotate = 270
+                else:
+                    msg_x = rect.width - 320
+                    msg_y = 25
+                    msg_rotate = 0
                 
                 new_page.insert_text(
                     (msg_x, msg_y),
                     hindi_msg,
                     fontsize=12,
-                    fontname="helv",
+                    fontname=font_name,
                     color=(0, 0, 0.8),
-                    rotate=rotation
+                    rotate=msg_rotate
                 )
         
         output_pdf.save(
