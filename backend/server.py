@@ -3514,6 +3514,15 @@ async def upload_pdf_bills(
             bill_data["status"] = "Pending"
             bill_data["gps_arranged"] = False
             
+            # Check if this property is self-certified
+            bill_prop_id = bill_data.get("property_id", "")
+            is_self_certified = bill_prop_id.upper() in self_certified_pids if bill_prop_id else False
+            bill_data["self_certified"] = is_self_certified
+            if is_self_certified:
+                self_certified_count += 1
+            else:
+                not_self_certified_count += 1
+            
             bills.append(bill_data)
         
         pdf_doc.close()
