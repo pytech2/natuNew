@@ -4102,26 +4102,28 @@ async def generate_arranged_pdf(
                 serial_text = get_display_serial(bill)
                 font_size = 18  # Larger for visibility
                 
-                # TOP RIGHT CORNER - HORIZONTAL
-                # For rotated pages, use rotate parameter to make text appear horizontal
+                # TOP RIGHT CORNER - HORIZONTAL TEXT
+                # For rotated pages, we need to:
+                # 1. Transform visual coords to internal coords using derotation_matrix
+                # 2. Use rotate parameter to counter-rotate the text
                 if rotation == 90:
-                    # For 90-degree rotated page: high X, low Y with rotate=90
-                    x_pos = rect.width - 80
-                    y_pos = 25
+                    # Visual top-right position (in visual landscape orientation)
+                    visual_point = fitz.Point(rect.width - 100, 30)
+                    # Transform to internal coordinates
+                    internal_point = visual_point * new_page.derotation_matrix
                     text_rotate = 90  # Counter-rotate to appear horizontal
                 elif rotation == 270:
-                    x_pos = 80
-                    y_pos = rect.height - 25
+                    visual_point = fitz.Point(100, rect.height - 30)
+                    internal_point = visual_point * new_page.derotation_matrix
                     text_rotate = 270
                 else:
-                    # Normal orientation
-                    x_pos = rect.width - 80
-                    y_pos = 25
+                    # Normal orientation - no transformation needed
+                    internal_point = fitz.Point(rect.width - 100, 30)
                     text_rotate = 0
                 
                 # Insert serial number - RED BOLD in top right
                 new_page.insert_text(
-                    (x_pos, y_pos),
+                    internal_point,
                     serial_text,
                     fontsize=font_size,
                     fontname="helv",
@@ -4143,28 +4145,27 @@ async def generate_arranged_pdf(
                     font_name = 'helv'
                     hindi_msg = "Self Certify Your Property"  # Fallback to English
                 
-                # Position: To the left of serial number (same row)
+                # Position: To the left of serial number (same row) at visual top
                 if rotation == 90:
-                    msg_x = rect.width - 320  # Shifted left from serial
-                    msg_y = 25
-                    text_rotate = 90
+                    visual_msg_point = fitz.Point(rect.width - 400, 30)
+                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
+                    msg_rotate = 90
                 elif rotation == 270:
-                    msg_x = 80
-                    msg_y = rect.height - 60
-                    text_rotate = 270
+                    visual_msg_point = fitz.Point(100, rect.height - 60)
+                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
+                    msg_rotate = 270
                 else:
-                    msg_x = rect.width - 320
-                    msg_y = 25
-                    text_rotate = 0
+                    internal_msg_point = fitz.Point(rect.width - 400, 30)
+                    msg_rotate = 0
                 
                 # Insert Hindi message in BLUE
                 new_page.insert_text(
-                    (msg_x, msg_y),
+                    internal_msg_point,
                     hindi_msg,
                     fontsize=12,
                     fontname=font_name,
                     color=(0, 0, 0.8),
-                    rotate=text_rotate
+                    rotate=msg_rotate
                 )
             
             included_count += 1
