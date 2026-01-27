@@ -5003,24 +5003,23 @@ async def split_bills_by_specific_employees(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # TOP RIGHT CORNER - HORIZONTAL
-            # For rotated pages, use rotate parameter to make text appear horizontal
+            # TOP RIGHT CORNER - HORIZONTAL TEXT
+            # For rotated pages, transform visual coords to internal coords
             if rotation == 90:
-                sn_x = rect.width - 80
-                sn_y = 25
+                visual_point = fitz.Point(rect.width - 100, 30)
+                internal_point = visual_point * new_page.derotation_matrix
                 text_rotate = 90
             elif rotation == 270:
-                sn_x = 80
-                sn_y = rect.height - 25
+                visual_point = fitz.Point(100, rect.height - 30)
+                internal_point = visual_point * new_page.derotation_matrix
                 text_rotate = 270
             else:
-                sn_x = rect.width - 80
-                sn_y = 25
+                internal_point = fitz.Point(rect.width - 100, 30)
                 text_rotate = 0
             
             # Draw serial number text in RED - top right horizontal
             new_page.insert_text(
-                (sn_x, sn_y), 
+                internal_point, 
                 sn_text, 
                 fontsize=sn_font_size, 
                 color=sn_rgb, 
@@ -5043,20 +5042,19 @@ async def split_bills_by_specific_employees(
                     hindi_msg = "Self Certify Your Property"
                 
                 if rotation == 90:
-                    msg_x = rect.width - 320
-                    msg_y = 25
+                    visual_msg_point = fitz.Point(rect.width - 400, 30)
+                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 90
                 elif rotation == 270:
-                    msg_x = 80
-                    msg_y = rect.height - 60
+                    visual_msg_point = fitz.Point(100, rect.height - 60)
+                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 270
                 else:
-                    msg_x = rect.width - 320
-                    msg_y = 25
+                    internal_msg_point = fitz.Point(rect.width - 400, 30)
                     msg_rotate = 0
                 
                 new_page.insert_text(
-                    (msg_x, msg_y),
+                    internal_msg_point,
                     hindi_msg,
                     fontsize=12,
                     fontname=font_name,
