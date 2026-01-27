@@ -4097,65 +4097,35 @@ async def generate_arranged_pdf(
             rotation = new_page.rotation
             rect = new_page.rect
             
-            # Add serial number overlay if enabled (draw directly on copied page)
-            if should_print_serial:
-                serial_text = get_display_serial(bill)
-                font_size = 18  # Larger for visibility
-                
-                # TOP RIGHT CORNER - HORIZONTAL TEXT
-                # For rotated pages, we need to:
-                # 1. Transform visual coords to internal coords using derotation_matrix
-                # 2. Use rotate parameter to counter-rotate the text
-                if rotation == 90:
-                    # Visual top-right position (in visual landscape orientation)
-                    visual_point = fitz.Point(rect.width - 100, 30)
-                    # Transform to internal coordinates
-                    internal_point = visual_point * new_page.derotation_matrix
-                    text_rotate = 90  # Counter-rotate to appear horizontal
-                elif rotation == 270:
-                    visual_point = fitz.Point(100, rect.height - 30)
-                    internal_point = visual_point * new_page.derotation_matrix
-                    text_rotate = 270
-                else:
-                    # Normal orientation - no transformation needed
-                    internal_point = fitz.Point(rect.width - 100, 30)
-                    text_rotate = 0
-                
-                # Insert serial number - RED BOLD in top right
-                new_page.insert_text(
-                    internal_point,
-                    serial_text,
-                    fontsize=font_size,
-                    fontname="helv",
-                    color=(1, 0, 0),
-                    rotate=text_rotate
-                )
-            
-            # Add Hindi message if NOT self-certified
+            # Add Hindi message FIRST (left side), then serial number (right side)
+            # Both at top with 50px padding
             is_self_certified = bill.get("self_certified", False)
+            
+            # Load FreeSans font for Hindi support
+            font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+            if os.path.exists(font_file):
+                new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+                font_name = 'freesans'
+            else:
+                font_name = 'helv'
+            
+            # Add Hindi message if NOT self-certified (LEFT side)
             if not is_self_certified:
                 hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
+                if font_name == 'helv':
+                    hindi_msg = "Self Certify Your Property"
                 
-                # Load FreeSans font for Hindi support
-                font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-                if os.path.exists(font_file):
-                    new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
-                    font_name = 'freesans'
-                else:
-                    font_name = 'helv'
-                    hindi_msg = "Self Certify Your Property"  # Fallback to English
-                
-                # Position: To the left of serial number (same row) at visual top
+                # Position: LEFT side at top with 50px padding
                 if rotation == 90:
-                    visual_msg_point = fitz.Point(rect.width - 400, 30)
+                    visual_msg_point = fitz.Point(320, 50)  # Left side, 50px from top
                     internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 90
                 elif rotation == 270:
-                    visual_msg_point = fitz.Point(100, rect.height - 60)
+                    visual_msg_point = fitz.Point(rect.width - 320, rect.height - 50)
                     internal_msg_point = visual_msg_point * new_page.derotation_matrix
                     msg_rotate = 270
                 else:
-                    internal_msg_point = fitz.Point(rect.width - 400, 30)
+                    internal_msg_point = fitz.Point(50, 50)
                     msg_rotate = 0
                 
                 # Insert Hindi message in BLUE
@@ -4166,6 +4136,34 @@ async def generate_arranged_pdf(
                     fontname=font_name,
                     color=(0, 0, 0.8),
                     rotate=msg_rotate
+                )
+            
+            # Add serial number (RIGHT side, after Hindi message)
+            if should_print_serial:
+                serial_text = get_display_serial(bill)
+                font_size = 18
+                
+                # Position: RIGHT side at top with 50px padding
+                if rotation == 90:
+                    visual_point = fitz.Point(rect.width - 80, 50)  # Right side, 50px from top
+                    internal_point = visual_point * new_page.derotation_matrix
+                    text_rotate = 90
+                elif rotation == 270:
+                    visual_point = fitz.Point(80, rect.height - 50)
+                    internal_point = visual_point * new_page.derotation_matrix
+                    text_rotate = 270
+                else:
+                    internal_point = fitz.Point(rect.width - 80, 50)
+                    text_rotate = 0
+                
+                # Insert serial number - RED BOLD
+                new_page.insert_text(
+                    internal_point,
+                    serial_text,
+                    fontsize=font_size,
+                    fontname="helv",
+                    color=(1, 0, 0),
+                    rotate=text_rotate
                 )
             
             included_count += 1
