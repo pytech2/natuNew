@@ -3443,6 +3443,12 @@ async def upload_pdf_bills(
     skipped_count = 0
     na_serial_count = 0
     
+    # Load self-certified PIDs from database for matching
+    self_certified_docs = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+    self_certified_pids = set(doc["pid"].upper() for doc in self_certified_docs if doc.get("pid"))
+    self_certified_count = 0
+    not_self_certified_count = 0
+    
     try:
         pdf_doc = fitz.open(str(pdf_path))
         
