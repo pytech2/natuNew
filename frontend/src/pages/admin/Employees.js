@@ -55,8 +55,28 @@ export default function Employees() {
     password: '',
     name: '',
     role: 'SURVEYOR',
-    assigned_area: ''
+    assigned_area: '',
+    authority: ''
   });
+
+  // Authority options for Supervisor and MC Officer
+  const AUTHORITY_OPTIONS = [
+    'Ward 1',
+    'Ward 2', 
+    'Ward 3',
+    'Ward 4',
+    'Ward 5',
+    'Ward 6',
+    'Ward 7',
+    'Ward 8',
+    'Ward 9',
+    'Ward 10',
+    'Zone A',
+    'Zone B',
+    'Zone C',
+    'Zone D',
+    'All Areas'
+  ];
 
   // Only ADMIN can create employees
   const canManageEmployees = user?.role === 'ADMIN';
