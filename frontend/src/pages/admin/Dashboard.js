@@ -434,11 +434,11 @@ export default function Dashboard() {
                 className="flex items-center gap-2"
                 onClick={() => {
                   // Download as CSV
-                  const headers = ['Employee', 'Role', 'Today', 'Completed', 'Pending', 'Progress %'];
+                  const headers = ['Employee', 'Role', 'Assigned', 'Today', 'Completed', 'Pending', 'Progress %'];
                   const sortedData = [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0));
                   const rows = sortedData.map(emp => {
                     const percentage = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
-                    return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.today_completed, emp.completed, emp.pending, percentage + '%'];
+                    return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.total_assigned || 0, emp.today_completed, emp.completed, emp.pending, percentage + '%'];
                   });
                   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
                   const blob = new Blob([csv], { type: 'text/csv' });
