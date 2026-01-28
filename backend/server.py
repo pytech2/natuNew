@@ -245,6 +245,20 @@ async def serve_legacy_upload(filename: str):
 # ============== MODELS ==============
 
 # Role options: ADMIN, SURVEYOR, SUPERVISOR, MC_OFFICER
+# Permission options for SUPERVISOR and MC_OFFICER
+AVAILABLE_PERMISSIONS = [
+    "dashboard",      # View dashboard
+    "bills",          # View/manage bills
+    "properties",     # View properties
+    "map",            # View property map
+    "submissions",    # View submissions
+    "approve",        # Approve/reject submissions
+    "employees",      # View employees
+    "attendance",     # View attendance
+    "export",         # Export data
+    "upload"          # Upload data
+]
+
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -252,6 +266,7 @@ class UserCreate(BaseModel):
     role: str = "SURVEYOR"  # ADMIN, SURVEYOR, SUPERVISOR, MC_OFFICER
     assigned_area: Optional[str] = None
     authority: Optional[str] = None  # For SUPERVISOR and MC_OFFICER roles
+    permissions: Optional[List[str]] = None  # For SUPERVISOR and MC_OFFICER roles
 
 class UserLogin(BaseModel):
     username: str
@@ -264,6 +279,7 @@ class UserResponse(BaseModel):
     role: str
     assigned_area: Optional[str] = None
     authority: Optional[str] = None
+    permissions: Optional[List[str]] = None
     created_at: str
 
 class TokenResponse(BaseModel):
