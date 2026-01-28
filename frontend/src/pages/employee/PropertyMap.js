@@ -371,14 +371,25 @@ export default function PropertyMap() {
                     )}
                     
                     <div className="flex gap-2 mt-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 h-8 text-xs bg-blue-600"
-                        onClick={() => navigate(`/employee/survey/${property.id}`)}
-                      >
-                        <FileText className="w-3 h-3 mr-1" />
-                        Survey
-                      </Button>
+                      {property.status === 'Approved' || property.locked ? (
+                        <Button
+                          size="sm"
+                          className="flex-1 h-8 text-xs bg-slate-400 cursor-not-allowed"
+                          disabled
+                        >
+                          <Lock className="w-3 h-3 mr-1" />
+                          Locked
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="flex-1 h-8 text-xs bg-blue-600"
+                          onClick={() => navigate(`/employee/survey/${property.id}`)}
+                        >
+                          <FileText className="w-3 h-3 mr-1" />
+                          Survey
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
