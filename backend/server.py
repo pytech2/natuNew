@@ -2200,8 +2200,17 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
     # Update property status and include rejection remarks
     prop_status = "Approved" if data.action == "APPROVE" else "Rejected"
     prop_update = {"status": prop_status}
+    
+    # Lock the property if approved (prevents re-submission)
+    if data.action == "APPROVE":
+        prop_update["locked"] = True
+        prop_update["locked_at"] = datetime.now(timezone.utc).isoformat()
+        prop_update["locked_by"] = current_user["id"]
+    
     if data.action == "REJECT" and data.remarks:
         prop_update["reject_remarks"] = data.remarks
+        # Unlock property on rejection so surveyor can re-submit
+        prop_update["locked"] = False
     
     await db.properties.update_one(
         {"id": submission["property_record_id"]},
