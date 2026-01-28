@@ -251,6 +251,7 @@ class UserCreate(BaseModel):
     name: str
     role: str = "SURVEYOR"  # ADMIN, SURVEYOR, SUPERVISOR, MC_OFFICER
     assigned_area: Optional[str] = None
+    authority: Optional[str] = None  # For SUPERVISOR and MC_OFFICER roles
 
 class UserLogin(BaseModel):
     username: str
@@ -262,6 +263,7 @@ class UserResponse(BaseModel):
     name: str
     role: str
     assigned_area: Optional[str] = None
+    authority: Optional[str] = None
     created_at: str
 
 class TokenResponse(BaseModel):
