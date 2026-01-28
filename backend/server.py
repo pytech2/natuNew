@@ -656,6 +656,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "name": data.name,
         "role": data.role,
         "assigned_area": data.assigned_area,
+        "authority": data.authority if data.role in ["SUPERVISOR", "MC_OFFICER"] else None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -666,6 +667,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "name": user_doc["name"],
         "role": user_doc["role"],
         "assigned_area": user_doc["assigned_area"],
+        "authority": user_doc["authority"],
         "created_at": user_doc["created_at"]
     }
 
