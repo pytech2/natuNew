@@ -351,8 +351,11 @@ export default function PropertyMap() {
                         #{property.serial_number || index + 1}
                       </span>
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        property.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                        property.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                        property.status === 'Pending' ? 'bg-red-100 text-red-700' :
+                        property.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' :
+                        property.status === 'Completed' ? 'bg-yellow-100 text-yellow-700' :
+                        property.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
+                        property.status === 'Rejected' ? 'bg-orange-100 text-orange-700' :
                         'bg-slate-100 text-slate-700'
                       }`}>
                         {property.status}
