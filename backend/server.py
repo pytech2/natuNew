@@ -665,6 +665,20 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
+    # Set permissions based on role
+    user_permissions = None
+    if data.role in ["SUPERVISOR", "MC_OFFICER"]:
+        # Use provided permissions or default to basic view permissions
+        if data.permissions:
+            # Validate permissions
+            user_permissions = [p for p in data.permissions if p in AVAILABLE_PERMISSIONS]
+        else:
+            # Default permissions for SUPERVISOR/MC_OFFICER
+            user_permissions = ["dashboard", "properties", "map", "submissions"]
+    elif data.role == "ADMIN":
+        # Admin has all permissions
+        user_permissions = AVAILABLE_PERMISSIONS.copy()
+    
     user_doc = {
         "id": str(uuid.uuid4()),
         "username": data.username,
@@ -673,6 +687,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "role": data.role,
         "assigned_area": data.assigned_area,
         "authority": data.authority if data.role in ["SUPERVISOR", "MC_OFFICER"] else None,
+        "permissions": user_permissions,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -684,6 +699,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "role": user_doc["role"],
         "assigned_area": user_doc["assigned_area"],
         "authority": user_doc["authority"],
+        "permissions": user_doc["permissions"],
         "created_at": user_doc["created_at"]
     }
 
