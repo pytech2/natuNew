@@ -326,6 +326,7 @@ export default function Employees() {
                       <th>Name</th>
                       <th>Mobile / Login</th>
                       <th>Role</th>
+                      <th>Authority</th>
                       <th>Assigned Area</th>
                       {canManageEmployees && <th>Actions</th>}
                     </tr>
@@ -341,6 +342,13 @@ export default function Employees() {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[emp.role] || 'bg-slate-100'}`}>
                             {ROLE_LABELS[emp.role] || emp.role}
                           </span>
+                        </td>
+                        <td className="text-slate-600">
+                          {emp.authority ? (
+                            <span className="px-2 py-1 rounded bg-green-50 text-green-700 text-xs font-medium">
+                              {emp.authority}
+                            </span>
+                          ) : '-'}
                         </td>
                         <td className="text-slate-600">{emp.assigned_area || '-'}</td>
                         {canManageEmployees && (
