@@ -127,7 +127,8 @@ export default function Employees() {
         password: '',
         name: '',
         role: 'SURVEYOR',
-        assigned_area: ''
+        assigned_area: '',
+        authority: ''
       });
       fetchEmployees();
     } catch (error) {
