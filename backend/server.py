@@ -2899,6 +2899,14 @@ async def submit_survey(
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
+    # Check if property is locked (survey already completed and approved)
+    if prop.get("locked") == True:
+        raise HTTPException(status_code=403, detail="This property is locked. Survey already completed.")
+    
+    # Check if property status is Completed or Approved - prevent re-submission
+    if prop.get("status") in ["Completed", "Approved"]:
+        raise HTTPException(status_code=403, detail="This property survey is already completed. Cannot re-submit.")
+    
     # Check if employee is assigned (either single or in array)
     is_assigned = (
         prop.get("assigned_employee_id") == current_user["id"] or
