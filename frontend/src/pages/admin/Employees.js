@@ -251,7 +251,7 @@ export default function Employees() {
                     <Label htmlFor="role">Role</Label>
                     <Select
                       value={formData.role}
-                      onValueChange={(value) => setFormData({ ...formData, role: value })}
+                      onValueChange={(value) => setFormData({ ...formData, role: value, authority: '' })}
                     >
                       <SelectTrigger data-testid="employee-role-select">
                         <SelectValue placeholder="Select role" />
@@ -263,6 +263,32 @@ export default function Employees() {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Authority Selection - Only for Supervisor and MC Officer */}
+                  {(formData.role === 'SUPERVISOR' || formData.role === 'MC_OFFICER') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="authority">Authority / Jurisdiction</Label>
+                      <Select
+                        value={formData.authority}
+                        onValueChange={(value) => setFormData({ ...formData, authority: value })}
+                      >
+                        <SelectTrigger data-testid="employee-authority-select">
+                          <SelectValue placeholder="Select authority area" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AUTHORITY_OPTIONS.map((auth) => (
+                            <SelectItem key={auth} value={auth}>{auth}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500">
+                        {formData.role === 'SUPERVISOR' 
+                          ? 'Area this supervisor will oversee' 
+                          : 'Jurisdiction for this MC Officer'}
+                      </p>
+                    </div>
+                  )}
+                  
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                       Cancel
