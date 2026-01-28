@@ -410,23 +410,38 @@ async def login(data: UserLogin):
             "name": user["name"],
             "role": user["role"],
             "assigned_area": user.get("assigned_area"),
+            "authority": user.get("authority"),
+            "permissions": user.get("permissions"),
             "created_at": user["created_at"]
         }
     }
 
 @api_router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
-    # Calculate permissions based on role
+    # Get user's custom permissions from DB
+    user_permissions = current_user.get("permissions") or []
     role = current_user["role"]
+    
+    # For Admin, grant all permissions
+    if role == "ADMIN":
+        user_permissions = AVAILABLE_PERMISSIONS.copy()
+    
+    # Build permissions object - check both role-based and custom permissions
     permissions = {
-        "can_upload": role in UPLOAD_ROLES,
-        "can_export": role in EXPORT_ROLES,
-        "can_edit_submissions": role in SUBMISSION_EDIT_ROLES,
+        "can_upload": role in UPLOAD_ROLES or "upload" in user_permissions,
+        "can_export": role in EXPORT_ROLES or "export" in user_permissions,
+        "can_edit_submissions": role in SUBMISSION_EDIT_ROLES or "approve" in user_permissions,
         "can_manage_users": role == "ADMIN",
-        "can_download_performance": role in PERFORMANCE_DOWNLOAD_ROLES,
-        "can_view_employees": role in ["ADMIN", "MC_OFFICER"],
-        "can_view_attendance": role in ["ADMIN", "MC_OFFICER"],
-        "can_approve_reject": role == "ADMIN"
+        "can_download_performance": role in PERFORMANCE_DOWNLOAD_ROLES or "export" in user_permissions,
+        "can_view_employees": role in ["ADMIN", "MC_OFFICER"] or "employees" in user_permissions,
+        "can_view_attendance": role in ["ADMIN", "MC_OFFICER"] or "attendance" in user_permissions,
+        "can_approve_reject": role == "ADMIN" or "approve" in user_permissions,
+        # New granular permissions
+        "can_view_dashboard": role == "ADMIN" or "dashboard" in user_permissions,
+        "can_view_bills": role == "ADMIN" or "bills" in user_permissions,
+        "can_view_properties": role == "ADMIN" or "properties" in user_permissions,
+        "can_view_map": role == "ADMIN" or "map" in user_permissions,
+        "can_view_submissions": role == "ADMIN" or "submissions" in user_permissions,
     }
     
     return {
@@ -435,8 +450,10 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "name": current_user["name"],
         "role": current_user["role"],
         "assigned_area": current_user.get("assigned_area"),
-        "created_at": current_user["created_at"],
-        "permissions": permissions
+        "authority": current_user.get("authority"),
+        "permissions": permissions,
+        "raw_permissions": user_permissions,
+        "created_at": current_user["created_at"]
     }
 
 # ============== FAST MAP ENDPOINTS (OPTIMIZED FOR 20+ CONCURRENT USERS) ==============
