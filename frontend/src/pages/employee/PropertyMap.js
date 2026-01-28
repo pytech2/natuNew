@@ -32,15 +32,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Custom numbered marker
+// Custom numbered marker - SAME COLORS AS ADMIN MAP
 const createNumberedIcon = (number, status) => {
   const colors = {
-    'Pending': '#f97316',
-    'Completed': '#22c55e',
-    'Approved': '#22c55e',
-    'In Progress': '#3b82f6',
-    'Rejected': '#ef4444',
-    'default': '#6b7280'
+    'Pending': '#ef4444',       // RED - same as admin
+    'In Progress': '#eab308',   // YELLOW - same as admin
+    'Completed': '#eab308',     // YELLOW - same as admin
+    'Approved': '#22c55e',      // GREEN - same as admin
+    'Rejected': '#f97316',      // ORANGE - same as admin
+    'default': '#ef4444'        // RED
   };
   
   const color = colors[status] || colors['default'];
