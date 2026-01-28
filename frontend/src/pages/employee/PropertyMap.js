@@ -272,7 +272,7 @@ export default function PropertyMap() {
         </div>
       </header>
 
-      {/* Stats Bar */}
+      {/* Stats Bar with Color Legend */}
       <div className="bg-white border-b px-4 py-2">
         <div className="flex items-center justify-around text-center">
           <div>
@@ -281,13 +281,32 @@ export default function PropertyMap() {
           </div>
           <div className="h-8 w-px bg-slate-200" />
           <div>
-            <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
+            <p className="text-2xl font-bold text-red-500">{stats.pending}</p>
             <p className="text-xs text-slate-500">Pending</p>
           </div>
           <div className="h-8 w-px bg-slate-200" />
           <div>
             <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
             <p className="text-xs text-slate-500">Done</p>
+          </div>
+        </div>
+        {/* Color Legend - Same as Admin Map */}
+        <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-xs text-slate-600">Pending</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="text-xs text-slate-600">In Progress</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <span className="text-xs text-slate-600">Approved</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <span className="text-xs text-slate-600">Rejected</span>
           </div>
         </div>
       </div>
