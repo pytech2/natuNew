@@ -154,7 +154,8 @@ export default function Employees() {
       // Use mobile as username
       const submitData = {
         ...formData,
-        username: formData.mobile // Mobile number is the username
+        username: formData.mobile, // Mobile number is the username
+        permissions: formData.role === 'SURVEYOR' ? null : formData.permissions
       };
       
       await axios.post(`${API_URL}/admin/users`, submitData, {
@@ -168,7 +169,8 @@ export default function Employees() {
         name: '',
         role: 'SURVEYOR',
         assigned_area: '',
-        authority: ''
+        authority: '',
+        permissions: []
       });
       fetchEmployees();
     } catch (error) {
