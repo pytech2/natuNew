@@ -943,6 +943,15 @@ export default function PropertyMap() {
                             ? Math.round((employeeStats[filters.employee].completed / employeeStats[filters.employee].total) * 100)
                             : 0}%
                         </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => handleBulkUnassign(filters.employee)}
+                        >
+                          <UserMinus className="w-4 h-4 mr-1" />
+                          Unassign
+                        </Button>
                       </div>
                     </div>
                     {/* Progress Bar */}
@@ -956,6 +965,21 @@ export default function PropertyMap() {
                         }}
                       />
                     </div>
+                  </div>
+                )}
+                
+                {/* Bulk Unassign All Button - Show when colony selected */}
+                {filters.colony && (
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={() => handleBulkUnassign()}
+                    >
+                      <UserMinus className="w-4 h-4 mr-1" />
+                      Unassign All Employees from Colony
+                    </Button>
                   </div>
                 )}
 
