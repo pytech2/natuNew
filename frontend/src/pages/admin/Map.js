@@ -641,6 +641,34 @@ export default function PropertyMap() {
     }
   };
 
+  // Bulk Unassign Function
+  const handleBulkUnassign = async (employeeId = null) => {
+    if (!filters.colony) {
+      toast.error('Please select a colony first');
+      return;
+    }
+    
+    const confirmMsg = employeeId 
+      ? `Unassign all properties from this employee in ${filters.colony}?`
+      : `Unassign ALL employees from ALL properties in ${filters.colony}?`;
+    
+    if (!window.confirm(confirmMsg)) return;
+    
+    try {
+      const response = await axios.post(`${API_URL}/admin/unassign-bulk`, {
+        ward: filters.colony,
+        employee_id: employeeId || undefined
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Unassigned ${response.data.unassigned_count || response.data.modified_count} properties`);
+      fetchPropertiesByColony(filters.colony);
+    } catch (error) {
+      toast.error('Failed to unassign: ' + (error.response?.data?.detail || 'Unknown error'));
+    }
+  };
+
   const getStatusBadge = (status) => {
     const colors = {
       'Pending': 'bg-red-100 text-red-700',
