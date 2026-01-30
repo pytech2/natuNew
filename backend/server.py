@@ -4568,33 +4568,6 @@ async def split_bills_by_employee(
             else:
                 font_name = 'helv'
             
-            # Add Hindi message if NOT self-certified (LEFT side)
-            if not is_self_certified:
-                hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
-                if font_name == 'helv':
-                    hindi_msg = "Please Self Certify Your Property"
-                
-                if rotation == 90:
-                    visual_msg_point = fitz.Point(320, 50)
-                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
-                    msg_rotate = 90
-                elif rotation == 270:
-                    visual_msg_point = fitz.Point(rect.width - 320, rect.height - 50)
-                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
-                    msg_rotate = 270
-                else:
-                    internal_msg_point = fitz.Point(50, 50)
-                    msg_rotate = 0
-                
-                new_page.insert_text(
-                    internal_msg_point,
-                    hindi_msg,
-                    fontsize=12,
-                    fontname=font_name,
-                    color=(0, 0, 0.8),
-                    rotate=msg_rotate
-                )
-            
             # Add serial number (RIGHT side)
             if rotation == 90:
                 visual_point = fitz.Point(rect.width - 80, 50)
@@ -5144,33 +5117,6 @@ async def split_bills_by_specific_employees(
                 font_name = 'freesans'
             else:
                 font_name = 'helv'
-            
-            # Add Hindi message if NOT self-certified (LEFT side)
-            if not is_self_certified:
-                hindi_msg = "अपनी प्रॉपर्टी को Self Certified कराएँ।"
-                if font_name == 'helv':
-                    hindi_msg = "Please Self Certify Your Property"
-                
-                if rotation == 90:
-                    visual_msg_point = fitz.Point(320, 50)
-                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
-                    msg_rotate = 90
-                elif rotation == 270:
-                    visual_msg_point = fitz.Point(rect.width - 320, rect.height - 50)
-                    internal_msg_point = visual_msg_point * new_page.derotation_matrix
-                    msg_rotate = 270
-                else:
-                    internal_msg_point = fitz.Point(50, 50)
-                    msg_rotate = 0
-                
-                new_page.insert_text(
-                    internal_msg_point,
-                    hindi_msg,
-                    fontsize=12,
-                    fontname=font_name,
-                    color=(0, 0, 0.8),
-                    rotate=msg_rotate
-                )
             
             # Add serial number (RIGHT side)
             if rotation == 90:
