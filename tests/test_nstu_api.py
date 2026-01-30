@@ -8,7 +8,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://propertax-tracker.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proptrack-29.preview.emergentagent.com').rstrip('/')
 
 class TestAdminAuth:
     """Admin authentication tests"""

@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://propertax-tracker.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proptrack-29.preview.emergentagent.com').rstrip('/')
 
 # Credentials
 ADMIN_USERNAME = "admin"
