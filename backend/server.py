@@ -4271,14 +4271,13 @@ async def generate_arranged_pdf(
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: After the disclaimer text at the bottom of the bill
+                # Position: After the disclaimer text (which ends at ~X=373)
                 if rotation == 90:
-                    # For 90-degree rotated page: high internal X = visual bottom
-                    # Y needs to be high enough for text (~530px needed)
-                    internal_bottom_point = fitz.Point(760, 565)
+                    # For 90-degree rotated page: place just after disclaimer at X~400
+                    internal_bottom_point = fitz.Point(390, 565)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 760, 30)
+                    internal_bottom_point = fitz.Point(rect.width - 390, 30)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(30, rect.height - 30)
