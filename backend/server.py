@@ -4273,11 +4273,9 @@ async def generate_arranged_pdf(
                 
                 # Position: Start from left, 100px from visual bottom
                 if rotation == 90:
-                    # For 90-degree rotated page: text with rotate=90 grows in internal Y direction
-                    # We need enough Y space for the full text
-                    # Internal coords: (20, 700) gives text starting from visual bottom-left
-                    # Use full page width (595) minus small padding for text to fit
-                    internal_bottom_point = fitz.Point(100, 575)
+                    # For 90-degree rotated page: text grows in internal Y direction
+                    # Text at 12pt needs ~530px, we have 575px
+                    internal_bottom_point = fitz.Point(100, 565)
                     bottom_rotate = 90
                 elif rotation == 270:
                     internal_bottom_point = fitz.Point(rect.width - 100, 20)
@@ -4286,11 +4284,11 @@ async def generate_arranged_pdf(
                     internal_bottom_point = fitz.Point(20, rect.height - 100)
                     bottom_rotate = 0
                 
-                # Insert note in RED with larger font (16pt)
+                # Insert note in RED - font size 12 to fit within page width
                 new_page.insert_text(
                     internal_bottom_point,
                     bottom_note,
-                    fontsize=16,
+                    fontsize=12,
                     fontname=font_name,
                     color=(0.8, 0, 0),  # Dark red
                     rotate=bottom_rotate
