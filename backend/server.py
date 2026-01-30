@@ -4280,7 +4280,7 @@ async def generate_arranged_pdf(
                     internal_bottom_point = fitz.Point(100, 575)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 20, rect.height - 700)
+                    internal_bottom_point = fitz.Point(rect.width - 100, 20)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(20, rect.height - 100)
@@ -5154,7 +5154,7 @@ async def split_bills_by_specific_employees(
                     internal_bottom_point = fitz.Point(100, 575)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 20, rect.height - 700)
+                    internal_bottom_point = fitz.Point(rect.width - 100, 20)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(20, rect.height - 100)
