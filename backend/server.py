@@ -4265,31 +4265,31 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add note for non-self-certified properties - just below bill content
+            # Add note for non-self-certified properties - immediately below bill content
             if not is_self_certified:
                 bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Just below bill content (approximately 85% down the page)
+                # Position: Immediately below bill content (no white space)
                 if rotation == 90:
-                    # For 90-degree rotated page - position at ~85% from visual top
-                    visual_bottom_point = fitz.Point(70, rect.height - 20)  # Just below bill
+                    # For 90-degree rotated page - position closer to bill content
+                    visual_bottom_point = fitz.Point(200, rect.height - 20)  # Closer to bill
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 70, 20)
+                    visual_bottom_point = fitz.Point(rect.width - 200, 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(30, rect.height - 70)
+                    internal_bottom_point = fitz.Point(30, rect.height - 200)
                     bottom_rotate = 0
                 
-                # Insert note in RED with 40% larger font (9 -> 13)
+                # Insert note in RED with larger font (16pt)
                 new_page.insert_text(
                     internal_bottom_point,
                     bottom_note,
-                    fontsize=13,
+                    fontsize=16,
                     fontname=font_name,
                     color=(0.8, 0, 0),  # Dark red
                     rotate=bottom_rotate
