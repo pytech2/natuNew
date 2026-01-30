@@ -414,6 +414,12 @@ export default function Survey() {
         toast.error('GPS location is required');
         return;
       }
+      
+      // Owner Denied requires remarks
+      if (specialCondition === 'owner_denied' && !formData.remarks?.trim()) {
+        toast.error('Remarks are required when owner denied');
+        return;
+      }
     } else {
       // Normal validation for regular submissions
       if (!formData.receiver_name || !formData.relation) {
