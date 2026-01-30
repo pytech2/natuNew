@@ -4273,16 +4273,15 @@ async def generate_arranged_pdf(
                 
                 # Position: Immediately below bill content (no white space)
                 if rotation == 90:
-                    # For 90-degree rotated page - position closer to bill content
-                    visual_bottom_point = fitz.Point(200, rect.height - 20)  # Closer to bill
+                    visual_bottom_point = fitz.Point(320, rect.height - 20)  # Very close to bill
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 200, 20)
+                    visual_bottom_point = fitz.Point(rect.width - 320, 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(30, rect.height - 200)
+                    internal_bottom_point = fitz.Point(30, rect.height - 320)
                     bottom_rotate = 0
                 
                 # Insert note in RED with larger font (16pt)
@@ -5148,15 +5147,15 @@ async def split_bills_by_specific_employees(
                 
                 # Position: Immediately below bill content (no white space)
                 if rotation == 90:
-                    visual_bottom_point = fitz.Point(200, rect.height - 20)  # Closer to bill
+                    visual_bottom_point = fitz.Point(320, rect.height - 20)  # Very close to bill
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 200, 20)
+                    visual_bottom_point = fitz.Point(rect.width - 320, 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(30, rect.height - 200)
+                    internal_bottom_point = fitz.Point(30, rect.height - 320)
                     bottom_rotate = 0
                 
                 # Insert note in RED with larger font (16pt)
