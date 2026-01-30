@@ -179,6 +179,7 @@ export default function PropertyMap() {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colonies, setColonies] = useState([]);
+  const [colonySearch, setColonySearch] = useState(''); // Colony search filter
   const [categories, setCategories] = useState([]);
   const [employees, setEmployees] = useState([]); // Employees/Surveyors list
   const [mapType, setMapType] = useState('satellite');
@@ -193,6 +194,11 @@ export default function PropertyMap() {
     employee: '', // Employee filter
     search: ''
   });
+
+  // Filtered colonies based on search
+  const filteredColonies = colonies.filter(c => 
+    c.toLowerCase().includes(colonySearch.toLowerCase())
+  );
 
   // Employee stats for selected colony
   const [employeeStats, setEmployeeStats] = useState(null);
