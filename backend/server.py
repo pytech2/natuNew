@@ -738,6 +738,41 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
 
+class UpdateUserRequest(BaseModel):
+    name: Optional[str] = None
+    authority: Optional[str] = None
+    permissions: Optional[List[str]] = None
+    assigned_area: Optional[str] = None
+
+@api_router.put("/admin/users/{user_id}")
+async def update_user(user_id: str, data: UpdateUserRequest, current_user: dict = Depends(get_current_user)):
+    """Update user details (Admin only)"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Build update dict
+    update_data = {}
+    if data.name:
+        update_data["name"] = data.name
+    if data.authority is not None:
+        update_data["authority"] = data.authority
+    if data.permissions is not None:
+        update_data["permissions"] = data.permissions
+    if data.assigned_area is not None:
+        update_data["assigned_area"] = data.assigned_area
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    return updated_user
+
 class ResetPasswordRequest(BaseModel):
     new_password: str
 
