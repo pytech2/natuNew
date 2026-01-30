@@ -173,6 +173,7 @@ const RELATION_OPTIONS = [
   'Family Member',
   'Kirayedar',
   'Padosi',
+  'Worker',
   'Other'
 ];
 
