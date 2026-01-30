@@ -463,8 +463,8 @@ export default function Dashboard() {
                     <tr>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider bg-emerald-50">Today</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Assigned</th>
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Today</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Completed</th>
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
