@@ -643,58 +643,38 @@ export default function Submissions() {
                   </div>
                 )}
 
-                {/* Special Condition */}
+                {/* Special Condition - Compact */}
                 {selectedSubmission.special_condition && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="text-xs text-amber-600 font-medium">Special Condition</div>
-                    <div className="font-semibold text-amber-800">
-                      {selectedSubmission.special_condition === 'house_locked' ? 'House Locked' : 
-                       selectedSubmission.special_condition === 'owner_denied' ? 'Owner Denied' : 
+                  <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs flex items-center gap-2">
+                    <span className="text-amber-600">Condition:</span>
+                    <span className="font-semibold text-amber-800">
+                      {selectedSubmission.special_condition === 'house_locked' ? '🔒 House Locked' : 
+                       selectedSubmission.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
                        selectedSubmission.special_condition}
-                    </div>
+                    </span>
                   </div>
                 )}
 
-                {/* GPS */}
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium text-blue-800">GPS Location</span>
-                  </div>
-                  <p className="font-mono text-sm text-gray-700">
-                    {selectedSubmission.latitude?.toFixed(6)}, {selectedSubmission.longitude?.toFixed(6)}
-                  </p>
-                  <a
-                    href={`https://www.google.com/maps?q=${selectedSubmission.latitude},${selectedSubmission.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1 mt-1"
-                  >
-                    View on Google Maps <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-
-                {/* Remarks */}
+                {/* Remarks - Compact */}
                 {selectedSubmission.remarks && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Remarks</div>
-                    <p className="text-gray-800">{selectedSubmission.remarks}</p>
+                  <div className="bg-gray-50 rounded p-2 text-xs">
+                    <span className="text-gray-500">Remarks:</span>
+                    <span className="text-gray-800 ml-1">{selectedSubmission.remarks}</span>
                   </div>
                 )}
 
                 {/* Review Remarks */}
                 {selectedSubmission.review_remarks && (
-                  <div className="p-4 bg-red-50 rounded-lg">
-                    <div className="text-xs text-red-600 font-medium">Rejection Remarks</div>
-                    <p className="mt-1 text-red-800">{selectedSubmission.review_remarks}</p>
+                  <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs">
+                    <span className="text-red-600">Rejection Remarks:</span>
+                    <span className="text-red-800 ml-1">{selectedSubmission.review_remarks}</span>
                   </div>
                 )}
 
-                {/* Photos */}
+                {/* Photos - Smaller thumbnails */}
                 <div>
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-500 mb-3 block">Photos</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Filter out duplicate photos (same file_url) and show only unique photos */}
+                  <div className="text-xs font-semibold text-slate-500 mb-2">Photos</div>
+                  <div className="grid grid-cols-3 gap-2">
                     {selectedSubmission.photos?.filter((photo, index, self) => 
                       index === self.findIndex(p => p.file_url === photo.file_url)
                     ).map((photo, idx) => (
@@ -702,22 +682,22 @@ export default function Submissions() {
                         <img
                           src={`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`}
                           alt={photo.photo_type}
-                          className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90"
+                          className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90"
                           onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
                         />
-                        <span className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                        <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-semibold ${
                           photo.photo_type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
                           photo.photo_type === 'GATE' ? 'bg-amber-100 text-amber-700' :
                           'bg-slate-100 text-slate-700'
                         }`}>
-                          {photo.photo_type === 'HOUSE' ? 'PROPERTY' : photo.photo_type}
+                          {photo.photo_type === 'HOUSE' ? 'PROP' : photo.photo_type}
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Signature */}
+                {/* Signature - Smaller */}
                 {selectedSubmission.signature_url && (
                   <div>
                     <label className="text-xs font-mono uppercase tracking-wider text-slate-500 mb-3 block">Property Holder Signature</label>
