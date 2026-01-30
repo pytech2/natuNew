@@ -505,6 +505,15 @@ export default function Employees() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => openEditDialog(emp)}
+                                title="Edit"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => openResetDialog(emp)}
                                 title="Reset Password"
                               >
@@ -532,6 +541,52 @@ export default function Employees() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Employee Dialog */}
+        <Dialog open={editDialog} onOpenChange={setEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Edit Employee</DialogTitle>
+              <DialogDescription>
+                Update details for {selectedEmployee?.username}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder="Full Name"
+                />
+              </div>
+              {(selectedEmployee?.role === 'SUPERVISOR' || selectedEmployee?.role === 'MC_OFFICER') && (
+                <div className="space-y-2">
+                  <Label>Authority</Label>
+                  <Select
+                    value={editFormData.authority}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, authority: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select authority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUTHORITY_OPTIONS.map((auth) => (
+                        <SelectItem key={auth} value={auth}>{auth}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Reset Password Dialog */}
         <Dialog open={resetPasswordDialog} onOpenChange={setResetPasswordDialog}>
