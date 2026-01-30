@@ -4271,17 +4271,19 @@ async def generate_arranged_pdf(
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Immediately below bill content (minimal white space)
+                # Position: Start from left, 100px from bottom
                 if rotation == 90:
-                    visual_bottom_point = fitz.Point(450, rect.height - 20)  # Very close to bill content
+                    # For 90-degree rotated: X=visual vertical, Y=visual horizontal
+                    # X=100 for 100px from visual bottom, Y=20 for left side start
+                    visual_bottom_point = fitz.Point(100, 20)  # Left side, 100px from bottom
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 450, 20)
+                    visual_bottom_point = fitz.Point(rect.width - 100, rect.height - 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(30, 450)
+                    internal_bottom_point = fitz.Point(20, rect.height - 100)
                     bottom_rotate = 0
                 
                 # Insert note in RED with larger font (16pt)
@@ -5145,17 +5147,18 @@ async def split_bills_by_specific_employees(
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Immediately below bill content (minimal white space)
+                # Position: Start from left, 100px from bottom
                 if rotation == 90:
-                    visual_bottom_point = fitz.Point(450, rect.height - 20)  # Very close to bill content
+                    # For 90-degree rotated: X=visual vertical, Y=visual horizontal
+                    visual_bottom_point = fitz.Point(100, 20)  # Left side, 100px from bottom
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 450, 20)
+                    visual_bottom_point = fitz.Point(rect.width - 100, rect.height - 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(30, 450)
+                    internal_bottom_point = fitz.Point(20, rect.height - 100)
                     bottom_rotate = 0
                 
                 # Insert note in RED with larger font (16pt)
