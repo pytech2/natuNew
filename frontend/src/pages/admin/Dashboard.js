@@ -497,14 +497,14 @@ export default function Dashboard() {
                               {ROLE_LABELS[emp.role] || emp.role}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold">
-                              {emp.total_assigned || 0}
+                          <td className="px-6 py-4 text-center bg-emerald-50">
+                            <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 font-bold text-lg shadow-sm">
+                              {emp.today_completed}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-bold">
-                              {emp.today_completed}
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold">
+                              {emp.total_assigned || 0}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
