@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import {
   LayoutDashboard,
   Users,
@@ -17,40 +18,19 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 
-// Full navigation for ADMIN
-const adminNavItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/admin/employees', icon: Users, label: 'Employees' },
-  { path: '/admin/attendance', icon: Calendar, label: 'Attendance' },
-  { path: '/admin/upload', icon: Upload, label: 'Upload Data' },
-  { path: '/admin/bills', icon: FileText, label: 'PDF Bills' },
-  { path: '/admin/properties', icon: FileSpreadsheet, label: 'Properties' },
-  { path: '/admin/map', icon: Map, label: 'Property Map' },
-  { path: '/admin/submissions', icon: ClipboardCheck, label: 'Submissions' },
-  { path: '/admin/export', icon: Download, label: 'Export' },
-];
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Navigation for SUPERVISOR (can upload but cannot export)
-const supervisorNavItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/admin/attendance', icon: Calendar, label: 'Attendance' },
-  { path: '/admin/upload', icon: Upload, label: 'Upload Data' },
-  { path: '/admin/bills', icon: FileText, label: 'PDF Bills' },
-  { path: '/admin/properties', icon: FileSpreadsheet, label: 'Properties' },
-  { path: '/admin/map', icon: Map, label: 'Property Map' },
-  { path: '/admin/submissions', icon: ClipboardCheck, label: 'Submissions' },
-];
-
-// Navigation for MC_OFFICER (can view and export but cannot upload or edit)
-const mcOfficerNavItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/admin/employees', icon: Users, label: 'Employees' },
-  { path: '/admin/attendance', icon: Calendar, label: 'Attendance' },
-  { path: '/admin/bills', icon: FileText, label: 'PDF Bills' },
-  { path: '/admin/properties', icon: FileSpreadsheet, label: 'Properties' },
-  { path: '/admin/map', icon: Map, label: 'Property Map' },
-  { path: '/admin/submissions', icon: ClipboardCheck, label: 'Submissions' },
-  { path: '/admin/export', icon: Download, label: 'Export' },
+// All navigation items with permission keys
+const allNavItems = [
+  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', permission: 'dashboard' },
+  { path: '/admin/employees', icon: Users, label: 'Employees', permission: 'employees' },
+  { path: '/admin/attendance', icon: Calendar, label: 'Attendance', permission: 'attendance' },
+  { path: '/admin/upload', icon: Upload, label: 'Upload Data', permission: 'upload' },
+  { path: '/admin/bills', icon: FileText, label: 'PDF Bills', permission: 'bills' },
+  { path: '/admin/properties', icon: FileSpreadsheet, label: 'Properties', permission: 'properties' },
+  { path: '/admin/map', icon: Map, label: 'Property Map', permission: 'map' },
+  { path: '/admin/submissions', icon: ClipboardCheck, label: 'Submissions', permission: 'submissions' },
+  { path: '/admin/export', icon: Download, label: 'Export', permission: 'export' },
 ];
 
 const ROLE_DISPLAY = {
@@ -61,23 +41,65 @@ const ROLE_DISPLAY = {
 
 export default function AdminLayout({ children, title }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [userPermissions, setUserPermissions] = useState(null);
+  const { user, token, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Fetch user permissions on mount
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (token) {
+        try {
+          const response = await axios.get(`${API_URL}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUserPermissions(response.data.permissions);
+        } catch (error) {
+          console.error('Failed to fetch permissions');
+        }
+      }
+    };
+    fetchPermissions();
+  }, [token]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Determine which nav items to show based on role
+  // Determine which nav items to show based on role and permissions
   const getNavItems = () => {
-    switch (user?.role) {
-      case 'ADMIN':
-        return adminNavItems;
-      case 'SUPERVISOR':
-        return supervisorNavItems;
-      case 'MC_OFFICER':
+    // Admin gets all items
+    if (user?.role === 'ADMIN') {
+      return allNavItems;
+    }
+    
+    // For SUPERVISOR and MC_OFFICER, filter based on permissions
+    if (userPermissions) {
+      return allNavItems.filter(item => {
+        // Check specific permission keys
+        const permKey = item.permission;
+        if (permKey === 'dashboard') return userPermissions.can_view_dashboard;
+        if (permKey === 'employees') return userPermissions.can_view_employees;
+        if (permKey === 'attendance') return userPermissions.can_view_attendance;
+        if (permKey === 'upload') return userPermissions.can_upload;
+        if (permKey === 'bills') return userPermissions.can_view_bills;
+        if (permKey === 'properties') return userPermissions.can_view_properties;
+        if (permKey === 'map') return userPermissions.can_view_map;
+        if (permKey === 'submissions') return userPermissions.can_view_submissions;
+        if (permKey === 'export') return userPermissions.can_export;
+        return false;
+      });
+    }
+    
+    // Default: show basic items while permissions are loading
+    return allNavItems.filter(item => 
+      ['dashboard', 'properties', 'map'].includes(item.permission)
+    );
+  };
+
+  const navItems = getNavItems();
         return mcOfficerNavItems;
       default:
         return adminNavItems;
