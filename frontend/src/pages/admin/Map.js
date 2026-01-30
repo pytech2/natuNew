@@ -689,12 +689,13 @@ export default function PropertyMap() {
                     </div>
                     <Select 
                       value={filters.colony} 
-                      onValueChange={(v) => setFilters({ ...filters, colony: v })}
+                      onValueChange={(v) => setFilters({ ...filters, colony: v === 'ALL_AREAS' ? '' : v })}
                     >
                       <SelectTrigger className="w-[250px] h-10 bg-white border-blue-300">
                         <SelectValue placeholder="-- Select Colony --" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="ALL_AREAS" className="font-semibold text-blue-600">🌐 All Areas</SelectItem>
                         {colonies.map(c => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
