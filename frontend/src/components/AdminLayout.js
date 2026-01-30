@@ -100,13 +100,6 @@ export default function AdminLayout({ children, title }) {
   };
 
   const navItems = getNavItems();
-        return mcOfficerNavItems;
-      default:
-        return adminNavItems;
-    }
-  };
-  
-  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen bg-slate-50">
