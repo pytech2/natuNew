@@ -424,6 +424,7 @@ export default function Employees() {
                       <th>Mobile / Login</th>
                       <th>Role</th>
                       <th>Authority</th>
+                      <th>Permissions</th>
                       <th>Assigned Area</th>
                       {canManageEmployees && <th>Actions</th>}
                     </tr>
@@ -446,6 +447,26 @@ export default function Employees() {
                               {emp.authority}
                             </span>
                           ) : '-'}
+                        </td>
+                        <td>
+                          {emp.permissions && emp.permissions.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {emp.permissions.slice(0, 3).map((perm) => (
+                                <span key={perm} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">
+                                  {perm}
+                                </span>
+                              ))}
+                              {emp.permissions.length > 3 && (
+                                <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">
+                                  +{emp.permissions.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-xs">
+                              {emp.role === 'ADMIN' ? 'All Access' : '-'}
+                            </span>
+                          )}
                         </td>
                         <td className="text-slate-600">{emp.assigned_area || '-'}</td>
                         {canManageEmployees && (
