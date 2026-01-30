@@ -433,11 +433,10 @@ export default function Submissions() {
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Sr. No</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Property ID</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Owner</th>
-                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Owner Mobile</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Colony</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Receiver</th>
-                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Receiver Mobile</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Relation</th>
+                      <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Condition</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Employee</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Submit Date</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
@@ -450,11 +449,22 @@ export default function Submissions() {
                         <td className="px-3 py-3 font-bold text-red-600">{sub.bill_sr_no || sub.serial_number || '-'}</td>
                         <td className="px-3 py-3 font-mono font-medium text-blue-600">{sub.property_id}</td>
                         <td className="px-3 py-3">{sub.property_owner_name || '-'}</td>
-                        <td className="px-3 py-3 font-mono text-xs">{sub.property_mobile || '-'}</td>
                         <td className="px-3 py-3 text-xs">{sub.colony || sub.property_ward || '-'}</td>
                         <td className="px-3 py-3">{sub.receiver_name || '-'}</td>
-                        <td className="px-3 py-3 font-mono text-xs">{sub.receiver_mobile || '-'}</td>
                         <td className="px-3 py-3 text-xs">{sub.relation || '-'}</td>
+                        <td className="px-3 py-3">
+                          {sub.special_condition === 'house_locked' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-xs font-medium">
+                              <Lock className="w-3 h-3" /> Locked
+                            </span>
+                          ) : sub.special_condition === 'owner_denied' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-medium">
+                              <UserX className="w-3 h-3" /> Denied
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">-</span>
+                          )}
+                        </td>
                         <td className="px-3 py-3 text-xs">{sub.employee_name}</td>
                         <td className="px-3 py-3 text-xs text-slate-500">
                           {new Date(sub.submitted_at).toLocaleDateString('en-IN')} {new Date(sub.submitted_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
