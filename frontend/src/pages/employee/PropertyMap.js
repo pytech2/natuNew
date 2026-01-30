@@ -277,6 +277,15 @@ export default function PropertyMap() {
               )}
               Print PDF
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setLoading(true); fetchProperties(); }}
+              disabled={loading}
+              title="Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </div>
       </header>
