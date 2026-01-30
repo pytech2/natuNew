@@ -4265,21 +4265,21 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add note for non-self-certified properties - immediately below bill content
+            # Add note for non-self-certified properties - at bottom left
             if not is_self_certified:
                 bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Start from left, 100px from bottom
+                # Position: Start from left, 100px from visual bottom
                 if rotation == 90:
-                    # For 90-degree rotated: X=visual vertical, Y=visual horizontal
-                    # X=100 for 100px from visual bottom, Y=20 for left side start
-                    visual_bottom_point = fitz.Point(100, 20)  # Left side, 100px from bottom
+                    # For 90-degree rotated: X=visual vertical (high X = visual bottom), Y=visual horizontal (low Y = left)
+                    # Visual bottom = rect.width - 100, left side = 20
+                    visual_bottom_point = fitz.Point(rect.width - 100, 20)  # 100px from visual bottom, start from left
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 100, rect.height - 20)
+                    visual_bottom_point = fitz.Point(100, rect.height - 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
@@ -5141,20 +5141,20 @@ async def split_bills_by_specific_employees(
                 rotate=text_rotate
             )
             
-            # Add note for non-self-certified properties - immediately below bill content
+            # Add note for non-self-certified properties - at bottom left
             if not is_self_certified:
                 bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Start from left, 100px from bottom
+                # Position: Start from left, 100px from visual bottom
                 if rotation == 90:
-                    # For 90-degree rotated: X=visual vertical, Y=visual horizontal
-                    visual_bottom_point = fitz.Point(100, 20)  # Left side, 100px from bottom
+                    # For 90-degree rotated: X=visual vertical (high X = visual bottom), Y=visual horizontal (low Y = left)
+                    visual_bottom_point = fitz.Point(rect.width - 100, 20)  # 100px from visual bottom, start from left
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(rect.width - 100, rect.height - 20)
+                    visual_bottom_point = fitz.Point(100, rect.height - 20)
                     internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
                     bottom_rotate = 270
                 else:
