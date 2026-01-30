@@ -785,15 +785,22 @@ export default function Survey() {
                 {/* Remarks field for special conditions */}
                 {canSkipRequiredFields && (
                   <div className="space-y-2 pt-2">
-                    <Label className="text-amber-700">Remarks (Optional)</Label>
+                    <Label className={specialCondition === 'owner_denied' ? 'text-red-700' : 'text-amber-700'}>
+                      Remarks {specialCondition === 'owner_denied' ? '*' : '(Optional)'}
+                    </Label>
                     <Textarea
                       value={formData.remarks}
                       onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                      placeholder="Add any additional remarks..."
+                      placeholder={specialCondition === 'owner_denied' 
+                        ? "Required: Please explain why owner denied..." 
+                        : "Add any additional remarks..."}
                       rows={2}
-                      className="border-amber-300"
+                      className={specialCondition === 'owner_denied' ? 'border-red-300' : 'border-amber-300'}
                       data-testid="special-remarks-input"
                     />
+                    {specialCondition === 'owner_denied' && !formData.remarks?.trim() && (
+                      <p className="text-xs text-red-500">Remarks are required when owner denied</p>
+                    )}
                   </div>
                 )}
               </CardContent>
