@@ -47,9 +47,11 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [resetPasswordDialog, setResetPasswordDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [editFormData, setEditFormData] = useState({ name: '', authority: '' });
   const [formData, setFormData] = useState({
     mobile: '',
     password: '',
