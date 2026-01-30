@@ -542,93 +542,106 @@ export default function Submissions() {
             </DialogHeader>
 
             {selectedSubmission && (
-              <div className="space-y-4">
-                {/* Property Info Header - Same format as Surveyor Map */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Property ID</div>
-                  <div className="text-2xl font-bold text-blue-700 mt-1">{selectedSubmission.property_id || '-'}</div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-gray-500">Sr. No:</span>
-                    <span className="font-bold text-red-600">{selectedSubmission.bill_sr_no || selectedSubmission.serial_number || '-'}</span>
+              <div className="space-y-3">
+                {/* Compact Property Info Header */}
+                <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <div>
+                    <span className="text-xs text-blue-600">Property ID:</span>
+                    <span className="font-bold text-blue-700 ml-1">{selectedSubmission.property_id || '-'}</span>
                   </div>
-                </div>
-
-                {/* Status Badge */}
-                <div>
-                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                  <div>
+                    <span className="text-xs text-gray-500">Sr:</span>
+                    <span className="font-bold text-red-600 ml-1">{selectedSubmission.bill_sr_no || selectedSubmission.serial_number || '-'}</span>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                     selectedSubmission.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 
                     selectedSubmission.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
                     'bg-green-100 text-green-700'
                   }`}>
-                    {selectedSubmission.status === 'Approved' ? '✓ ' : ''}
                     {selectedSubmission.status}
                   </span>
                 </div>
 
-                {/* Property Details Grid - Same as Surveyor Map */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Owner</div>
-                    <div className="font-semibold text-gray-900">{selectedSubmission.property_owner_name || '-'}</div>
+                {/* Property Details - Compact 3-column grid */}
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Owner</div>
+                    <div className="font-semibold truncate">{selectedSubmission.property_owner_name || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Owner Mobile</div>
-                    {selectedSubmission.property_mobile ? (
-                      <a href={`tel:${selectedSubmission.property_mobile}`} className="font-semibold text-blue-600 underline">
-                        {selectedSubmission.property_mobile}
-                      </a>
-                    ) : (
-                      <div className="text-gray-400">-</div>
-                    )}
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Mobile</div>
+                    <div className="font-mono">{selectedSubmission.property_mobile || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Colony</div>
-                    <div className="font-medium text-gray-800">{selectedSubmission.colony || selectedSubmission.property_ward || '-'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Colony</div>
+                    <div className="font-medium truncate">{selectedSubmission.colony || selectedSubmission.property_ward || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Total Area</div>
-                    <div className="font-medium text-gray-800">{selectedSubmission.total_area || '-'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Area</div>
+                    <div className="font-medium">{selectedSubmission.total_area || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Category</div>
-                    <div className="font-medium text-gray-800">{selectedSubmission.category || 'Residential'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Category</div>
+                    <div className="font-medium">{selectedSubmission.category || 'Residential'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Amount</div>
-                    <div className="font-bold text-red-600 text-lg">₹{selectedSubmission.property_amount || '0'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-gray-500">Amount</div>
+                    <div className="font-bold text-red-600">₹{selectedSubmission.property_amount || '0'}</div>
                   </div>
                 </div>
 
-                {/* Receiver Details */}
-                <div className="border-t pt-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Survey Details</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Receiver Name</div>
+                {/* Survey Details - Compact */}
+                <div className="border-t pt-2">
+                  <div className="text-xs font-semibold text-gray-700 mb-2">Survey Details</div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Receiver</div>
                       <div className="font-medium">{selectedSubmission.receiver_name || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Receiver Mobile</div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Receiver Mobile</div>
                       <div className="font-mono">{selectedSubmission.receiver_mobile || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Relation</div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Relation</div>
                       <div className="font-medium">{selectedSubmission.relation || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Self Certification</div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Self Cert</div>
                       <div className="font-medium">{selectedSubmission.self_cert_status || selectedSubmission.self_satisfied || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Employee</div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Employee</div>
                       <div className="font-medium">{selectedSubmission.employee_name}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Submit Date</div>
-                      <div className="font-medium text-xs">{new Date(selectedSubmission.submitted_at).toLocaleString('en-IN')}</div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-gray-500">Date</div>
+                      <div className="font-medium">{new Date(selectedSubmission.submitted_at).toLocaleDateString('en-IN')}</div>
                     </div>
                   </div>
                 </div>
+
+                {/* GPS Location - Compact with map link */}
+                {(selectedSubmission.latitude || selectedSubmission.survey_latitude) && (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs text-emerald-700">
+                        {(selectedSubmission.latitude || selectedSubmission.survey_latitude)?.toFixed(6)}, 
+                        {(selectedSubmission.longitude || selectedSubmission.survey_longitude)?.toFixed(6)}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs border-emerald-300 text-emerald-700"
+                      onClick={() => window.open(`https://www.google.com/maps?q=${selectedSubmission.latitude || selectedSubmission.survey_latitude},${selectedSubmission.longitude || selectedSubmission.survey_longitude}`, '_blank')}
+                    >
+                      <Navigation className="w-3 h-3 mr-1" />
+                      Open Map
+                    </Button>
+                  </div>
+                )}
 
                 {/* Special Condition */}
                 {selectedSubmission.special_condition && (
