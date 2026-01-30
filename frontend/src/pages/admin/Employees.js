@@ -56,7 +56,8 @@ export default function Employees() {
     name: '',
     role: 'SURVEYOR',
     assigned_area: '',
-    authority: ''
+    authority: '',
+    permissions: []
   });
 
   // Authority options for Supervisor and MC Officer
@@ -78,8 +79,47 @@ export default function Employees() {
     'All Areas'
   ];
 
+  // Available permissions for Supervisor and MC Officer
+  const PERMISSION_OPTIONS = [
+    { key: 'dashboard', label: 'Dashboard', description: 'View dashboard statistics' },
+    { key: 'bills', label: 'Bills', description: 'View and manage property bills' },
+    { key: 'properties', label: 'Properties', description: 'View property list' },
+    { key: 'map', label: 'Map', description: 'View property map' },
+    { key: 'submissions', label: 'Submissions', description: 'View survey submissions' },
+    { key: 'approve', label: 'Approve/Reject', description: 'Approve or reject submissions' },
+    { key: 'employees', label: 'Employees', description: 'View employee list' },
+    { key: 'attendance', label: 'Attendance', description: 'View attendance records' },
+    { key: 'export', label: 'Export', description: 'Export data to Excel/PDF' },
+    { key: 'upload', label: 'Upload', description: 'Upload property data' }
+  ];
+
   // Only ADMIN can create employees
   const canManageEmployees = user?.role === 'ADMIN';
+
+  // Toggle permission
+  const togglePermission = (permKey) => {
+    setFormData(prev => {
+      const perms = prev.permissions || [];
+      if (perms.includes(permKey)) {
+        return { ...prev, permissions: perms.filter(p => p !== permKey) };
+      } else {
+        return { ...prev, permissions: [...perms, permKey] };
+      }
+    });
+  };
+
+  // Select all permissions
+  const selectAllPermissions = () => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: PERMISSION_OPTIONS.map(p => p.key)
+    }));
+  };
+
+  // Clear all permissions
+  const clearAllPermissions = () => {
+    setFormData(prev => ({ ...prev, permissions: [] }));
+  };
 
   useEffect(() => {
     fetchEmployees();
