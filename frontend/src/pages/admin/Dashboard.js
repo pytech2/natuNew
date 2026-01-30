@@ -485,7 +485,10 @@ export default function Dashboard() {
                               }`}>
                                 {emp.employee_name?.charAt(0)}
                               </div>
-                              <span className="font-medium text-slate-900">{emp.employee_name}</span>
+                              <div>
+                                <span className="font-medium text-slate-900 block">{emp.employee_name}</span>
+                                <span className="text-xs text-slate-500 font-mono">{emp.employee_mobile || emp.employee_id}</span>
+                              </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
