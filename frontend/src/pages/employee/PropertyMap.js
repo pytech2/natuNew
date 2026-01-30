@@ -99,6 +99,13 @@ export default function PropertyMap() {
 
   useEffect(() => {
     fetchProperties();
+    
+    // Auto-refresh every 30 seconds to get updated statuses
+    const refreshInterval = setInterval(() => {
+      fetchProperties();
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const fetchProperties = async () => {
