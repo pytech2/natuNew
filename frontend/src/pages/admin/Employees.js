@@ -23,7 +23,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { UserPlus, Trash2, Users, Key, Phone, Loader2 } from 'lucide-react';
+import { UserPlus, Trash2, Users, Key, Phone, Loader2, Edit } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
