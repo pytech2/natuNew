@@ -4265,23 +4265,23 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add note for non-self-certified properties - at bottom left
+            # Add note for non-self-certified properties - below the disclaimer text
             if not is_self_certified:
                 bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
                 if font_name == 'helv':
                     bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
                 
-                # Position: Start from left, 100px from visual bottom
+                # Position: After the disclaimer text at the bottom of the bill
                 if rotation == 90:
-                    # For 90-degree rotated page: text grows in internal Y direction
-                    # Text at 12pt needs ~530px, we have 575px
-                    internal_bottom_point = fitz.Point(100, 565)
+                    # For 90-degree rotated page: high internal X = visual bottom
+                    # Place at ~760 from internal left (which is visual bottom, after disclaimer)
+                    internal_bottom_point = fitz.Point(760, 30)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 100, 20)
+                    internal_bottom_point = fitz.Point(rect.width - 760, rect.height - 30)
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(20, rect.height - 100)
+                    internal_bottom_point = fitz.Point(30, rect.height - 30)
                     bottom_rotate = 0
                 
                 # Insert note in RED - font size 12 to fit within page width
