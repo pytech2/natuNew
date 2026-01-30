@@ -224,6 +224,34 @@ export default function Employees() {
     setResetPasswordDialog(true);
   };
 
+  const openEditDialog = (employee) => {
+    setSelectedEmployee(employee);
+    setEditFormData({
+      name: employee.name || '',
+      authority: employee.authority || ''
+    });
+    setEditDialog(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editFormData.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    
+    try {
+      await axios.put(`${API_URL}/admin/users/${selectedEmployee.id}`, editFormData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Employee updated successfully');
+      setEditDialog(false);
+      fetchEmployees();
+    } catch (error) {
+      toast.error('Failed to update employee');
+    }
+  };
+
   return (
     <AdminLayout title="Employee Management">
       <div data-testid="admin-employees" className="space-y-6">
