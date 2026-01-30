@@ -701,10 +701,21 @@ export default function PropertyMap() {
                         <SelectValue placeholder="-- Select Colony --" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ALL_AREAS" className="font-semibold text-blue-600">🌐 All Areas</SelectItem>
-                        {colonies.map(c => (
+                        <div className="px-2 pb-2">
+                          <Input
+                            placeholder="Search colony..."
+                            value={colonySearch}
+                            onChange={(e) => setColonySearch(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <SelectItem value="ALL_AREAS" className="font-semibold text-blue-600">🌐 All Areas ({colonies.length} colonies)</SelectItem>
+                        {filteredColonies.map(c => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
+                        {filteredColonies.length === 0 && colonySearch && (
+                          <div className="px-2 py-2 text-sm text-slate-500">No colonies found</div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
