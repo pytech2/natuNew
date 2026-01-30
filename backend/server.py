@@ -5148,13 +5148,11 @@ async def split_bills_by_specific_employees(
                 
                 # Position: Start from left, 100px from visual bottom
                 if rotation == 90:
-                    # For 90-degree rotated: X=visual vertical (high X = visual bottom), Y=visual horizontal (low Y = left)
-                    visual_bottom_point = fitz.Point(rect.width - 100, 20)  # 100px from visual bottom, start from left
-                    internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
+                    # For 90-degree rotated page: text with rotate=90 grows in internal Y direction
+                    internal_bottom_point = fitz.Point(20, 700)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    visual_bottom_point = fitz.Point(100, rect.height - 20)
-                    internal_bottom_point = visual_bottom_point * new_page.derotation_matrix
+                    internal_bottom_point = fitz.Point(rect.width - 20, rect.height - 700)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(20, rect.height - 100)
