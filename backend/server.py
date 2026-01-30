@@ -4276,7 +4276,8 @@ async def generate_arranged_pdf(
                     # For 90-degree rotated page: text with rotate=90 grows in internal Y direction
                     # We need enough Y space for the full text
                     # Internal coords: (20, 700) gives text starting from visual bottom-left
-                    internal_bottom_point = fitz.Point(20, 700)
+                    # Use full page width (595) minus small padding for text to fit
+                    internal_bottom_point = fitz.Point(100, 575)
                     bottom_rotate = 90
                 elif rotation == 270:
                     internal_bottom_point = fitz.Point(rect.width - 20, rect.height - 700)
@@ -5149,7 +5150,8 @@ async def split_bills_by_specific_employees(
                 # Position: Start from left, 100px from visual bottom
                 if rotation == 90:
                     # For 90-degree rotated page: text with rotate=90 grows in internal Y direction
-                    internal_bottom_point = fitz.Point(20, 700)
+                    # Use full page width (595) minus small padding for text to fit
+                    internal_bottom_point = fitz.Point(100, 575)
                     bottom_rotate = 90
                 elif rotation == 270:
                     internal_bottom_point = fitz.Point(rect.width - 20, rect.height - 700)
