@@ -331,6 +331,61 @@ export default function Employees() {
                     </div>
                   )}
                   
+                  {/* Permissions - Only for Supervisor and MC Officer */}
+                  {(formData.role === 'SUPERVISOR' || formData.role === 'MC_OFFICER') && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Access Permissions</Label>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs h-7"
+                            onClick={selectAllPermissions}
+                          >
+                            Select All
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs h-7"
+                            onClick={clearAllPermissions}
+                          >
+                            Clear All
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3 bg-slate-50">
+                        {PERMISSION_OPTIONS.map((perm) => (
+                          <label 
+                            key={perm.key} 
+                            className={`flex items-start gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+                              formData.permissions?.includes(perm.key) 
+                                ? 'bg-blue-50 border border-blue-200' 
+                                : 'bg-white border border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.permissions?.includes(perm.key) || false}
+                              onChange={() => togglePermission(perm.key)}
+                              className="mt-0.5 rounded border-slate-300"
+                            />
+                            <div>
+                              <span className="text-sm font-medium text-slate-800">{perm.label}</span>
+                              <p className="text-xs text-slate-500">{perm.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <span>⚠️</span> Selected: {formData.permissions?.length || 0} permissions
+                      </p>
+                    </div>
+                  )}
+                  
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                       Cancel
