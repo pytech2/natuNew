@@ -4274,11 +4274,11 @@ async def generate_arranged_pdf(
                 # Position: After the disclaimer text at the bottom of the bill
                 if rotation == 90:
                     # For 90-degree rotated page: high internal X = visual bottom
-                    # Place at ~760 from internal left (which is visual bottom, after disclaimer)
-                    internal_bottom_point = fitz.Point(760, 30)
+                    # Y needs to be high enough for text (~530px needed)
+                    internal_bottom_point = fitz.Point(760, 565)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 760, rect.height - 30)
+                    internal_bottom_point = fitz.Point(rect.width - 760, 30)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(30, rect.height - 30)
