@@ -4267,9 +4267,9 @@ async def generate_arranged_pdf(
             
             # Add note for non-self-certified properties - below the disclaimer text
             if not is_self_certified:
-                bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
+                bottom_note = "आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके !"
                 if font_name == 'helv':
-                    bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
+                    bottom_note = "Please verify your Property ID so that other citizens cannot tamper with your Property ID!"
                 
                 # Position: After the disclaimer text (which ends at ~X=420)
                 if rotation == 90:
