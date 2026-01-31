@@ -4277,7 +4277,7 @@ async def generate_arranged_pdf(
             
             # Add note for non-self-certified properties - below the disclaimer text
             if not is_self_certified:
-                bottom_note = "Note : आप अपनी Property ID को Self Certified करवाएं so that आपकी Property ID के साथ कोई दूसरा छेड़-छाड़ न कर सके!"
+                bottom_note = "Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।"
                 if font_name == 'helv':
                     bottom_note = "NOTE : Please Self Certify your Property ID so that other citizens cannot tamper with your Property ID!"
                 
@@ -5171,7 +5171,7 @@ async def split_bills_by_specific_employees(
             
             # Add note for non-self-certified properties - below the disclaimer text
             if not is_self_certified:
-                bottom_note = "Note : आप अपनी Property ID को Self Certified करवाएं so that आपकी Property ID के साथ कोई दूसरा छेड़-छाड़ न कर सके!"
+                bottom_note = "Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।"
                 if font_name == 'helv':
                     bottom_note = "NOTE : Please Self Certify your Property ID so that other citizens cannot tamper with your Property ID!"
                 
