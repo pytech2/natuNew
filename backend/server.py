@@ -5184,33 +5184,37 @@ async def split_bills_by_specific_employees(
                 rotate=text_rotate
             )
             
-            # Add note for non-self-certified properties - using image for proper Hindi rendering
+            # Add note for non-self-certified properties - using pre-generated image
             if not is_self_certified:
-                # Generate Hindi note image using wkhtmltoimage
-                import subprocess
-                import tempfile
+                # Use pre-generated Hindi note image
+                note_img_path = "/tmp/hindi_note_cached.png"
                 
-                hindi_note_html = '''<!DOCTYPE html>
+                # Generate image only if it doesn't exist
+                if not os.path.exists(note_img_path):
+                    import subprocess
+                    import tempfile
+                    
+                    hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:12px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
 </head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
-                
-                # Create temp HTML file
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-                    f.write(hindi_note_html)
-                    html_path = f.name
-                
-                note_img_path = f"/tmp/hindi_note_{uuid.uuid4().hex[:8]}.png"
-                
-                try:
-                    # Generate image
-                    subprocess.run([
-                        'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                        '--encoding', 'utf-8', '--width', '750', '--height', '30', '--quality', '100',
-                        html_path, note_img_path
-                    ], capture_output=True, timeout=30)
                     
-                    if os.path.exists(note_img_path):
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                        f.write(hindi_note_html)
+                        html_path = f.name
+                    
+                    try:
+                        subprocess.run([
+                            'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
+                            '--encoding', 'utf-8', '--width', '750', '--height', '30', '--quality', '100',
+                            html_path, note_img_path
+                        ], capture_output=True, timeout=30)
+                    finally:
+                        if os.path.exists(html_path):
+                            os.unlink(html_path)
+                
+                if os.path.exists(note_img_path):
+                    try:
                         # Insert image into PDF
                         if rotation == 90:
                             img_rect = fitz.Rect(430, 30, 580, 560)
@@ -5220,12 +5224,8 @@ async def split_bills_by_specific_employees(
                             img_rect = fitz.Rect(30, rect.height - 50, rect.width - 30, rect.height - 20)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
-                        os.unlink(note_img_path)
-                except Exception as e:
-                    logger.error(f"Error inserting Hindi note image: {e}")
-                finally:
-                    if os.path.exists(html_path):
-                        os.unlink(html_path)
+                    except Exception as e:
+                        logger.error(f"Error inserting Hindi note image: {e}")
         
         output_pdf.save(
             str(output_path),
