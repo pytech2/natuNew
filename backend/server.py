@@ -4230,13 +4230,17 @@ async def generate_arranged_pdf(
             is_self_certified = bill.get("self_certified", False)
             
             # Load font for Hindi + English support
-            # Lohit-Devanagari for proper Hindi rendering with English fallback
-            lohit_font = '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf'
+            # Try Gargi font for proper Hindi rendering
+            gargi_font = '/usr/share/fonts/truetype/Gargi/Gargi.ttf'
+            samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(lohit_font):
-                new_page.insert_font(fontname='lohit', fontbuffer=open(lohit_font, 'rb').read())
-                font_name = 'lohit'
+            if os.path.exists(gargi_font):
+                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                font_name = 'gargi'
+            elif os.path.exists(samyak_font):
+                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
                 font_name = 'freesans'
@@ -4566,13 +4570,17 @@ async def split_bills_by_employee(
             is_self_certified = bill.get("self_certified", False)
             
             # Load font for Hindi + English support
-            # Lohit-Devanagari for proper Hindi rendering with English fallback
-            lohit_font = '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf'
+            # Try Gargi font for proper Hindi rendering
+            gargi_font = '/usr/share/fonts/truetype/Gargi/Gargi.ttf'
+            samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(lohit_font):
-                new_page.insert_font(fontname='lohit', fontbuffer=open(lohit_font, 'rb').read())
-                font_name = 'lohit'
+            if os.path.exists(gargi_font):
+                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                font_name = 'gargi'
+            elif os.path.exists(samyak_font):
+                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
                 font_name = 'freesans'
@@ -5122,13 +5130,17 @@ async def split_bills_by_specific_employees(
             is_self_certified = bill.get("self_certified", False)
             
             # Load font for Hindi + English support
-            # Lohit-Devanagari for proper Hindi rendering with English fallback
-            lohit_font = '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf'
+            # Try Gargi font for proper Hindi rendering
+            gargi_font = '/usr/share/fonts/truetype/Gargi/Gargi.ttf'
+            samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(lohit_font):
-                new_page.insert_font(fontname='lohit', fontbuffer=open(lohit_font, 'rb').read())
-                font_name = 'lohit'
+            if os.path.exists(gargi_font):
+                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                font_name = 'gargi'
+            elif os.path.exists(samyak_font):
+                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
                 font_name = 'freesans'
