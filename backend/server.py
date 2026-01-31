@@ -4273,11 +4273,12 @@ async def generate_arranged_pdf(
                 
                 # Position: After the disclaimer text (which ends at ~X=420)
                 if rotation == 90:
-                    # For 90-degree rotated page: place just after disclaimer at X~440
-                    internal_bottom_point = fitz.Point(440, 565)
+                    # For 90-degree rotated page: place just after disclaimer
+                    # Y=580 to give more room for full text including "!"
+                    internal_bottom_point = fitz.Point(440, 580)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 440, 30)
+                    internal_bottom_point = fitz.Point(rect.width - 440, 15)
                     bottom_rotate = 270
                 else:
                     internal_bottom_point = fitz.Point(30, rect.height - 30)
