@@ -5196,7 +5196,7 @@ async def split_bills_by_specific_employees(
                     
                     hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:12px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
+<style>body{margin:0;padding:2px 0;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:16px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
 </head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                     
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
@@ -5206,7 +5206,7 @@ async def split_bills_by_specific_employees(
                     try:
                         subprocess.run([
                             'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                            '--encoding', 'utf-8', '--width', '750', '--height', '30', '--quality', '100',
+                            '--encoding', 'utf-8', '--width', '900', '--height', '40', '--quality', '100',
                             html_path, note_img_path
                         ], capture_output=True, timeout=30)
                     finally:
@@ -5215,13 +5215,13 @@ async def split_bills_by_specific_employees(
                 
                 if os.path.exists(note_img_path):
                     try:
-                        # Insert image into PDF
+                        # Insert image into PDF - adjusted rect for larger image, no left margin
                         if rotation == 90:
-                            img_rect = fitz.Rect(430, 30, 580, 560)
+                            img_rect = fitz.Rect(430, 10, 600, 580)
                         elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 580, rect.height - 560, rect.width - 430, rect.height - 30)
+                            img_rect = fitz.Rect(rect.width - 600, rect.height - 580, rect.width - 430, rect.height - 10)
                         else:
-                            img_rect = fitz.Rect(30, rect.height - 50, rect.width - 30, rect.height - 20)
+                            img_rect = fitz.Rect(10, rect.height - 60, rect.width - 10, rect.height - 20)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                     except Exception as e:
