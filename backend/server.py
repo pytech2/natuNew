@@ -4275,34 +4275,49 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add note for non-self-certified properties - below the disclaimer text
+            # Add note for non-self-certified properties - using image for proper Hindi rendering
             if not is_self_certified:
-                bottom_note = "Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।"
-                if font_name == 'helv':
-                    bottom_note = "NOTE : Please Self Certify your Property ID so that other citizens cannot tamper with your Property ID!"
+                # Generate Hindi note image using wkhtmltoimage
+                import subprocess
+                import tempfile
                 
-                # Position: After the disclaimer text (which ends at ~X=420)
-                if rotation == 90:
-                    # For 90-degree rotated page: place just after disclaimer
-                    # Y=580 to give more room for full text including "!"
-                    internal_bottom_point = fitz.Point(440, 580)
-                    bottom_rotate = 90
-                elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 440, 15)
-                    bottom_rotate = 270
-                else:
-                    internal_bottom_point = fitz.Point(30, rect.height - 30)
-                    bottom_rotate = 0
+                hindi_note_html = '''<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:12px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
+</head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                 
-                # Insert note in RED - font size 12 to fit within page width
-                new_page.insert_text(
-                    internal_bottom_point,
-                    bottom_note,
-                    fontsize=12,
-                    fontname=font_name,
-                    color=(0.8, 0, 0),  # Dark red
-                    rotate=bottom_rotate
-                )
+                # Create temp HTML file
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                    f.write(hindi_note_html)
+                    html_path = f.name
+                
+                note_img_path = f"/tmp/hindi_note_{uuid.uuid4().hex[:8]}.png"
+                
+                try:
+                    # Generate image
+                    subprocess.run([
+                        'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
+                        '--encoding', 'utf-8', '--width', '750', '--height', '30', '--quality', '100',
+                        html_path, note_img_path
+                    ], capture_output=True, timeout=30)
+                    
+                    if os.path.exists(note_img_path):
+                        # Insert image into PDF
+                        if rotation == 90:
+                            # For rotated page, position after disclaimer
+                            img_rect = fitz.Rect(430, 30, 580, 560)
+                        elif rotation == 270:
+                            img_rect = fitz.Rect(rect.width - 580, rect.height - 560, rect.width - 430, rect.height - 30)
+                        else:
+                            img_rect = fitz.Rect(30, rect.height - 50, rect.width - 30, rect.height - 20)
+                        
+                        new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
+                        os.unlink(note_img_path)
+                except Exception as e:
+                    logger.error(f"Error inserting Hindi note image: {e}")
+                finally:
+                    if os.path.exists(html_path):
+                        os.unlink(html_path)
             
             included_count += 1
     else:
