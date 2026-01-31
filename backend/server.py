@@ -5215,14 +5215,14 @@ async def split_bills_by_specific_employees(
                 
                 if os.path.exists(note_img_path):
                     try:
-                        # Insert image into PDF - left aligned, 200px from bottom
+                        # Insert image into PDF - left aligned, 300px from bottom
                         if rotation == 90:
-                            # Y=5 for left align, X increased for 200px bottom padding
-                            img_rect = fitz.Rect(575, 5, 640, 590)
+                            # Y=5 for left align, 300px padding from bottom
+                            img_rect = fitz.Rect(477, 5, 542, 590)
                         elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 640, rect.height - 590, rect.width - 575, rect.height - 5)
+                            img_rect = fitz.Rect(rect.width - 542, rect.height - 590, rect.width - 477, rect.height - 5)
                         else:
-                            img_rect = fitz.Rect(5, rect.height - 290, rect.width - 5, rect.height - 225)
+                            img_rect = fitz.Rect(5, rect.height - 390, rect.width - 5, rect.height - 325)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                     except Exception as e:
