@@ -4229,10 +4229,16 @@ async def generate_arranged_pdf(
             # Both at top with 50px padding
             is_self_certified = bill.get("self_certified", False)
             
-            # Load FreeSans font for Hindi support
-            font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-            if os.path.exists(font_file):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+            # Load Hindi font for proper Devanagari rendering
+            # Priority: Noto Sans Devanagari > FreeSans > helv
+            hindi_font_file = '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf'
+            fallback_font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+            
+            if os.path.exists(hindi_font_file):
+                new_page.insert_font(fontname='notosans', fontbuffer=open(hindi_font_file, 'rb').read())
+                font_name = 'notosans'
+            elif os.path.exists(fallback_font_file):
+                new_page.insert_font(fontname='freesans', fontbuffer=open(fallback_font_file, 'rb').read())
                 font_name = 'freesans'
             else:
                 font_name = 'helv'
@@ -4559,10 +4565,16 @@ async def split_bills_by_employee(
             # Both at top with 50px padding
             is_self_certified = bill.get("self_certified", False)
             
-            # Load FreeSans font for Hindi support
-            font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-            if os.path.exists(font_file):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+            # Load Hindi font for proper Devanagari rendering
+            # Priority: Noto Sans Devanagari > FreeSans > helv
+            hindi_font_file = '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf'
+            fallback_font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+            
+            if os.path.exists(hindi_font_file):
+                new_page.insert_font(fontname='notosans', fontbuffer=open(hindi_font_file, 'rb').read())
+                font_name = 'notosans'
+            elif os.path.exists(fallback_font_file):
+                new_page.insert_font(fontname='freesans', fontbuffer=open(fallback_font_file, 'rb').read())
                 font_name = 'freesans'
             else:
                 font_name = 'helv'
@@ -5109,10 +5121,16 @@ async def split_bills_by_specific_employees(
             # Both at top with 50px padding
             is_self_certified = bill.get("self_certified", False)
             
-            # Load FreeSans font for Hindi support
-            font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
-            if os.path.exists(font_file):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(font_file, 'rb').read())
+            # Load Hindi font for proper Devanagari rendering
+            # Priority: Noto Sans Devanagari > FreeSans > helv
+            hindi_font_file = '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf'
+            fallback_font_file = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+            
+            if os.path.exists(hindi_font_file):
+                new_page.insert_font(fontname='notosans', fontbuffer=open(hindi_font_file, 'rb').read())
+                font_name = 'notosans'
+            elif os.path.exists(fallback_font_file):
+                new_page.insert_font(fontname='freesans', fontbuffer=open(fallback_font_file, 'rb').read())
                 font_name = 'freesans'
             else:
                 font_name = 'helv'
