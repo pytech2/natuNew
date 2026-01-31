@@ -4288,7 +4288,7 @@ async def generate_arranged_pdf(
                     hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:12px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
-</head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
+</head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                     
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
                         f.write(hindi_note_html)
@@ -5197,7 +5197,7 @@ async def split_bills_by_specific_employees(
                     hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:0;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:34px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
-</head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
+</head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                     
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
                         f.write(hindi_note_html)
