@@ -5142,26 +5142,24 @@ async def split_bills_by_specific_employees(
                 rotate=text_rotate
             )
             
-            # Add note for non-self-certified properties - at bottom left
+            # Add note for non-self-certified properties - below the disclaimer text
             if not is_self_certified:
-                bottom_note = "Note:- आप अपनी Property ID को सत्यापित करवाएं ताकि आपकी Property ID के साथ अन्य नागरिक छेड़-छाड़ न कर सके"
+                bottom_note = "NOTE : आप अपनी Property ID को Self Certified करवाएं ताकि आपकी Property ID के साथ दूसरा नागरिक छेड़-छाड़ न कर सके!"
                 if font_name == 'helv':
-                    bottom_note = "Note:- Please verify your Property ID so that other citizens cannot tamper with your Property ID"
+                    bottom_note = "NOTE : Please Self Certify your Property ID so that other citizens cannot tamper with your Property ID!"
                 
-                # Position: Start from left, 100px from visual bottom
+                # Position: After the disclaimer text
                 if rotation == 90:
-                    # For 90-degree rotated page: text grows in internal Y direction
-                    # Text at 12pt needs ~530px, we have 575px
-                    internal_bottom_point = fitz.Point(100, 565)
+                    internal_bottom_point = fitz.Point(440, 580)
                     bottom_rotate = 90
                 elif rotation == 270:
-                    internal_bottom_point = fitz.Point(rect.width - 100, 20)
+                    internal_bottom_point = fitz.Point(rect.width - 440, 15)
                     bottom_rotate = 270
                 else:
-                    internal_bottom_point = fitz.Point(20, rect.height - 100)
+                    internal_bottom_point = fitz.Point(30, rect.height - 30)
                     bottom_rotate = 0
                 
-                # Insert note in RED - font size 12 to fit within page width
+                # Insert note in RED - font size 12
                 new_page.insert_text(
                     internal_bottom_point,
                     bottom_note,
