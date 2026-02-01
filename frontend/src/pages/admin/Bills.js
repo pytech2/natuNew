@@ -67,11 +67,13 @@ export default function BillsPage() {
   const [employees, setEmployees] = useState([]);
   const [batchStats, setBatchStats] = useState(null);  // Batch skip statistics
   const [colonyStats, setColonyStats] = useState(null);  // Colony statistics
+  const [towns, setTowns] = useState([]);  // Towns list
   
   // Filters
   const [filters, setFilters] = useState({
     batch_id: '',
     colony: '',
+    town: '',
     search: ''
   });
   
