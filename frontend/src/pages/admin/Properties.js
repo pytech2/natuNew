@@ -558,6 +558,21 @@ export default function Properties() {
               </Select>
 
               <Select
+                value={filters.town}
+                onValueChange={(value) => setFilters({ ...filters, town: value })}
+              >
+                <SelectTrigger className="w-[150px]" data-testid="town-filter">
+                  <SelectValue placeholder="All Towns" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" ">All Towns</SelectItem>
+                  {towns.map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
                 value={filters.status}
                 onValueChange={(value) => setFilters({ ...filters, status: value })}
               >
@@ -575,7 +590,7 @@ export default function Properties() {
 
               <Button
                 variant="outline"
-                onClick={() => setFilters({ batch_id: '', area: '', status: '', employee_id: '', search: '' })}
+                onClick={() => setFilters({ batch_id: '', area: '', town: '', status: '', employee_id: '', search: '' })}
               >
                 Clear
               </Button>
