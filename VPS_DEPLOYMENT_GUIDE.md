@@ -135,3 +135,4 @@ module.exports = {
 3. **Port already in use**: `pm2 delete all` then restart
 4. **Photos not showing**: Check if `uploads/` folder exists on VPS
 5. **Git pull fails**: Run `git reset --hard origin/main` first
+6. **Hindi note not showing on PDF**: Run the FIRST TIME SETUP command at top of this file
