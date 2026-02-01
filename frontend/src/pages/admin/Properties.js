@@ -147,6 +147,9 @@ export default function Properties() {
         }),
         axios.get(`${API_URL}/admin/areas`, {
           headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/admin/towns`, {
+          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       console.log('Users fetched:', empRes.data.length);
@@ -155,6 +158,7 @@ export default function Properties() {
       setEmployees(nonAdminUsers);
       setBatches(batchRes.data || []);
       setAreas(areaRes.data.areas || []);
+      setTowns(townRes.data.towns || []);
     } catch (error) {
       console.error('Failed to fetch initial data:', error);
       toast.error('Failed to load employees');
