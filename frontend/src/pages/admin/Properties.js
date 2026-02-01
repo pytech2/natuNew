@@ -71,6 +71,7 @@ export default function Properties() {
   const [employees, setEmployees] = useState([]);
   const [batches, setBatches] = useState([]);
   const [areas, setAreas] = useState([]);
+  const [towns, setTowns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   
@@ -78,6 +79,7 @@ export default function Properties() {
   const [filters, setFilters] = useState({
     batch_id: '',
     area: '',
+    town: '',
     status: '',
     employee_id: '',
     search: ''
