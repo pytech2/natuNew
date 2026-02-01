@@ -138,7 +138,7 @@ export default function Properties() {
   const fetchInitialData = async () => {
     try {
       console.log('Fetching initial data...');
-      const [empRes, batchRes, areaRes] = await Promise.all([
+      const [empRes, batchRes, areaRes, townRes] = await Promise.all([
         axios.get(`${API_URL}/admin/users`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
