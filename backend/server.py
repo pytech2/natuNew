@@ -3824,6 +3824,7 @@ async def export_bills_excel(
 async def list_bills(
     batch_id: Optional[str] = None,
     colony: Optional[str] = None,
+    town: Optional[str] = None,
     status: Optional[str] = None,
     sorted_by_route: bool = False,
     page: int = 1,
@@ -3839,6 +3840,8 @@ async def list_bills(
         query["batch_id"] = batch_id
     if colony and colony.strip():
         query["colony"] = {"$regex": colony, "$options": "i"}
+    if town and town.strip():
+        query["town"] = town
     if status and status.strip():
         query["status"] = status
     
