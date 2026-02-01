@@ -93,6 +93,7 @@ async def create_indexes():
         await db.properties.create_index("batch_id", background=True)
         await db.properties.create_index("ward", background=True)
         await db.properties.create_index("colony", background=True)
+        await db.properties.create_index("town", background=True)  # NEW: Town index
         await db.properties.create_index("status", background=True)
         await db.properties.create_index("assigned_employee_id", background=True)
         await db.properties.create_index("assigned_employee_ids", background=True)  # NEW: For array field
@@ -102,6 +103,7 @@ async def create_indexes():
         await db.properties.create_index("property_id", background=True)  # NEW: For property lookup
         # Compound indexes for common query patterns
         await db.properties.create_index([("ward", 1), ("status", 1)], background=True)
+        await db.properties.create_index([("town", 1), ("status", 1)], background=True)  # NEW: Town compound index
         await db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
         await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)  # NEW: Optimized for surveyor map
         
