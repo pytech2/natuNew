@@ -388,14 +388,14 @@ export default function PropertyMap() {
                     )}
                     
                     <div className="flex gap-2 mt-2">
-                      {property.status === 'Approved' || property.locked ? (
+                      {['Completed', 'Approved'].includes(property.status) || property.locked ? (
                         <Button
                           size="sm"
                           className="flex-1 h-8 text-xs bg-slate-400 cursor-not-allowed"
                           disabled
                         >
                           <Lock className="w-3 h-3 mr-1" />
-                          Locked
+                          {property.status === 'Approved' ? 'Approved' : 'Submitted'}
                         </Button>
                       ) : (
                         <Button
