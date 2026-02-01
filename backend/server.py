@@ -2096,6 +2096,19 @@ async def list_areas(current_user: dict = Depends(get_current_user)):
     
     return {"areas": areas}
 
+@api_router.get("/admin/towns")
+async def list_towns(current_user: dict = Depends(get_current_user)):
+    """Get list of unique towns from properties"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get unique towns from properties
+    towns = await db.properties.distinct("town")
+    # Filter out None/empty values and sort
+    towns = sorted([t for t in towns if t])
+    
+    return {"towns": towns}
+
 @api_router.get("/admin/submission-stats")
 async def get_submission_stats(
     date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
