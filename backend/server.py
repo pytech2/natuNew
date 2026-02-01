@@ -4097,6 +4097,7 @@ async def generate_arranged_pdf(
     colony: str = Form(None),
     bills_per_page: int = Form(1),  # 1 = full page, 3 = stacked vertically
     print_serial: str = Form("true"),  # Print serial number on PDF
+    self_certified_filter: str = Form("all"),  # "all", "self_certified", "not_self_certified"
     current_user: dict = Depends(get_current_user)
 ):
     """Generate PDF with invoices. 3 per page = landscape bills scaled & stacked vertically on A4."""
@@ -4110,6 +4111,12 @@ async def generate_arranged_pdf(
         query["batch_id"] = batch_id
     if colony and colony.strip():
         query["colony"] = {"$regex": colony, "$options": "i"}
+    
+    # Add self_certified filter
+    if self_certified_filter == "self_certified":
+        query["self_certified"] = True
+    elif self_certified_filter == "not_self_certified":
+        query["self_certified"] = {"$ne": True}
     
     bills = await db.bills.find(query, {"_id": 0}).sort("page_number", 1).to_list(None)
     
