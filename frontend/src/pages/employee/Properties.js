@@ -9,7 +9,7 @@ import Map, { Marker, Source, Layer } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { 
   MapPin, Navigation, FileText, Loader2, RefreshCw, 
-  Compass, LocateFixed, Search, X, CheckCircle, XCircle, AlertTriangle
+  Compass, LocateFixed, Search, X, CheckCircle, XCircle, AlertTriangle, Lock
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
