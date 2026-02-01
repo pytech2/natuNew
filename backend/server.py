@@ -4304,7 +4304,7 @@ async def generate_arranged_pdf(
                     try:
                         subprocess.run([
                             'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                            '--encoding', 'utf-8', '--width', '1000', '--height', '50', '--quality', '100',
+                            '--encoding', 'utf-8', '--width', '1150', '--height', '50', '--quality', '100',
                             html_path, note_img_path
                         ], capture_output=True, timeout=30)
                     finally:
