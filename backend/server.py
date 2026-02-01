@@ -4294,7 +4294,7 @@ async def generate_arranged_pdf(
                     
                     hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:16px;font-weight:bold;color:#cc0000;background:transparent;white-space:nowrap;}</style>
+<style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:22px;font-weight:bold;color:#cc0000;background:transparent;white-space:nowrap;}</style>
 </head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                     
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
@@ -4304,7 +4304,7 @@ async def generate_arranged_pdf(
                     try:
                         subprocess.run([
                             'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                            '--encoding', 'utf-8', '--width', '850', '--height', '40', '--quality', '100',
+                            '--encoding', 'utf-8', '--width', '1000', '--height', '50', '--quality', '100',
                             html_path, note_img_path
                         ], capture_output=True, timeout=30)
                     finally:
@@ -4313,14 +4313,14 @@ async def generate_arranged_pdf(
                 
                 if os.path.exists(note_img_path):
                     try:
-                        # Insert image into PDF - moved up to reduce white space
+                        # Insert image into PDF - moved up by 100px
                         if rotation == 90:
                             # For rotated page, position after disclaimer
-                            img_rect = fitz.Rect(400, 30, 560, 560)
+                            img_rect = fitz.Rect(300, 30, 500, 560)
                         elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 560, rect.height - 560, rect.width - 400, rect.height - 30)
+                            img_rect = fitz.Rect(rect.width - 500, rect.height - 560, rect.width - 300, rect.height - 30)
                         else:
-                            img_rect = fitz.Rect(30, rect.height - 70, rect.width - 30, rect.height - 30)
+                            img_rect = fitz.Rect(30, rect.height - 170, rect.width - 30, rect.height - 120)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                     except Exception as e:
