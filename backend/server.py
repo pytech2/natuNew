@@ -4314,13 +4314,15 @@ async def generate_arranged_pdf(
                 if os.path.exists(note_img_path):
                     try:
                         # Insert image into PDF - TOP position with serial number
+                        # Page is landscape (rotated 90), so adjust coordinates
                         if rotation == 90:
-                            img_rect = fitz.Rect(300, 10, 500, 580)
+                            # Rotated page - top becomes left side visually
+                            img_rect = fitz.Rect(10, 10, 60, rect.height - 80)
                         elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 500, rect.height - 580, rect.width - 300, rect.height - 10)
+                            img_rect = fitz.Rect(rect.width - 60, 80, rect.width - 10, rect.height - 10)
                         else:
-                            # Top of page, below serial number area
-                            img_rect = fitz.Rect(10, 30, rect.width - 80, 80)
+                            # Normal page - TOP position
+                            img_rect = fitz.Rect(10, 10, rect.width - 80, 60)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                     except Exception as e:
