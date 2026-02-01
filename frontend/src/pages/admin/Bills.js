@@ -1796,7 +1796,7 @@ export default function BillsPage() {
                   Download Sample Excel
                 </Button>
                 <p className="text-xs text-slate-500 mt-2">
-                  File must have a column named "PID" or "Property ID"
+                  File must have a column named &quot;PID&quot; or &quot;Property ID&quot;
                 </p>
               </div>
               
