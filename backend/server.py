@@ -4295,7 +4295,7 @@ async def generate_arranged_pdf(
                     hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:22px;font-weight:bold;color:#cc0000;background:transparent;white-space:nowrap;}</style>
-</head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
+</head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
                     
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
                         f.write(hindi_note_html)
@@ -4313,14 +4313,14 @@ async def generate_arranged_pdf(
                 
                 if os.path.exists(note_img_path):
                     try:
-                        # Insert image into PDF - left aligned, full width
+                        # Insert image into PDF - TOP position with serial number
                         if rotation == 90:
-                            # For rotated page, position after disclaimer
                             img_rect = fitz.Rect(300, 10, 500, 580)
                         elif rotation == 270:
                             img_rect = fitz.Rect(rect.width - 500, rect.height - 580, rect.width - 300, rect.height - 10)
                         else:
-                            img_rect = fitz.Rect(10, rect.height - 170, rect.width - 10, rect.height - 120)
+                            # Top of page, below serial number area
+                            img_rect = fitz.Rect(10, 30, rect.width - 80, 80)
                         
                         new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                     except Exception as e:
