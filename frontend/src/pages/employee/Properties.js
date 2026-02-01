@@ -659,22 +659,33 @@ export default function Properties() {
               
               {/* Action Buttons - Big */}
               <div className="flex gap-3 mt-4">
-                <button 
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-4 rounded-xl text-base font-semibold flex items-center justify-center gap-2 shadow-lg"
-                  onClick={() => {
-                    localStorage.setItem('surveyor_map_position', JSON.stringify({
-                      lat: selectedProperty.latitude,
-                      lng: selectedProperty.longitude,
-                      zoom: viewState.zoom,
-                      bearing: viewState.bearing
-                    }));
-                    navigate(`/employee/survey/${selectedProperty.id}`);
-                  }}
-                  data-testid="survey-btn"
-                >
-                  <FileText className="w-5 h-5" />
-                  Start Survey
-                </button>
+                {isCompleted(selectedProperty.status) ? (
+                  <button 
+                    className="flex-1 bg-slate-400 text-white px-4 py-4 rounded-xl text-base font-semibold flex items-center justify-center gap-2 shadow-lg cursor-not-allowed"
+                    disabled
+                    data-testid="survey-btn-locked"
+                  >
+                    <Lock className="w-5 h-5" />
+                    {selectedProperty.status === 'Approved' ? 'Approved' : 'Submitted'}
+                  </button>
+                ) : (
+                  <button 
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-4 rounded-xl text-base font-semibold flex items-center justify-center gap-2 shadow-lg"
+                    onClick={() => {
+                      localStorage.setItem('surveyor_map_position', JSON.stringify({
+                        lat: selectedProperty.latitude,
+                        lng: selectedProperty.longitude,
+                        zoom: viewState.zoom,
+                        bearing: viewState.bearing
+                      }));
+                      navigate(`/employee/survey/${selectedProperty.id}`);
+                    }}
+                    data-testid="survey-btn"
+                  >
+                    <FileText className="w-5 h-5" />
+                    Start Survey
+                  </button>
+                )}
                 <button 
                   className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-4 rounded-xl shadow"
                   onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.latitude},${selectedProperty.longitude}`, '_blank')}
