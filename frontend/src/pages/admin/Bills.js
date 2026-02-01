@@ -94,7 +94,8 @@ export default function BillsPage() {
     sn_font_size: 48,
     sn_color: 'red',
     bills_per_page: '1',  // Default: 1 bill per page (full size)
-    print_serial: true    // Print serial number on PDF
+    print_serial: true,   // Print serial number on PDF
+    self_certified_filter: 'all'  // Filter: 'all', 'self_certified', 'not_self_certified'
   });
   
   // Split by employee state
@@ -423,6 +424,7 @@ export default function BillsPage() {
       if (filters.colony) formData.append('colony', filters.colony);
       formData.append('bills_per_page', pdfOptions.bills_per_page || '1');
       formData.append('print_serial', pdfOptions.print_serial ? 'true' : 'false');
+      formData.append('self_certified_filter', pdfOptions.self_certified_filter || 'all');
 
       const response = await axios.post(`${API_URL}/admin/bills/generate-pdf`, formData, {
         headers: { 
@@ -1344,6 +1346,31 @@ export default function BillsPage() {
                     Adds serial number (like N34, N54) in red color on top-right of each bill
                   </p>
                 </label>
+              </div>
+
+              {/* Self-Certified Filter option */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Data Filter (Self Certified)</Label>
+                <Select 
+                  value={pdfOptions.self_certified_filter || 'all'} 
+                  onValueChange={(val) => setPdfOptions({...pdfOptions, self_certified_filter: val})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Data</SelectItem>
+                    <SelectItem value="self_certified">Self Certified Data Only</SelectItem>
+                    <SelectItem value="not_self_certified">Not Self Certified Data Only</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  {pdfOptions.self_certified_filter === 'all' 
+                    ? 'Include all bills in the PDF' 
+                    : pdfOptions.self_certified_filter === 'self_certified'
+                    ? 'Only include self-certified properties'
+                    : 'Only include properties that are NOT self-certified'}
+                </p>
               </div>
             </div>
             <DialogFooter>
