@@ -8,7 +8,7 @@ import os
 import time
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proptrack-29.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://propfinder-app-1.preview.emergentagent.com').rstrip('/')
 
 
 class TestAdminLogin:
