@@ -281,6 +281,7 @@ export default function BillsPage() {
       const params = new URLSearchParams();
       if (filters.batch_id) params.append('batch_id', filters.batch_id);
       if (filters.colony) params.append('colony', filters.colony);
+      if (filters.town) params.append('town', filters.town);
       params.append('page', pagination.page);
       params.append('limit', 20);
 
