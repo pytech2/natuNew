@@ -2,6 +2,20 @@
 # NSTU India - VPS Deployment Guide
 # ============================================
 
+## 🔧 FIRST TIME SETUP: Install Required Dependencies
+
+Run this command ONCE on your VPS to install required packages for PDF Hindi note:
+```bash
+sudo apt-get update && sudo apt-get install -y wkhtmltopdf xvfb xauth fonts-lohit-deva fonts-noto-core
+```
+
+This installs:
+- `wkhtmltopdf` - For generating Hindi note image
+- `xvfb` + `xauth` - Virtual display for wkhtmltoimage
+- `fonts-lohit-deva` + `fonts-noto-core` - Hindi fonts
+
+---
+
 ## ⚠️ IMPORTANT: Fix Git Push Error First
 
 If you're getting git push errors, run this ONE TIME:
