@@ -791,6 +791,21 @@ export default function BillsPage() {
                 </SelectContent>
               </Select>
 
+              <Select
+                value={filters.town}
+                onValueChange={(value) => setFilters({ ...filters, town: value })}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Select Town" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" ">All Towns</SelectItem>
+                  {towns.map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <div className="flex-1" />
 
               <Button
