@@ -178,7 +178,8 @@ export default function Properties() {
     try {
       const params = new URLSearchParams();
       if (filters.batch_id) params.append('batch_id', filters.batch_id);
-      if (filters.area) params.append('area', filters.area);
+      if (filters.area) params.append('ward', filters.area);
+      if (filters.town) params.append('town', filters.town);
       if (filters.status) params.append('status', filters.status);
       if (filters.employee_id) params.append('employee_id', filters.employee_id);
       if (filters.search) params.append('search', filters.search);
