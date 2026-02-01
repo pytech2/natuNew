@@ -1016,6 +1016,7 @@ PERFORMANCE_DOWNLOAD_ROLES = ["ADMIN"]
 async def list_properties(
     batch_id: Optional[str] = None,
     ward: Optional[str] = None,
+    town: Optional[str] = None,
     status: Optional[str] = None,
     employee_id: Optional[str] = None,
     search: Optional[str] = None,
@@ -1031,6 +1032,8 @@ async def list_properties(
         query["batch_id"] = batch_id
     if ward and ward.strip():
         query["ward"] = ward
+    if town and town.strip():
+        query["town"] = town
     if status and status.strip():
         query["status"] = status
     if employee_id and employee_id.strip():
@@ -1052,6 +1055,7 @@ async def list_properties(
         "address": 1,
         "colony": 1,
         "ward": 1,
+        "town": 1,
         "latitude": 1,
         "longitude": 1,
         "status": 1,
