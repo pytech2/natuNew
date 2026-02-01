@@ -4254,22 +4254,22 @@ async def generate_arranged_pdf(
             else:
                 font_name = 'helv'
             
-            # Add serial number (RIGHT side)
+            # Add serial number (LEFT side)
             if should_print_serial:
                 serial_text = get_display_serial(bill)
                 font_size = 18
                 
-                # Position: RIGHT side at top with 50px padding
+                # Position: LEFT side at top with 50px padding
                 if rotation == 90:
-                    visual_point = fitz.Point(rect.width - 80, 50)  # Right side, 50px from top
+                    visual_point = fitz.Point(80, 50)  # Left side, 50px from top
                     internal_point = visual_point * new_page.derotation_matrix
                     text_rotate = 90
                 elif rotation == 270:
-                    visual_point = fitz.Point(80, rect.height - 50)
+                    visual_point = fitz.Point(rect.width - 80, rect.height - 50)
                     internal_point = visual_point * new_page.derotation_matrix
                     text_rotate = 270
                 else:
-                    internal_point = fitz.Point(rect.width - 80, 50)
+                    internal_point = fitz.Point(80, 50)
                     text_rotate = 0
                 
                 # Insert serial number - RED BOLD
