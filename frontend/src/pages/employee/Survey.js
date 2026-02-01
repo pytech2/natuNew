@@ -516,10 +516,11 @@ export default function Survey() {
   }
 
   const isCompleted = property?.status === 'Completed';
-  const isLocked = property?.locked === true || property?.status === 'Approved';
+  const isApproved = property?.status === 'Approved';
+  const isLocked = property?.locked === true || isCompleted || isApproved;
 
-  // If property is locked, show locked message
-  if (isLocked) {
+  // If property is locked (Completed or Approved), show locked message
+  if (isLocked && !submission) {
     return (
       <div className="min-h-screen bg-slate-50">
         <header className="bg-gradient-to-r from-slate-600 to-slate-700 text-white sticky top-0 z-30">
@@ -532,7 +533,7 @@ export default function Survey() {
             </button>
             <div className="flex-1">
               <h1 className="font-heading font-semibold flex items-center gap-2">
-                <Lock className="w-4 h-4" /> Property Locked
+                <Lock className="w-4 h-4" /> Survey Locked
               </h1>
               <p className="text-xs text-white/70">{property?.property_id} • {property?.owner_name}</p>
             </div>
@@ -543,13 +544,21 @@ export default function Survey() {
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-8 h-8 text-slate-500" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Survey Completed</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">
+              {isApproved ? 'Survey Approved' : 'Survey Submitted'}
+            </h2>
             <p className="text-slate-600 mb-4">
-              This property has been surveyed and approved. You cannot make changes.
+              {isApproved 
+                ? 'This property survey has been approved. You cannot make changes.'
+                : 'This property survey has been submitted and is pending approval. You cannot make changes.'}
             </p>
-            <div className="bg-green-50 rounded-lg p-3 mb-4">
-              <p className="text-sm text-green-700 font-medium">Status: Approved</p>
-              <p className="text-xs text-green-600">Serial: {property?.bill_sr_no || property?.serial_number}</p>
+            <div className={`rounded-lg p-3 mb-4 ${isApproved ? 'bg-green-50' : 'bg-yellow-50'}`}>
+              <p className={`text-sm font-medium ${isApproved ? 'text-green-700' : 'text-yellow-700'}`}>
+                Status: {property?.status}
+              </p>
+              <p className={`text-xs ${isApproved ? 'text-green-600' : 'text-yellow-600'}`}>
+                Serial: {property?.bill_sr_no || property?.serial_number}
+              </p>
             </div>
             <Button
               onClick={() => navigate('/employee/properties')}
