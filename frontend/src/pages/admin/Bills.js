@@ -146,6 +146,7 @@ export default function BillsPage() {
   useEffect(() => {
     fetchBatches();
     fetchColonies();
+    fetchTowns();
     fetchEmployees();
     fetchGeneratedPdfs(); // Fetch previously generated PDFs
   }, []);
@@ -163,6 +164,17 @@ export default function BillsPage() {
       setBatches(pdfBatches);
     } catch (error) {
       console.error('Failed to fetch batches:', error);
+    }
+  };
+
+  const fetchTowns = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/towns`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTowns(response.data.towns || []);
+    } catch (error) {
+      console.error('Failed to fetch towns:', error);
     }
   };
 
