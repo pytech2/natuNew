@@ -27,7 +27,8 @@ import {
   ClipboardCheck, MapPin, Camera, ChevronLeft, ChevronRight, 
   Eye, Check, X, Edit, User, Phone, Home, Hash, CreditCard, 
   Building, Users, FileText, Pen, Image as ImageIcon, Save,
-  ExternalLink, Trash2, Plus, AlertTriangle, Lock, UserX, CheckCircle, Navigation
+  ExternalLink, Trash2, Plus, AlertTriangle, Lock, UserX, CheckCircle, Navigation,
+  Download, Filter, ChevronDown, ChevronUp, Calendar, Search
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
