@@ -146,7 +146,11 @@ export default function Submissions() {
       if (employeeIdFilter || employeeFilter) params.append('employee_id', employeeIdFilter || employeeFilter);
       if (colonyFilter) params.append('colony', colonyFilter);
       if (dateFilter) params.append('date_from', dateFilter);
+      if (dateToFilter) params.append('date_to', dateToFilter);
       if (searchFilter) params.append('search', searchFilter);
+      if (specialConditionFilter) params.append('special_condition', specialConditionFilter);
+      if (selfCertifiedFilter) params.append('self_certified', selfCertifiedFilter);
+      if (photoStatusFilter) params.append('photo_status', photoStatusFilter);
 
       const response = await axios.get(`${API_URL}/admin/submissions?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -164,6 +168,65 @@ export default function Submissions() {
       setLoading(false);
     }
   };
+
+  // Export submissions to Excel
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      if (employeeIdFilter || employeeFilter) params.append('employee_id', employeeIdFilter || employeeFilter);
+      if (colonyFilter) params.append('colony', colonyFilter);
+      if (dateFilter) params.append('date_from', dateFilter);
+      if (dateToFilter) params.append('date_to', dateToFilter);
+      if (searchFilter) params.append('search', searchFilter);
+      if (specialConditionFilter) params.append('special_condition', specialConditionFilter);
+      if (selfCertifiedFilter) params.append('self_certified', selfCertifiedFilter);
+      if (photoStatusFilter) params.append('photo_status', photoStatusFilter);
+
+      const response = await axios.get(`${API_URL}/admin/submissions/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `submissions_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Export downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to export submissions');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setStatusFilter('');
+    setEmployeeFilter('');
+    setColonyFilter('');
+    setDateFilter('');
+    setDateToFilter('');
+    setSearchFilter('');
+    setSpecialConditionFilter('');
+    setSelfCertifiedFilter('');
+    setPhotoStatusFilter('');
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // Count active filters
+  const activeFilterCount = [
+    statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter,
+    searchFilter, specialConditionFilter, selfCertifiedFilter, photoStatusFilter
+  ].filter(f => f && f.trim()).length;
 
   const viewDetail = (submission) => {
     setSelectedSubmission(submission);
