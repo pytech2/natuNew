@@ -2216,10 +2216,12 @@ async def list_submissions(
                 {"photos": None}
             ]
     
-    # If search is provided, first find matching property IDs
+    # If search is provided, search in properties AND employees
     search_property_ids = None
+    search_employee_ids = None
     if search and search.strip():
         search_term = search.strip()
+        
         # Search in properties collection
         search_query = {
             "$or": [
@@ -2239,14 +2241,32 @@ async def list_submissions(
         matching_properties = await db.properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
         search_property_ids = [p["id"] for p in matching_properties]
         
-        if search_property_ids:
-            if "property_record_id" in query:
-                # Intersect with existing filter
-                query["property_record_id"]["$in"] = list(set(query["property_record_id"]["$in"]) & set(search_property_ids))
+        # Search in employees/users collection by name or username
+        employee_search_query = {
+            "$or": [
+                {"name": {"$regex": search_term, "$options": "i"}},
+                {"username": {"$regex": search_term, "$options": "i"}},
+                {"mobile": {"$regex": search_term, "$options": "i"}}
+            ]
+        }
+        matching_employees = await db.users.find(employee_search_query, {"id": 1, "_id": 0}).to_list(None)
+        search_employee_ids = [e["id"] for e in matching_employees]
+        
+        # Build combined query - match either property OR employee
+        if search_property_ids or search_employee_ids:
+            search_conditions = []
+            if search_property_ids:
+                search_conditions.append({"property_record_id": {"$in": search_property_ids}})
+            if search_employee_ids:
+                search_conditions.append({"employee_id": {"$in": search_employee_ids}})
+            
+            if "$or" in query:
+                # Combine with existing $or
+                query["$and"] = [{"$or": query.pop("$or")}, {"$or": search_conditions}]
             else:
-                query["property_record_id"] = {"$in": search_property_ids}
+                query["$or"] = search_conditions
         else:
-            # No matching properties found
+            # No matching properties or employees found
             return {
                 "submissions": [],
                 "total": 0,
