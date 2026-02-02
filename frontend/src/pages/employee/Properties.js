@@ -550,6 +550,7 @@ export default function Properties() {
               property={property}
               withinReach={isWithinReach(property.distance)}
               completed={isCompleted(property.status)}
+              status={property.status}
               onClick={(e) => {
                 e.originalEvent.stopPropagation();
                 setSelectedProperty(property);
