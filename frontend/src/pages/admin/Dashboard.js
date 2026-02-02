@@ -56,6 +56,7 @@ export default function Dashboard() {
   const [submissionStats, setSubmissionStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [employeeProgress, setEmployeeProgress] = useState([]);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
+  const [townStats, setTownStats] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Employee Colony Detail Dialog
