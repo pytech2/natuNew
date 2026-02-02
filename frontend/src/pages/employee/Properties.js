@@ -789,8 +789,9 @@ export default function Properties() {
                     </div>
                     <div className={`text-xs px-2 py-0.5 rounded-full ${
                       property.status === 'Pending' ? 'bg-red-100 text-red-700' : 
-                      property.status === 'Completed' ? 'bg-green-100 text-green-700' : 
-                      'bg-yellow-100 text-yellow-700'
+                      property.status === 'Completed' ? 'bg-yellow-100 text-yellow-700' : 
+                      property.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                      'bg-amber-100 text-amber-700'
                     }`}>
                       {property.status}
                     </div>
