@@ -329,6 +329,72 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Town-wise Progress Section */}
+        {townStats.length > 0 && (
+          <Card className="shadow-lg border-0 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-heading text-base flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-indigo-600" />
+                Town-wise Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {townStats.map((town, index) => {
+                  const completionRate = town.total > 0 ? Math.round((town.completed / town.total) * 100) : 0;
+                  const pendingRate = town.total > 0 ? Math.round((town.pending / town.total) * 100) : 0;
+                  
+                  return (
+                    <div 
+                      key={town.name || index} 
+                      className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/admin/properties?town=${encodeURIComponent(town.name)}`)}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-slate-800 truncate" title={town.name}>
+                          {town.name || 'Unknown'}
+                        </h4>
+                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                          {town.total} properties
+                        </span>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
+                        <div className="h-full flex">
+                          <div 
+                            className="bg-green-500 transition-all" 
+                            style={{ width: `${completionRate}%` }}
+                          />
+                          <div 
+                            className="bg-amber-400 transition-all" 
+                            style={{ width: `${pendingRate}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Stats Row */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-green-600 font-medium">
+                          <CheckCircle className="w-3 h-3 inline mr-1" />
+                          {town.completed} Done
+                        </span>
+                        <span className="text-amber-600 font-medium">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {town.pending} Pending
+                        </span>
+                        <span className="text-slate-500">
+                          {completionRate}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Employee Performance Bar Chart */}
