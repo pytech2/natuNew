@@ -121,7 +121,7 @@ export default function Submissions() {
 
   useEffect(() => {
     fetchSubmissions();
-  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, employeeIdFilter, searchFilter]);
+  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter, employeeIdFilter, searchFilter, specialConditionFilter, selfCertifiedFilter, photoStatusFilter]);
 
   const fetchFilters = async () => {
     try {
