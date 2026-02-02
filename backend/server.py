@@ -2113,6 +2113,78 @@ async def list_towns(current_user: dict = Depends(get_current_user)):
     
     return {"towns": towns}
 
+@api_router.get("/admin/town-stats")
+async def get_town_stats(current_user: dict = Depends(get_current_user)):
+    """Get town-wise property statistics for dashboard"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Aggregate properties by town
+    pipeline = [
+        {
+            "$match": {
+                "town": {"$exists": True, "$ne": None, "$ne": ""}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$town",
+                "total": {"$sum": 1},
+                "completed": {
+                    "$sum": {
+                        "$cond": [
+                            {"$in": ["$status", ["Completed", "Approved"]]},
+                            1, 0
+                        ]
+                    }
+                },
+                "pending": {
+                    "$sum": {
+                        "$cond": [
+                            {"$eq": ["$status", "Pending"]},
+                            1, 0
+                        ]
+                    }
+                },
+                "in_progress": {
+                    "$sum": {
+                        "$cond": [
+                            {"$eq": ["$status", "In Progress"]},
+                            1, 0
+                        ]
+                    }
+                },
+                "rejected": {
+                    "$sum": {
+                        "$cond": [
+                            {"$eq": ["$status", "Rejected"]},
+                            1, 0
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "$sort": {"total": -1}
+        }
+    ]
+    
+    result = await db.properties.aggregate(pipeline).to_list(None)
+    
+    towns = [
+        {
+            "name": r["_id"],
+            "total": r["total"],
+            "completed": r["completed"],
+            "pending": r["pending"],
+            "in_progress": r["in_progress"],
+            "rejected": r["rejected"]
+        }
+        for r in result
+    ]
+    
+    return {"towns": towns}
+
 @api_router.get("/admin/submission-stats")
 async def get_submission_stats(
     date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
