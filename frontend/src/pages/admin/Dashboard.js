@@ -79,7 +79,7 @@ export default function Dashboard() {
     try {
       const todayDate = new Date().toISOString().split('T')[0];
       
-      const [statsRes, progressRes, attendanceRes, submissionsRes] = await Promise.all([
+      const [statsRes, progressRes, attendanceRes, submissionsRes, townStatsRes] = await Promise.all([
         axios.get(`${API_URL}/admin/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
@@ -92,11 +92,15 @@ export default function Dashboard() {
         }).catch(() => ({ data: { attendance: [], total: 0 } })),
         axios.get(`${API_URL}/admin/submission-stats`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } }))
+        }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } })),
+        axios.get(`${API_URL}/admin/town-stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: { towns: [] } }))
       ]);
       setStats(statsRes.data);
       setEmployeeProgress(progressRes.data);
       setSubmissionStats(submissionsRes.data);
+      setTownStats(townStatsRes.data.towns || []);
       
       // Calculate attendance stats - use attendance array length for present count
       const attendanceTotal = attendanceRes.data?.attendance?.length || 0;
