@@ -303,8 +303,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Employees Count */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Employees, Colonies & Towns Count */}
+        <div className="grid grid-cols-3 gap-4">
           <Card className="stat-card">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -324,6 +324,17 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total Colonies</p>
                 <p className="text-2xl font-bold font-heading text-purple-600">{stats?.colonies || 0}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="stat-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <MapPin className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Total Towns</p>
+                <p className="text-2xl font-bold font-heading text-indigo-600">{townStats.length || 0}</p>
               </div>
             </div>
           </Card>
