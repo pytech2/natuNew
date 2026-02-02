@@ -92,9 +92,15 @@ export default function Submissions() {
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [colonyFilter, setColonyFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');  // Date range end
   const [searchFilter, setSearchFilter] = useState('');  // Search by serial, property ID, owner name
+  const [specialConditionFilter, setSpecialConditionFilter] = useState('');  // house_locked, owner_denied
+  const [selfCertifiedFilter, setSelfCertifiedFilter] = useState('');  // yes, no
+  const [photoStatusFilter, setPhotoStatusFilter] = useState('');  // with_photos, without_photos
   const [employees, setEmployees] = useState([]);
   const [colonies, setColonies] = useState([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [editData, setEditData] = useState({});
   const [editPropertyData, setEditPropertyData] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
