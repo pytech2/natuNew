@@ -2157,6 +2157,9 @@ async def list_submissions(
     date_to: Optional[str] = None,
     colony: Optional[str] = None,  # Colony filter
     search: Optional[str] = None,  # Search by serial number, property ID, owner name
+    special_condition: Optional[str] = None,  # house_locked, owner_denied, normal
+    self_certified: Optional[str] = None,  # yes, no
+    photo_status: Optional[str] = None,  # with_photos, without_photos
     page: int = 1,
     limit: int = 50,
     current_user: dict = Depends(get_current_user)
@@ -2175,9 +2178,43 @@ async def list_submissions(
         query["submitted_at"] = {"$gte": date_from}
     if date_to:
         if "submitted_at" in query:
-            query["submitted_at"]["$lte"] = date_to
+            query["submitted_at"]["$lte"] = date_to + "T23:59:59"
         else:
-            query["submitted_at"] = {"$lte": date_to}
+            query["submitted_at"] = {"$lte": date_to + "T23:59:59"}
+    
+    # Special condition filter (house_locked, owner_denied, normal)
+    if special_condition and special_condition.strip():
+        if special_condition == "normal":
+            query["$or"] = [
+                {"special_condition": {"$exists": False}},
+                {"special_condition": None},
+                {"special_condition": ""}
+            ]
+        else:
+            query["special_condition"] = special_condition
+    
+    # Self certified filter
+    if self_certified and self_certified.strip():
+        if self_certified == "yes":
+            query["self_certified"] = "Yes"
+        elif self_certified == "no":
+            query["$or"] = [
+                {"self_certified": {"$exists": False}},
+                {"self_certified": None},
+                {"self_certified": ""},
+                {"self_certified": "No"}
+            ]
+    
+    # Photo status filter
+    if photo_status and photo_status.strip():
+        if photo_status == "with_photos":
+            query["photos"] = {"$exists": True, "$ne": [], "$ne": None}
+        elif photo_status == "without_photos":
+            query["$or"] = [
+                {"photos": {"$exists": False}},
+                {"photos": []},
+                {"photos": None}
+            ]
     
     # If search is provided, first find matching property IDs
     search_property_ids = None
