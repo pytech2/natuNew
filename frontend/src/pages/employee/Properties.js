@@ -15,8 +15,15 @@ import {
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // PERFORMANCE: Memoized marker component to prevent re-renders - TINY SIZE
-const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
-  const markerColor = completed ? '#16a34a' : '#ef4444';
+const PropertyMarker = memo(({ property, onClick, withinReach, completed, status }) => {
+  // Color based on status: Pending=Red, Completed=Yellow, Approved=Green
+  const getColor = () => {
+    if (status === 'Approved') return '#16a34a';  // Green
+    if (status === 'Completed') return '#eab308'; // Yellow
+    if (status === 'In Progress') return '#f59e0b'; // Amber
+    return '#ef4444'; // Red for Pending
+  };
+  const markerColor = getColor();
   const serialNum = property.bill_sr_no || property.serial_number || '-';
   
   return (
@@ -32,7 +39,7 @@ const PropertyMarker = memo(({ property, onClick, withinReach, completed }) => {
           height="22" 
           viewBox="0 0 36 44" 
           style={{ 
-            filter: withinReach && !completed ? 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' : 'drop-shadow(0 1px 1px rgba(0,0,0,0.25))'
+            filter: withinReach && status === 'Pending' ? 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' : 'drop-shadow(0 1px 1px rgba(0,0,0,0.25))'
           }}
         >
           <path 
