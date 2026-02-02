@@ -401,16 +401,20 @@ export default function Submissions() {
         {/* Filters */}
         <Card>
           <CardContent className="py-4">
+            {/* Basic Filters Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
               {/* Search Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">Search</label>
-                <Input
-                  placeholder="Serial No, Property ID, Name..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  className="h-10"
-                />
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <Input
+                    placeholder="Serial No, Property ID, Name..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="h-10 pl-9"
+                  />
+                </div>
               </div>
               
               {/* Employee Filter */}
@@ -461,9 +465,9 @@ export default function Submissions() {
                 </Select>
               </div>
               
-              {/* Date Filter */}
+              {/* Date From Filter */}
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-500">Date</label>
+                <label className="text-xs font-medium text-slate-500">From Date</label>
                 <Input
                   type="date"
                   value={dateFilter}
@@ -472,12 +476,181 @@ export default function Submissions() {
                 />
               </div>
               
-              {/* Total Count */}
-              <div className="text-sm text-slate-500 flex items-center">
-                Total: <span className="font-semibold ml-1">{pagination.total}</span> submissions
-                {employeeIdFilter && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Filtered by employee</span>}
+              {/* Date To Filter */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-500">To Date</label>
+                <Input
+                  type="date"
+                  value={dateToFilter}
+                  onChange={(e) => setDateToFilter(e.target.value)}
+                  className="h-10"
+                />
               </div>
             </div>
+
+            {/* Advanced Filters Toggle */}
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                <Filter className="w-4 h-4" />
+                Advanced Filters
+                {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {activeFilterCount > 0 && (
+                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">
+                    {activeFilterCount} active
+                  </span>
+                )}
+              </button>
+              
+              <div className="flex items-center gap-3">
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+                    <X className="w-4 h-4 mr-1" />
+                    Clear All
+                  </Button>
+                )}
+                <span className="text-sm text-slate-500">
+                  Total: <span className="font-semibold">{pagination.total}</span> submissions
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExport}
+                  disabled={exporting || pagination.total === 0}
+                >
+                  {exporting ? (
+                    <>Exporting...</>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-1" />
+                      Export Excel
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Advanced Filters Panel */}
+            {showAdvancedFilters && (
+              <div className="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Special Condition Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Special Condition</label>
+                  <Select value={specialConditionFilter} onValueChange={setSpecialConditionFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Conditions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All Conditions</SelectItem>
+                      <SelectItem value="house_locked">
+                        <span className="flex items-center gap-2">
+                          <Lock className="w-3 h-3 text-amber-600" />
+                          House Locked
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="owner_denied">
+                        <span className="flex items-center gap-2">
+                          <UserX className="w-3 h-3 text-red-600" />
+                          Owner Denied
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="normal">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                          Normal Survey
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Self Certified Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Self Certified</label>
+                  <Select value={selfCertifiedFilter} onValueChange={setSelfCertifiedFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All</SelectItem>
+                      <SelectItem value="yes">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                          Self Certified
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="no">
+                        <span className="flex items-center gap-2">
+                          <X className="w-3 h-3 text-red-600" />
+                          Not Self Certified
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Photo Status Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Photo Status</label>
+                  <Select value={photoStatusFilter} onValueChange={setPhotoStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All</SelectItem>
+                      <SelectItem value="with_photos">
+                        <span className="flex items-center gap-2">
+                          <Camera className="w-3 h-3 text-blue-600" />
+                          With Photos
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="without_photos">
+                        <span className="flex items-center gap-2">
+                          <Camera className="w-3 h-3 text-slate-400" />
+                          Without Photos
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Quick Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Quick Filters</label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={specialConditionFilter === 'house_locked' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'house_locked' ? '' : 'house_locked')}
+                      className="text-xs"
+                    >
+                      <Lock className="w-3 h-3 mr-1" />
+                      Locked
+                    </Button>
+                    <Button
+                      variant={specialConditionFilter === 'owner_denied' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'owner_denied' ? '' : 'owner_denied')}
+                      className="text-xs"
+                    >
+                      <UserX className="w-3 h-3 mr-1" />
+                      Denied
+                    </Button>
+                    <Button
+                      variant={statusFilter === 'Pending' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setStatusFilter(statusFilter === 'Pending' ? '' : 'Pending')}
+                      className="text-xs"
+                    >
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      Pending
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
