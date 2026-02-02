@@ -409,7 +409,7 @@ export default function Submissions() {
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                   <Input
-                    placeholder="Serial No, Property ID, Name..."
+                    placeholder="Serial, Property ID, Name, Surveyor..."
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     className="h-10 pl-9"
