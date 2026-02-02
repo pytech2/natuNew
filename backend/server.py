@@ -2309,6 +2309,217 @@ async def list_submissions(
         "pages": (total + limit - 1) // limit
     }
 
+@api_router.get("/admin/submissions/export")
+async def export_submissions(
+    employee_id: Optional[str] = None,
+    status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    colony: Optional[str] = None,
+    search: Optional[str] = None,
+    special_condition: Optional[str] = None,
+    self_certified: Optional[str] = None,
+    photo_status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Export submissions to Excel with all filters applied"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if employee_id and employee_id.strip():
+        query["employee_id"] = employee_id
+    if status and status.strip():
+        query["status"] = status
+    if date_from:
+        query["submitted_at"] = {"$gte": date_from}
+    if date_to:
+        if "submitted_at" in query:
+            query["submitted_at"]["$lte"] = date_to + "T23:59:59"
+        else:
+            query["submitted_at"] = {"$lte": date_to + "T23:59:59"}
+    
+    # Special condition filter
+    if special_condition and special_condition.strip():
+        if special_condition == "normal":
+            query["$or"] = [
+                {"special_condition": {"$exists": False}},
+                {"special_condition": None},
+                {"special_condition": ""}
+            ]
+        else:
+            query["special_condition"] = special_condition
+    
+    # Self certified filter
+    if self_certified and self_certified.strip():
+        if self_certified == "yes":
+            query["self_certified"] = "Yes"
+        elif self_certified == "no":
+            query["$or"] = [
+                {"self_certified": {"$exists": False}},
+                {"self_certified": None},
+                {"self_certified": ""},
+                {"self_certified": "No"}
+            ]
+    
+    # Photo status filter
+    if photo_status and photo_status.strip():
+        if photo_status == "with_photos":
+            query["photos"] = {"$exists": True, "$ne": [], "$ne": None}
+        elif photo_status == "without_photos":
+            query["$or"] = [
+                {"photos": {"$exists": False}},
+                {"photos": []},
+                {"photos": None}
+            ]
+    
+    # Search filter
+    if search and search.strip():
+        search_term = search.strip()
+        search_query = {
+            "$or": [
+                {"id": {"$regex": search_term, "$options": "i"}},
+                {"owner_name": {"$regex": search_term, "$options": "i"}},
+                {"mobile": {"$regex": search_term, "$options": "i"}},
+                {"bill_sr_no": {"$regex": search_term, "$options": "i"}}
+            ]
+        }
+        try:
+            serial_num = int(search_term)
+            search_query["$or"].append({"serial_number": serial_num})
+        except ValueError:
+            pass
+        
+        matching_properties = await db.properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
+        search_property_ids = [p["id"] for p in matching_properties]
+        if search_property_ids:
+            query["property_record_id"] = {"$in": search_property_ids}
+    
+    # Colony filter
+    if colony and colony.strip():
+        properties_in_colony = await db.properties.find(
+            {"ward": colony}, 
+            {"id": 1, "_id": 0}
+        ).to_list(None)
+        property_ids_in_colony = [p["id"] for p in properties_in_colony]
+        if property_ids_in_colony:
+            if "property_record_id" in query:
+                existing_ids = set(query["property_record_id"].get("$in", []))
+                query["property_record_id"]["$in"] = list(existing_ids & set(property_ids_in_colony)) if existing_ids else property_ids_in_colony
+            else:
+                query["property_record_id"] = {"$in": property_ids_in_colony}
+    
+    # Fetch all submissions (no pagination for export)
+    submissions = await db.submissions.find(query, {"_id": 0}).sort("submitted_at", -1).to_list(None)
+    
+    # Enrich with property and employee details
+    employee_cache = {}
+    for sub in submissions:
+        if sub.get("property_record_id"):
+            prop = await db.properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
+            if prop:
+                sub["property_owner_name"] = prop.get("owner_name", "")
+                sub["property_mobile"] = prop.get("mobile", "")
+                sub["property_address"] = prop.get("address", "")
+                sub["property_ward"] = prop.get("ward", "")
+                sub["colony"] = prop.get("colony") or prop.get("ward", "")
+                sub["serial_number"] = prop.get("serial_number", 0)
+                sub["bill_sr_no"] = prop.get("bill_sr_no", "")
+        
+        # Get employee name
+        emp_id = sub.get("employee_id")
+        if emp_id:
+            if emp_id not in employee_cache:
+                emp = await db.users.find_one({"id": emp_id}, {"name": 1, "_id": 0})
+                employee_cache[emp_id] = emp.get("name", "Unknown") if emp else "Unknown"
+            sub["employee_name"] = employee_cache[emp_id]
+    
+    # Create Excel file
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Submissions"
+    
+    # Headers
+    headers = [
+        "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Mobile",
+        "Address", "Colony/Ward", "Employee Name", "Status", "Special Condition",
+        "Self Certified", "Receiver Name", "Relation", "Receiver Mobile",
+        "Submitted At", "Photos Count", "Remarks"
+    ]
+    
+    # Style headers
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+        cell.border = thin_border
+    
+    # Data rows
+    for row_num, sub in enumerate(submissions, 2):
+        special_cond = sub.get("special_condition", "")
+        special_cond_display = "House Locked" if special_cond == "house_locked" else "Owner Denied" if special_cond == "owner_denied" else "Normal"
+        
+        photos = sub.get("photos", [])
+        photos_count = len(photos) if photos else 0
+        
+        row_data = [
+            row_num - 1,
+            sub.get("serial_number", ""),
+            sub.get("bill_sr_no", ""),
+            sub.get("property_record_id", ""),
+            sub.get("property_owner_name", ""),
+            sub.get("property_mobile", ""),
+            sub.get("property_address", ""),
+            sub.get("colony", sub.get("property_ward", "")),
+            sub.get("employee_name", ""),
+            sub.get("status", "Pending"),
+            special_cond_display,
+            sub.get("self_certified", "No"),
+            sub.get("receiver_name", ""),
+            sub.get("relation", ""),
+            sub.get("receiver_mobile", ""),
+            sub.get("submitted_at", "")[:10] if sub.get("submitted_at") else "",
+            photos_count,
+            sub.get("remarks", sub.get("review_remarks", ""))
+        ]
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left')
+    
+    # Adjust column widths
+    column_widths = [8, 12, 12, 15, 25, 15, 35, 20, 20, 12, 15, 12, 20, 12, 15, 12, 12, 30]
+    for col, width in enumerate(column_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
+    
+    # Save to bytes
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    filename = f"submissions_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 @api_router.post("/admin/submissions/approve")
 async def approve_reject_submission(data: SubmissionApproval, current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
