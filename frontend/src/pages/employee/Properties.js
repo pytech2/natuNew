@@ -95,14 +95,14 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)}m` : `${(meters/1000).toFixed(1)}km`;
 
-// Marker colors based on status - Completed/Approved are LOCKED (green)
+// Marker colors based on status - Completed=Yellow, Approved=Green
 const getMarkerColor = (status) => {
   const colors = {
-    'Pending': '#ef4444',      // Red - needs survey
-    'Completed': '#16a34a',    // Green - locked/done
-    'Approved': '#16a34a',     // Green - locked/done  
-    'In Progress': '#eab308',  // Yellow
-    'Rejected': '#f97316',     // Orange
+    'Pending': '#ef4444',      // Red
+    'Completed': '#eab308',    // Yellow - submitted but not approved
+    'Approved': '#16a34a',     // Green - approved/locked  
+    'In Progress': '#f59e0b',  // Amber
+    'Rejected': '#f97316'      // Orange
   };
   return colors[status] || '#ef4444';
 };
