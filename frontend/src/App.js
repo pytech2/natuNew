@@ -116,6 +116,11 @@ function AppRoutes() {
           <AdminAttendance />
         </ProtectedRoute>
       } />
+      <Route path="/admin/towns" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <AdminTowns />
+        </ProtectedRoute>
+      } />
       
       {/* Employee/Surveyor Routes */}
       <Route path="/employee" element={
