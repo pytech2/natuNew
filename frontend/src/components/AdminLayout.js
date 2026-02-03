@@ -180,7 +180,7 @@ export default function AdminLayout({ children, title }) {
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
           <h1 className="font-heading font-bold text-slate-900">{title}</h1>
-          <div className="w-10" />
+          <TownSelector className="h-8 text-xs" />
         </div>
       </header>
 
@@ -195,9 +195,14 @@ export default function AdminLayout({ children, title }) {
       {/* Main Content */}
       <main className="main-with-sidebar pt-14 lg:pt-0">
         <div className="p-4 md:p-6 lg:p-8">
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-6 hidden lg:block">
-            {title}
-          </h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 hidden lg:block">
+              {title}
+            </h1>
+            <div className="hidden lg:block">
+              <TownSelector />
+            </div>
+          </div>
           {children}
         </div>
       </main>
