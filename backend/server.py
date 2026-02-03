@@ -270,18 +270,33 @@ AVAILABLE_PERMISSIONS = [
     "upload"          # Upload data
 ]
 
+# ============== TOWN MODELS ==============
+class TownCreate(BaseModel):
+    name: str
+    code: str  # Short code like "THS", "LDW", "PHW"
+    description: Optional[str] = None
+    is_active: bool = True
+
+class TownUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
 class UserCreate(BaseModel):
     username: str
     password: str
     name: str
     role: str = "SURVEYOR"  # ADMIN, SURVEYOR, SUPERVISOR, MC_OFFICER
     assigned_area: Optional[str] = None
+    assigned_town: Optional[str] = None  # Town ID assigned to user
     authority: Optional[str] = None  # For SUPERVISOR and MC_OFFICER roles
     permissions: Optional[List[str]] = None  # For SUPERVISOR and MC_OFFICER roles
 
 class UserLogin(BaseModel):
     username: str
     password: str
+    selected_town: Optional[str] = None  # Town selected at login
 
 class UserResponse(BaseModel):
     id: str
@@ -289,6 +304,7 @@ class UserResponse(BaseModel):
     name: str
     role: str
     assigned_area: Optional[str] = None
+    assigned_town: Optional[str] = None
     authority: Optional[str] = None
     permissions: Optional[List[str]] = None
     created_at: str
@@ -296,6 +312,7 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     token: str
     user: UserResponse
+    selected_town: Optional[dict] = None
 
 class DatasetBatchCreate(BaseModel):
     name: str
