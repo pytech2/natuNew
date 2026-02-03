@@ -82,6 +82,9 @@ export default function AdminLayout({ children, title }) {
     // For SUPERVISOR and MC_OFFICER, filter based on permissions
     if (userPermissions) {
       return allNavItems.filter(item => {
+        // Skip admin-only items
+        if (item.adminOnly) return false;
+        
         // Check specific permission keys
         const permKey = item.permission;
         if (permKey === 'dashboard') return userPermissions.can_view_dashboard;
@@ -99,7 +102,7 @@ export default function AdminLayout({ children, title }) {
     
     // Default: show basic items while permissions are loading
     return allNavItems.filter(item => 
-      ['dashboard', 'properties', 'map'].includes(item.permission)
+      ['dashboard', 'properties', 'map'].includes(item.permission) && !item.adminOnly
     );
   };
 
