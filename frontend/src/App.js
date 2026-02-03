@@ -171,8 +171,10 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
-        <Toaster position="top-right" richColors />
+        <TownProvider>
+          <AppRoutes />
+          <Toaster position="top-right" richColors />
+        </TownProvider>
       </AuthProvider>
     </BrowserRouter>
   );
