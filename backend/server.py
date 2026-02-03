@@ -699,6 +699,116 @@ async def get_submission_by_property(
     
     return {"submission": submission}
 
+# ============== TOWN MANAGEMENT ROUTES ==============
+
+@api_router.get("/towns")
+async def list_all_towns():
+    """Get all active towns - public endpoint for login page"""
+    towns = await db.towns.find({"is_active": True}, {"_id": 0}).sort("name", 1).to_list(None)
+    return {"towns": towns}
+
+@api_router.get("/admin/towns/manage")
+async def list_towns_admin(current_user: dict = Depends(get_current_user)):
+    """Get all towns for admin management"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    towns = await db.towns.find({}, {"_id": 0}).sort("name", 1).to_list(None)
+    
+    # Get stats for each town
+    for town in towns:
+        town["property_count"] = await db.properties.count_documents({"town": town["id"]})
+        town["user_count"] = await db.users.count_documents({"assigned_town": town["id"]})
+    
+    return {"towns": towns}
+
+@api_router.post("/admin/towns")
+async def create_town(data: TownCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new town"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if code already exists
+    existing = await db.towns.find_one({"code": data.code.upper()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Town code already exists")
+    
+    town_doc = {
+        "id": str(uuid.uuid4()),
+        "name": data.name,
+        "code": data.code.upper(),
+        "description": data.description,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.towns.insert_one(town_doc)
+    
+    return {"message": "Town created successfully", "town": {k: v for k, v in town_doc.items() if k != "_id"}}
+
+@api_router.put("/admin/towns/{town_id}")
+async def update_town(town_id: str, data: TownUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a town"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town = await db.towns.find_one({"id": town_id})
+    if not town:
+        raise HTTPException(status_code=404, detail="Town not found")
+    
+    update_data = {}
+    if data.name is not None:
+        update_data["name"] = data.name
+    if data.code is not None:
+        # Check if code is unique
+        existing = await db.towns.find_one({"code": data.code.upper(), "id": {"$ne": town_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Town code already exists")
+        update_data["code"] = data.code.upper()
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.is_active is not None:
+        update_data["is_active"] = data.is_active
+    
+    if update_data:
+        await db.towns.update_one({"id": town_id}, {"$set": update_data})
+    
+    return {"message": "Town updated successfully"}
+
+@api_router.delete("/admin/towns/{town_id}")
+async def delete_town(town_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a town (soft delete by setting is_active=False)"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town = await db.towns.find_one({"id": town_id})
+    if not town:
+        raise HTTPException(status_code=404, detail="Town not found")
+    
+    # Check if town has associated data
+    property_count = await db.properties.count_documents({"town": town_id})
+    if property_count > 0:
+        # Soft delete
+        await db.towns.update_one({"id": town_id}, {"$set": {"is_active": False}})
+        return {"message": f"Town deactivated (has {property_count} properties)"}
+    else:
+        # Hard delete if no data
+        await db.towns.delete_one({"id": town_id})
+        return {"message": "Town deleted successfully"}
+
+@api_router.post("/admin/towns/{town_id}/set-active")
+async def set_current_town(town_id: str, current_user: dict = Depends(get_current_user)):
+    """Set the active town for the current session"""
+    town = await db.towns.find_one({"id": town_id, "is_active": True}, {"_id": 0})
+    if not town:
+        raise HTTPException(status_code=404, detail="Town not found or inactive")
+    
+    # For non-admin users, verify they are assigned to this town
+    if current_user["role"] != "ADMIN":
+        if current_user.get("assigned_town") and current_user["assigned_town"] != town_id:
+            raise HTTPException(status_code=403, detail="You are not assigned to this town")
+    
+    return {"message": "Town selected", "town": town}
+
 # ============== ADMIN USER ROUTES ==============
 
 @api_router.post("/admin/users", response_model=UserResponse)
