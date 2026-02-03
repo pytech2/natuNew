@@ -88,29 +88,35 @@ fs_bucket = AsyncIOMotorGridFSBucket(db)
 async def create_indexes():
     """Create MongoDB indexes for faster queries"""
     try:
+        # Towns collection indexes
+        await db.towns.create_index("id", unique=True, background=True)
+        await db.towns.create_index("code", unique=True, background=True)
+        await db.towns.create_index("name", background=True)
+        
         # Properties collection indexes
         await db.properties.create_index("id", unique=True, background=True)
         await db.properties.create_index("batch_id", background=True)
         await db.properties.create_index("ward", background=True)
         await db.properties.create_index("colony", background=True)
-        await db.properties.create_index("town", background=True)  # NEW: Town index
+        await db.properties.create_index("town", background=True)  # Town index
         await db.properties.create_index("status", background=True)
         await db.properties.create_index("assigned_employee_id", background=True)
-        await db.properties.create_index("assigned_employee_ids", background=True)  # NEW: For array field
+        await db.properties.create_index("assigned_employee_ids", background=True)
         await db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
         await db.properties.create_index("serial_number", background=True)
         await db.properties.create_index("bill_sr_no", background=True)
-        await db.properties.create_index("property_id", background=True)  # NEW: For property lookup
+        await db.properties.create_index("property_id", background=True)
         # Compound indexes for common query patterns
         await db.properties.create_index([("ward", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("town", 1), ("status", 1)], background=True)  # NEW: Town compound index
+        await db.properties.create_index([("town", 1), ("status", 1)], background=True)
         await db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)  # NEW: Optimized for surveyor map
+        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
         
         # Users collection indexes
         await db.users.create_index("id", unique=True, background=True)
         await db.users.create_index("username", unique=True, background=True)
         await db.users.create_index("role", background=True)
+        await db.users.create_index("assigned_town", background=True)  # Town assignment
         
         # Submissions collection indexes
         await db.submissions.create_index("id", unique=True, background=True)
@@ -118,16 +124,19 @@ async def create_indexes():
         await db.submissions.create_index("employee_id", background=True)
         await db.submissions.create_index("status", background=True)
         await db.submissions.create_index("submitted_at", background=True)
+        await db.submissions.create_index("town", background=True)  # Town index
         await db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
         
         # Bills collection indexes
         await db.bills.create_index("id", unique=True, background=True)
         await db.bills.create_index("colony", background=True)
         await db.bills.create_index("bill_sr_no", background=True)
+        await db.bills.create_index("town", background=True)  # Town index
         
         # Attendance collection indexes
         await db.attendance.create_index("employee_id", background=True)
         await db.attendance.create_index("date", background=True)
+        await db.attendance.create_index("town", background=True)  # Town index
         await db.attendance.create_index([("employee_id", 1), ("date", 1)], unique=True, background=True)
         
         # Batches collection
