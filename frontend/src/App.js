@@ -11,12 +11,14 @@ import AdminMap from "./pages/admin/Map";
 import AdminBills from "./pages/admin/Bills";
 import AdminBillsMap from "./pages/admin/BillsMap";
 import AdminAttendance from "./pages/admin/Attendance";
+import AdminTowns from "./pages/admin/Towns";
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import EmployeeProperties from "./pages/employee/Properties";
 import EmployeeSurvey from "./pages/employee/Survey";
 import EmployeeAttendance from "./pages/employee/Attendance";
 import EmployeePropertyMap from "./pages/employee/PropertyMap";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { TownProvider } from "./context/TownContext";
 import "@/App.css";
 
 function ProtectedRoute({ children, allowedRoles }) {
