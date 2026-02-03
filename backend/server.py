@@ -841,6 +841,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "name": data.name,
         "role": data.role,
         "assigned_area": data.assigned_area,
+        "assigned_town": data.assigned_town,  # Town assignment
         "authority": data.authority if data.role in ["SUPERVISOR", "MC_OFFICER"] else None,
         "permissions": user_permissions,
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -853,6 +854,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "name": user_doc["name"],
         "role": user_doc["role"],
         "assigned_area": user_doc["assigned_area"],
+        "assigned_town": user_doc["assigned_town"],
         "authority": user_doc["authority"],
         "permissions": user_doc["permissions"],
         "created_at": user_doc["created_at"]
