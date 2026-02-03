@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTown } from '../context/TownContext';
+import TownSelector from './TownSelector';
 import axios from 'axios';
 import {
   LayoutDashboard,
@@ -14,7 +16,8 @@ import {
   X,
   Map,
   FileText,
-  Calendar
+  Calendar,
+  Building2
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -31,6 +34,7 @@ const allNavItems = [
   { path: '/admin/map', icon: Map, label: 'Property Map', permission: 'map' },
   { path: '/admin/submissions', icon: ClipboardCheck, label: 'Submissions', permission: 'submissions' },
   { path: '/admin/export', icon: Download, label: 'Export', permission: 'export' },
+  { path: '/admin/towns', icon: Building2, label: 'Towns', permission: 'admin_only', adminOnly: true },
 ];
 
 const ROLE_DISPLAY = {
