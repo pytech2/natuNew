@@ -93,8 +93,9 @@ db = client[os.environ.get('DB_NAME', 'test_database')]
 _town_db_cache: Dict[str, Any] = {}
 
 # Special mapping for existing towns to their databases
+# Uses DB_NAME from .env (nstu_property_tax on VPS, test_database in dev)
 TOWN_DB_MAPPING = {
-    "THS": "test_database",  # Thanesar uses existing legacy database with all old data
+    "THS": os.environ.get('DB_NAME', 'test_database'),
 }
 
 def get_town_db(town_code: str):
