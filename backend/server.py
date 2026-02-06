@@ -991,7 +991,7 @@ async def reset_user_password(user_id: str, data: ResetPasswordRequest, current_
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
     # Check if user exists
-    user = await db.users.find_one({"id": user_id})
+    user = await master_db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -999,7 +999,7 @@ async def reset_user_password(user_id: str, data: ResetPasswordRequest, current_
     hashed_password = bcrypt.hashpw(data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     # Update password_hash (the field used by login verification)
-    await db.users.update_one(
+    await master_db.users.update_one(
         {"id": user_id},
         {"$set": {"password_hash": hashed_password}}
     )
