@@ -85,10 +85,10 @@ class TestMultiTenantTowns:
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
         
         data = response.json()
-        assert data["total_properties"] == 674, f"Thanesar should have 674 total properties, got {data.get('total_properties')}"
-        print(f"SUCCESS: Thanesar dashboard shows {data['total_properties']} properties")
-        print(f"  - Employees: {data.get('employees')}")
-        print(f"  - Completed: {data.get('completed')}")
+        assert data["total"] == 674, f"Thanesar should have 674 total properties, got {data.get('total')}"
+        assert data["employees"] == 12, f"Thanesar should have 12 employees, got {data.get('employees')}"
+        print(f"SUCCESS: Thanesar dashboard shows {data['total']} properties, {data['employees']} employees")
+        print(f"  - Approved: {data.get('approved')}")
         print(f"  - Pending: {data.get('pending')}")
     
     def test_dashboard_xyz(self):
@@ -104,9 +104,9 @@ class TestMultiTenantTowns:
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
         
         data = response.json()
-        assert data["total_properties"] == 0, f"xyz should have 0 total properties, got {data.get('total_properties')}"
-        assert data.get("employees", 0) == 0 or data.get("employees") is None, f"xyz should have 0 employees"
-        print(f"SUCCESS: xyz dashboard shows {data['total_properties']} properties (empty)")
+        assert data["total"] == 0, f"xyz should have 0 total properties, got {data.get('total')}"
+        assert data.get("employees", 0) == 0, f"xyz should have 0 employees, got {data.get('employees')}"
+        print(f"SUCCESS: xyz dashboard shows {data['total']} properties, {data.get('employees', 0)} employees (empty)")
     
     # ==================== Properties Tests with Town Context ====================
     
