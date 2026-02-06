@@ -751,7 +751,7 @@ async def get_submission_by_property(
 @api_router.get("/towns")
 async def list_all_towns():
     """Get all active towns - public endpoint for login page"""
-    towns = await db.towns.find({"is_active": True}, {"_id": 0}).sort("name", 1).to_list(None)
+    towns = await master_db.towns.find({"is_active": True}, {"_id": 0}).sort("name", 1).to_list(None)
     return {"towns": towns}
 
 @api_router.get("/admin/towns/manage")
@@ -760,12 +760,19 @@ async def list_towns_admin(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    towns = await db.towns.find({}, {"_id": 0}).sort("name", 1).to_list(None)
+    towns = await master_db.towns.find({}, {"_id": 0}).sort("name", 1).to_list(None)
     
-    # Get stats for each town
+    # Get stats for each town - check both legacy and town-specific DBs
     for town in towns:
-        town["property_count"] = await db.properties.count_documents({"town": town["id"]})
-        town["user_count"] = await db.users.count_documents({"assigned_town": town["id"]})
+        # Legacy property count
+        legacy_count = await db.properties.count_documents({"town": town["id"]})
+        
+        # Town-specific property count
+        town_db = get_town_db(town["code"])
+        town_count = await town_db.properties.count_documents({})
+        
+        town["property_count"] = legacy_count + town_count
+        town["user_count"] = await master_db.users.count_documents({"assigned_town": town["id"]})
     
     return {"towns": towns}
 
