@@ -39,6 +39,11 @@ function ProtectedRoute({ children, allowedRoles, requireTown = true }) {
     return <Navigate to="/login" replace />;
   }
   
+  // Check if town selection is required and towns exist
+  if (requireTown && towns.length > 0 && !selectedTown) {
+    return <Navigate to="/select-town" replace />;
+  }
+  
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect based on role
     if (user.role === 'ADMIN' || user.role === 'SUPERVISOR') {
@@ -67,6 +72,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/select-town" element={<SelectTown />} />
       
       {/* Admin Routes - Full Access (ADMIN, SUPERVISOR) */}
       <Route path="/admin" element={
