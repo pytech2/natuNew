@@ -70,18 +70,43 @@ class SimpleCache:
 map_cache = SimpleCache(ttl_seconds=60)
 colonies_cache = SimpleCache(ttl_seconds=300)  # 5 minutes for colonies list
 
+# ============== MULTI-TENANT DATABASE SETUP ==============
 # MongoDB connection with optimized settings for performance
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(
     mongo_url,
-    maxPoolSize=50,  # Increase connection pool
+    maxPoolSize=50,
     minPoolSize=10,
     maxIdleTimeMS=30000,
     serverSelectionTimeoutMS=5000
 )
-db = client[os.environ['DB_NAME']]
 
-# GridFS for file storage in database
+# Master DB - Global (users, towns, access control)
+MASTER_DB_NAME = os.environ.get('MASTER_DB_NAME', 'nstu_master')
+master_db = client[MASTER_DB_NAME]
+
+# Legacy DB support (for backward compatibility during migration)
+db = client[os.environ.get('DB_NAME', 'test_database')]
+
+# Town DB cache
+_town_db_cache: Dict[str, Any] = {}
+
+def get_town_db(town_code: str):
+    """Get Town-specific Database connection"""
+    if town_code in _town_db_cache:
+        return _town_db_cache[town_code]
+    
+    town_db_name = f"nstu_town_{town_code.lower()}"
+    town_db = client[town_db_name]
+    _town_db_cache[town_code] = town_db
+    return town_db
+
+def get_town_gridfs(town_code: str):
+    """Get GridFS bucket for town-specific file storage"""
+    town_db = get_town_db(town_code)
+    return AsyncIOMotorGridFSBucket(town_db)
+
+# GridFS for file storage in database (legacy)
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
