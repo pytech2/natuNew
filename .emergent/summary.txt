@@ -1,270 +1,300 @@
-<analysis>**original_problem_statement:** The user wants a full-stack web application for a company named **NSTU India Private Limited** to manage property tax notice distribution and surveys. The application requires different user roles (Admin, Surveyor, Supervisor, MC Officer), bulk data upload via Excel and PDF, property assignment, a surveyor mobile interface for data collection (including photos with GPS watermarks), and an admin dashboard for progress tracking, review/approval, and data export.
+<analysis>**original_problem_statement:** The user wants a full-stack web application for a company named **NSTU India Private Limited** to manage property tax notice distribution and surveys. The application requires different user roles (Admin, Surveyor, Supervisor, MC Officer), bulk data upload, property assignment, and a surveyor mobile interface for data collection.
+
+The latest major requirement is to transform the application into a multi-town (multi-tenant) platform. Each town should have its own separate data (properties, bills, employees), while a Super Admin can manage all towns. The login flow must now include a town selection step. The town of Thanesar should retain all existing data, while new towns start fresh.
 
 **PRODUCT REQUIREMENTS:**
-- **Roles:** Super Admin, Surveyor, Supervisor, MC Officer with specific permissions.
-- **Admin Workflow:** Login, upload property data, manage users, assign properties, process PDF bills, view properties on a map, track progress, review submissions, and export data. Key features include generating serial numbers for un-numbered properties (e.g., N42), managing duplicate data, and managing self-certified properties via an Excel upload.
-- **Surveyor Workflow:** Login, view assigned properties on a map. The survey form must be locked until daily attendance is marked. Photo upload is mandatory. A search bar is needed to find properties. The survey form logic should adapt based on property status (e.g., self-certified, house locked).
-- **Dashboard:** Must provide accurate, filterable stats for total properties, submissions (pending, approved, rejected), and employee progress.
-- **Data Integrity & UX:** Data must be consistent across different views. The app and map must be fast and responsive. UI elements should be intuitive.
+- **Multi-Tenancy:**
+    - The app must support multiple towns, each with isolated data.
+    - Admins log in and are presented with a town selection page.
+    - Once a town is selected, all data displayed and modified (properties, bills, users, submissions) must be scoped to that town.
+    - Super Admins can see all towns and switch between them. Other users (Supervisors, Surveyors) are assigned to a single town.
+- **Roles & Permissions:** Super Admin, Surveyor, Supervisor, MC Officer with specific, town-scoped permissions.
+- **Admin Workflow:** Manage towns (create/edit/delete), manage users within a town, upload data for a specific town, assign properties, and track progress via a town-specific dashboard.
+- **Surveyor Workflow:** Login, select their assigned town (or be taken there directly), and see only properties assigned to them within that town. Survey forms must lock after submission.
+- **Advanced Search:** The submissions page needs an advanced search with filters for status (e.g., House Locked, Owner Denied), date range, employee, and an option to export the results to Excel.
+- **Data Integrity:** The architecture must enforce strict data separation between towns.
 
-**User's preferred language**: The user communicates in a mix of English and Hindi (e.g., app slow hai, ye option हटा दो, data should be correct). The next agent MUST be prepared to understand and respond to instructions in this mixed language format.
+**User's preferred language**: The user communicates in a mix of English and Hindi (e.g., vps par old print aa rha, left sift kare so pura text dikh sake). The next agent MUST be prepared to understand and respond to instructions in this mixed language format.
 
 **what currently exists?**
-A full-stack application with a monolithic FastAPI backend (), a React frontend, and a MongoDB database.
-- **Backend:** Handles user auth, data uploads (PDF/Excel), property management, and highly customized PDF generation. It has been heavily modified to add new endpoints for Excel exports and detailed colony statistics, and to repeatedly adjust the PDF generation logic.
-- **Frontend:**
-    - ****: The date filter functionality was removed at the user's request.
-    - ****: Significantly enhanced. It now displays detailed upload/processing history (skipped records) when a colony is selected and features a new Download Excel functionality with filters for self-certified status.
-    - ** & **: A search bar has been added/updated in both pages to allow searching by serial number, in addition to other fields.
+A full-stack application (FastAPI backend, React frontend) that has been partially converted to a multi-tenant architecture. The system now uses a hybrid database model: a  for global entities (users, towns) and separate databases for each town's data (properties, bills, etc.). The login flow has been updated to force town selection after authentication. A new Towns management page has been created for admins.
+
+However, the user's deployment on their VPS is broken. The frontend is not building correctly, preventing them from seeing the latest multi-town features. There is also a bug where users are not appearing in the UI after the architectural changes.
 
 **Last working item**:
-- **Last item agent was working:** Fixing an issue where the serial number and a conditional Hindi message (अपनी प्रॉपर्टी को Self Certified कराएँ।) were printing vertically on the right side of generated PDF bills. The goal is to make them appear horizontally at the top of the bill, outside the main content area, especially on landscape-oriented (90-degree rotated) pages.
-- **Status:** IN PROGRESS
+- **Last item agent was working:** The user reported no user is visible after the multi-town implementation. The agent correctly deduced that this is because users are being filtered by the selected town, but the user data itself is still in the old global database and has not been migrated or correctly associated with a town. The agent was starting to investigate this.
+- **Status:** BLOCKED
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Backend testing. The agent must use  to trigger the PDF generation API and a  script with usage: pymupdf [-h]
-               {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-               ...
-
-------------------------- Basic PyMuPDF Functions -------------------------
-
-options:
-  -h, --help            show this help message and exit
-
-Subcommands:
-  {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-                        Enter 'command -h' for subcommand specific help to inspect the output PDF, verifying that the text is present, horizontal, and correctly positioned at the top of the page.
+- **Which testing method agent to use?** both
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1:** PDF text (serial number & Hindi message) prints vertically instead of horizontally. (P0 - HIGHEST)
-- **Issue 2:** Git push fails due to large files in repository history. (P0 - BLOCKER)
-- **Issue 3:** The nearest GPS serial number algorithm may be incorrect (user's data yields different results than test data). (P1)
-- **Issue 4:** Dashboard attendance count is incorrect on the user's environment. (P1)
-- **Issue 5:** Dashboard property count mismatch reported by the user. (P1)
-- **Issue 6:** Surveyor and Category dropdowns on the Admin Map are not working on the user's VPS. (P1)
-- **Issue 7:** The user's Hostinger VPS deployment is fragile and a recurring source of problems. (P3)
+- **Issue 1:** Users not visible in the UI after multi-town update (P0)
+- **Issue 2:** User's VPS frontend build is failing or not deploying correctly (P0 - BLOCKER)
+- **Issue 3:** Old photos from previous dates are not showing on user's VPS (P1 - DEPLOYMENT BLOCKER)
+- **Issue 4:** Git push fails for the user due to repo history issues (P2 - DEPLOYMENT BLOCKER)
 
 **Issues Detail:**
-- **Issue 1: PDF text prints vertically, not horizontally**
-    - **Attempted fixes:** The agent confirmed the page rotation is 90 degrees. Attempts to insert text with  caused the text to disappear. The current approach involves trying to find the correct coordinates in the rotated page's coordinate system, but it has not been successful. Using a transformation matrix () is the likely solution.
+- **Issue 1: Users not visible in the UI after multi-town update**
+    - **Attempted fixes:** The agent started to investigate but did not implement a fix. The current logic incorrectly filters users by the selected town, but the user collection itself is still global and lacks town information.
     - **Next debug checklist:**
-        1.  In , locate the text insertion logic inside  and the two  functions.
-        2.  Use usage: pymupdf [-h]
-               {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-               ...
+        1. Modify the user-fetching API endpoints (, dashboard stats, etc.).
+        2. The API should now fetch users from the  for the selected town.
+        3. Since employees are now town-specific, you will need a strategy to migrate existing users from the legacy  collection to the appropriate town database (e.g., assign all existing users to the 'Thanesar' town DB).
+    - **Why fix this issue and what will be achieved with the fix?** Core functionality of user management is broken. Fixing it will allow admins to see and manage employees within the selected town.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on other issue:** None.
 
-------------------------- Basic PyMuPDF Functions -------------------------
-
-options:
-  -h, --help            show this help message and exit
-
-Subcommands:
-  {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-                        Enter 'command -h' for subcommand specific help's  or  with the  parameter.
-        3.  The  matrix should apply a translation to move the text to the top-right visual corner and a rotation of -90 degrees to counteract the page's 90-degree rotation, making the text appear horizontal.
-        4.  Ensure the embedded  font is used for the Hindi text.
-    - **Why fix this issue and what will be achieved with the fix?** The generated PDFs are a core output of the application and are currently unusable due to the incorrect text orientation.
+- **Issue 2: User's VPS frontend build is failing or not deploying correctly**
+    - **Attempted fixes:** The agent provided numerous commands to the user (, , , etc.). The user repeatedly reported that the changes are not visible. The agent diagnosed that the build output does not contain the new components (e.g., ).
+    - **Next debug checklist:**
+        1. Ask the user to run  and provide the **full output**.
+        2. Analyze the build log for errors (e.g., out of memory, missing dependencies, syntax errors).
+        3. If there are no errors, verify the build output directory () is being served correctly by their web server (Nginx). Check the Nginx config.
+    - **Why fix this issue and what will be achieved with the fix?** The user is completely blocked from testing or using any new features. This is the highest priority operational issue.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Backend
-    - **Blocked on other issue:** None
-
-- **Issue 2: Git push fails due to large files in repository history**
-    - **Attempted fixes:** None in this session. Previous session used WARNING: git-filter-branch has a glut of gotchas generating mangled history
-	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
-	 alternative filtering tool such as 'git filter-repo'
-	 (https://github.com/newren/git-filter-repo/) instead.  See the
-	 filter-branch manual page for more details; to squelch this warning,
-	 set FILTER_BRANCH_SQUELCH_WARNING=1.
-Proceeding with filter-branch....
-    - **Next debug checklist:** Instruct the user to run  and explain why it's necessary after rewriting history.
-    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the user from saving any code changes to their remote repository.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** N/A
-    - **Blocked on other issue:** This is a primary blocker for the user's workflow.
+    - **Should Test frontend/backend/both after fix?** N/A (User DevOps)
+    - **Blocked on other issue:** User providing logs.
 
 **In progress Task List**:
-- None.
+- **Task 1: Complete Multi-Tenant Data Scoping**
+    - **Where to resume:** . The database connection logic () is ready, but it needs to be applied everywhere.
+    - **What will be achieved with this?** True data isolation between towns. All API endpoints for properties, bills, submissions, dashboard stats, etc., will correctly use the database of the currently selected town.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **Implement Hide Completed Properties feature (P1):** Add a toggle on the map pages to hide properties with a Completed or Approved status.
-    - **Backend Refactoring (P2):** Decompose the monolithic  into a modular structure using FastAPI routers.
+    - **(P0) API Data Scoping:** Update all data-related API endpoints (, , , ) to use the  dependency to ensure they operate only on the selected town's data.
+    - **(P1) User/Employee Migration:** Create a migration path or admin UI to move existing employees from the global  collection into their respective town databases. For now, assign all existing employees to Thanesar.
+    - **(P1) Excel Upload with Town:** Modify the Excel/PDF upload functionality to associate the uploaded data with the currently selected town.
 - **Future Tasks:**
     - Offline support for the surveyor's mobile interface.
     - Add a feature to download all split-employee PDFs as a single ZIP file.
     - Add a shortcut to open the survey form by clicking a map marker.
-    - Implement Completed Colony access restrictions.
 
 **Completed work in this session**
-- **Dashboard Date Filter Removal:** The Today, Yesterday, All Time date filter was completely removed from the Admin Dashboard UI () and its associated backend logic.
-- **Skipped Records Tracking & Display:**
-    - Implemented a feature to save messages about skipped records during PDF uploads and Add to Properties actions into the  collection in the DB.
-    - Created a new API endpoint () to retrieve these stats.
-    - The  page now displays this processing history in info cards when a colony is selected.
-- **Excel Export Feature:**
-    - Added a Download Excel button on the  page, which opens a dialog with filter options.
-    - Created a new backend endpoint () to generate an XLSX file filtered by , , or  status for the selected colony.
-- **Enhanced Search Functionality:**
-    - Updated the Admin Property Map () search to include serial numbers.
-    - Added a new search input to the Submissions page () and corresponding backend logic to allow searching by serial number, property ID, and owner details.
-- **PDF Generation Logic Refinements:**
-    - The core algorithm for calculating  prefixed serial numbers based on nearest GPS coordinates was implemented and refined.
-    - Logic to add a Hindi message अपनी प्रॉपर्टी को Self Certified कराएँ। for non-self-certified properties was added, which required embedding the  font to support Hindi characters in usage: pymupdf [-h]
-               {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-               ...
+- **Multi-Tenant Architecture Foundation:**
+  - Designed and implemented a hybrid database architecture: a global master DB for towns/users and separate DBs for each town's data.
+  - Implemented a mandatory Select Town page after login.
+  - Created an admin page for managing towns ().
+  - Mapped the existing  to the Thanesar town to preserve all old data.
+- **Advanced Search on Submissions Page:**
+  - Added filters for date range, special conditions (House Locked, Owner Denied), photo status, and a general search box that includes surveyor name.
+  - Implemented an Export to Excel feature for the filtered results.
+- **Surveyor Workflow Enhancements:**
+  - Fixed map/badge colors: Submitted surveys are now **Yellow**, and Approved surveys are **Green**.
+  - Locked the survey form after a surveyor submits it, preventing re-edits.
+- **Town Filter Integration:**
+  - Added a Town dropdown filter to the Properties and Bills pages.
+  - Added a Towns card and a town-wise progress section to the Admin Dashboard.
+- **PDF Note Iteration:**
+  - Performed extensive, iterative adjustments to the Hindi note on the generated PDF (position, size, text, alignment) until the user was satisfied.
+- **VPS Deployment Support:**
+  - Provided extensive, step-by-step guidance to the user for deploying on their VPS, including resolving usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
 
-------------------------- Basic PyMuPDF Functions -------------------------
+These are common Git commands used in various situations:
 
-options:
-  -h, --help            show this help message and exit
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
 
-Subcommands:
-  {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-                        Enter 'command -h' for subcommand specific help.
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
 
-**Earlier issues found/mentioned but not fixed**
-- **Issue 1: Root cause of VPS deployment failures.**
-    - **Debug checklist:** Investigate npm <command>
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
 
-Usage:
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
 
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
 
-All commands:
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system. authentication, 
+Usage:   
+  pip <command> [options]
 
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
 
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm vs. yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.03s. conflicts, Node.js version mismatches, file permissions, or resource limitations on the user's Hostinger VPS.
-    - **Why to solve this issue and what will be achieved with this?** To create a stable and reliable deployment process.
-    - **Should Test frontend/backend/both after fix:** N/A (DevOps)
-    - **Is recurring issue?** Y
-
-**Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Git push failures and deployment/build failures on the Hostinger VPS.
-- **Recurrence count:** 5+
-- **Status:** NOT STARTED (The git push issue remains unresolved).
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) installation errors (), and using  instead of .
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, MongoDB (Motor), Pydantic, .
-- **File Processing:** usage: pymupdf [-h]
-               {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-               ...
-
-------------------------- Basic PyMuPDF Functions -------------------------
-
-options:
-  -h, --help            show this help message and exit
-
-Subcommands:
-  {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-                        Enter 'command -h' for subcommand specific help for complex PDF manipulation (including text insertion on rotated pages),  and  for Excel generation.
-- **Frontend:** React, React Hooks, MapLibre GL, Tailwind CSS, Shadcn UI, .
-- **Internationalization:** Embedding a  font in the backend to render Hindi characters in generated PDFs.
+- **Multi-Tenant Architecture:** Implemented a hybrid database-per-tenant model. A global  handles authentication and town configuration, while  dynamically provides a connection to the selected town's specific database.
+- **Data Scoping:** The core principle of ensuring all queries are filtered by . This is partially implemented.
+- **React Context API:** Used  to manage the currently selected town globally across the frontend application, making it available to all components and API calls.
+- **Dynamic Dependency Injection (FastAPI):** The  pattern is used to inject the correct database connection into API route handlers based on a request header.
 
 **key DB schema**
-- **batches:** Added a  object. This object now stores  (string) and  (object) to persist detailed processing results from file uploads.
-
-**changes in tech stack**
-- None.
+- ** ()**
+  - ****: 
+  - ****:  (Note: This is the target schema; currently, users are still in the legacy DB).
+- ** (e.g., , )**
+  - ****, ****, ****, ****, ****
+  - ****: This collection will hold employees for that specific town.
 
 **All files of reference**
-- 
-- 
-- 
-- 
-- 
+- **Backend (New/Critical):** , 
+- **Backend (Modified):** 
+- **Frontend (New/Critical):** , , , 
+- **Frontend (Modified):** , , , , , , , , 
 
 **Areas that need refactoring**:
-- ****: This file has grown even larger and more complex with the addition of multiple new endpoints and intricate PDF/Excel generation logic, making refactoring into modular routers a high priority.
-- ****: This component now manages state for filters, PDF generation, Excel downloads, and fetching/displaying multiple types of statistics, making it a candidate for being broken down into smaller components.
+- The logic in  for handling both the legacy database and the new  during login () and user fetching () is a temporary compatibility layer. It should be removed after a proper user migration to the new architecture is complete.
+- The monolithic  file is now extremely large and complex. API routes should be broken out into separate files using  for better organization (e.g., , , ).
 
 **key api endpoints**
-- **NEW:** : Retrieves detailed statistics for a colony, including processing history messages.
-- **NEW:** : Exports bills to an Excel file with filters for self-certification status.
-- **MODIFIED:** , , : All were heavily modified to adjust serial number placement, rotation, and to add conditional Hindi text.
-- **MODIFIED:** : Updated to accept a  query parameter.
-- **MODIFIED:**  & : Logic updated to save detailed processing messages to the  collection.
+- **New Town Management:**
+  - : List all towns for the admin page.
+  - : Create a new town.
+  - : Update a town.
+  - : Delete a town.
+- **New Town Stats:**
+  - : Get aggregated stats for all towns (for the select town page).
+- **Modified for Advanced Search:**
+  - : Now accepts many new filter parameters (, , date range, etc.).
+  - : New endpoint to download filtered submissions as an Excel file.
 
 **Critical Info for New Agent**
-- **The top priority is fixing the PDF text orientation.** The user has provided a screenshot showing the text is vertical. The agent must solve text rotation on landscape PDFs using usage: pymupdf [-h]
-               {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-               ...
-
-------------------------- Basic PyMuPDF Functions -------------------------
-
-options:
-  -h, --help            show this help message and exit
-
-Subcommands:
-  {show,clean,join,extract,embed-info,embed-add,embed-del,embed-upd,embed-extract,embed-copy,gettext,internal}
-                        Enter 'command -h' for subcommand specific help, likely with a transformation matrix ().
-- **The  blocker is the second most critical issue.** It prevents the user from saving their work. The agent should guide the user to force push to resolve it.
-- The user's feedback is highly visual and specific. Pay close attention to details like text placement, orientation, and color in screenshots.
-- Do not trust the data in the preview environment to be the same as the user's production data, especially for validating algorithms like the nearest-GPS calculation.
+- **PRIORITIZE THE VPS BUILD:** The user is blocked because their frontend is not updating. You must guide them to get a successful  on their server and provide the full logs if it fails.
+- **MULTI-TENANT IS INCOMPLETE:** The foundation is laid, but the work is only 30% done. Your main development task is to apply the town-scoping logic to **ALL** data-related APIs (properties, bills, dashboard, etc.) using .
+- **USER VISIBILITY BUG:** Immediately after fixing the build, address the 0 users bug. You need to decide on a strategy: either fetch users from the appropriate  or implement a temporary fix to show users from the legacy DB until migration.
+- **DB ARCHITECTURE:** Remember the rule: Thanesar (code: THS) maps to the old database . Any new town will get a new, separate database (e.g., ). The logic for this is in .
 
 **documents and test reports created in this job**
-- None.
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Request (Done):** when i upload a pdf... can we save this and display in record... - Requested saving and displaying skipped record stats.
-2.  **Request (Done):** skip message should store and show in property bill page when select colony - Clarified that skip messages should be tied to colony selection.
-3.  **Request (Done):** I understand! You want to save both upload statistics messages... - Confirmed that multiple types of processing messages should be saved.
-4.  **Clarification:** where can i check skip message - Asked where the new feature is located.
-5.  **Request (Done):** When admin upload the PDF... there should be a option to download in Excel file... - Requested an Excel download feature with filters.
-6.  **Bug Report (Fixed):** when try to download excell self certified - make sure excell file will downdad - Reported that Excel download was failing for certain filters.
-7.  **Bug Report (Fixed):** make sure excell file download that will open anywhare - - Reported issues with Excel file format and incorrect counts in the UI.
-8.  **Request (Done):** in the property map and submission search button should work with serial number as well - Requested search by serial number on two pages.
-9.  **Request (In Progress):** in pdf bill generate pdf print - the serial number need to print top right corner... horizontal... - Initial request for the horizontal text on PDF.
-10. **Bug Report (In Progress):** अपनी प्रॉपर्टी को Self Certified कराएँ।... text is verticle... it should be horizantal - Provided a screenshot showing the current blocking issue: PDF text is vertical.
+1.  **PENDING:** no user - The user reported that no users are visible in the app after the multi-town update.
+2.  **Completed:** User asked for confirmation that no data will be lost during the VPS update. The agent confirmed and explained why it's safe.
+3.  **Completed:** User confirmed they want the Hybrid database architecture.
+4.  **In Progress:** still not update 100% - User reported the VPS deployment did not work. The agent identified the frontend build is the likely culprit.
+5.  **Completed:** User provided their  output, revealing the correct repository name is , not .
+6.  **Completed:** User provided their GitHub username and a Personal Access Token (PAT) to fix  authentication issues.
+7.  **Completed:** User requested the final, complete deployment command with  included.
+8.  **Completed:** User reported the Hindi note was still printing the old version on their VPS.
+9.  **Completed:** User requested iterative visual changes to the Hindi note on the PDF (font size, position, alignment, text content). This was a long back-and-forth that is now resolved.
+10. **Completed:** User asked for an advanced search on the Submissions page with specific filters and an export option.
 
 **Project Health Check:**
 - **Broken:**
-    - **PDF Generation:** Text rendering on rotated pages is broken (prints vertically).
-    - **Git Repository:** Pushing to the remote is blocked due to rewritten history that was not force-pushed.
-    - **Dashboard Data Accuracy:** Attendance and property counts remain potentially incorrect on the user's production environment.
-- **Mocked:** None.
+    - **User VPS Deployment:** The frontend build process is failing or not configured correctly on the user's server, blocking all progress.
+    - **User Management UI:** Admins cannot see or manage users due to the incomplete multi-tenant filtering logic.
+- **Mocked:** None
 
 **3rd Party Integrations**
-- **MapLibre GL & React-Map-GL:** Used for interactive maps.
-- **PyMuPDF, reportlab:** Used for backend PDF processing.
-- **pandas, openpyxl:** Used for Excel/CSV file reading and writing in the backend.
+- MapLibre GL & React-Map-GL
+- PyMuPDF, reportlab
+- pandas, openpyxl
+- wkhtmltopdf (wkhtmltoimage)
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** None.
-- **Known regressions:** The PDF text placement has been worked on multiple times and is currently in a broken state regarding text orientation.
+- **Test files created:** None
+- **Known regressions:** User visibility is a major regression caused by the new architecture.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -273,6 +303,6 @@ Subcommands:
 - **MC Officer:**  / 
 
 **What agent forgot to execute**
-- The agent did not resolve the P0 ** blocker**, which was carried over from the previous session and is critical for the user.
-- The agent did not investigate the user's reports of dashboard count mismatches (attendance, properties) or the non-working dropdowns on the user's VPS.
-- The agent noted but did not resolve the discrepancy in the nearest-GPS serial number algorithm (user's data showing different results than agent's test).</analysis>
+- The agent started the multi-tenant migration but did not apply the town-scoping logic to all necessary API endpoints, leaving the application in a partially functional state.
+- The agent did not create a migration plan or a temporary fix for the users, leading directly to the no user bug.
+- While providing extensive deployment commands, the agent couldn't fully resolve the user's frontend build issue, which is the primary blocker.</analysis>
