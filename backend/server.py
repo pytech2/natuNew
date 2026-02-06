@@ -981,14 +981,9 @@ async def delete_town(town_id: str, current_user: dict = Depends(get_current_use
     if not town:
         raise HTTPException(status_code=404, detail="Town not found")
     
-    # Check if town has associated data in legacy DB
-    legacy_count = await get_db().properties.count_documents({"town": town_id})
-    
-    # Check town-specific DB
+    # Check town-specific DB for data
     town_db = get_town_db(town["code"])
-    town_count = await town_db.properties.count_documents({})
-    
-    total_properties = legacy_count + town_count
+    total_properties = await town_db.properties.count_documents({})
     
     if total_properties > 0:
         # Soft delete
