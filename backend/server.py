@@ -2213,35 +2213,50 @@ async def list_wards(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/admin/dashboard")
 async def admin_dashboard(
+    request: Request,
     date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
     current_user: dict = Depends(get_current_user)
 ):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
+    town_db = await get_town_data_db(request)
+    
     # Build date filter for submissions
     date_filter = {}
     if date:
-        # Filter submissions by date
         date_start = f"{date}T00:00:00"
         date_end = f"{date}T23:59:59"
         date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
     
-    # Property counts (always all time for total)
-    total = await db.properties.count_documents({})
-    approved = await db.properties.count_documents({"status": "Approved"})
-    completed = await db.properties.count_documents({"status": "Completed"})  # Surveyed but not yet approved
-    pending = await db.properties.count_documents({"status": "Pending"})
-    rejected = await db.properties.count_documents({"status": "Rejected"})
-    employees = await db.users.count_documents({"role": {"$ne": "ADMIN"}})
+    # Property counts from town DB
+    total = await town_db.properties.count_documents({})
+    approved = await town_db.properties.count_documents({"status": "Approved"})
+    completed = await town_db.properties.count_documents({"status": "Completed"})
+    pending = await town_db.properties.count_documents({"status": "Pending"})
+    rejected = await town_db.properties.count_documents({"status": "Rejected"})
+    
+    # Employee count: non-admin users assigned to current town
+    town_code = request.headers.get("x-town-code")
+    if town_code:
+        town = await master_db.towns.find_one({"code": town_code}, {"_id": 0})
+        if town:
+            employees = await master_db.users.count_documents({
+                "role": {"$ne": "ADMIN"},
+                "assigned_town": town["id"]
+            })
+        else:
+            employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
+    else:
+        employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
     
     # Get unique colonies count
-    colonies = await db.properties.distinct("colony")
+    colonies = await town_db.properties.distinct("colony")
     colonies_count = len([c for c in colonies if c])
     
     return {
         "total": total,
-        "approved": approved + completed,  # Combined: Approved + Completed (both mean survey done)
+        "approved": approved + completed,
         "pending": pending,
         "rejected": rejected,
         "employees": employees,
