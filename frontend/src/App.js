@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
+import axios from "axios";
 import Login from "./pages/Login";
 import SelectTown from "./pages/SelectTown";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -21,6 +22,23 @@ import EmployeePropertyMap from "./pages/employee/PropertyMap";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TownProvider, useTown } from "./context/TownContext";
 import "@/App.css";
+
+// Axios interceptor: automatically attach X-Town-Code header to ALL API requests
+axios.interceptors.request.use((config) => {
+  try {
+    const savedTown = localStorage.getItem('selectedTown');
+    if (savedTown) {
+      const town = JSON.parse(savedTown);
+      if (town && town.code) {
+        config.headers['X-Town-Code'] = town.code;
+        config.headers['X-Town-ID'] = town.id;
+      }
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
+  return config;
+});
 
 // Protected Route with Town requirement
 function ProtectedRoute({ children, allowedRoles, requireTown = true }) {
