@@ -261,10 +261,10 @@ async def create_indexes():
         await get_db().properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
         
         # Users collection indexes (legacy)
-        await db.users.create_index("id", unique=True, background=True)
-        await db.users.create_index("username", unique=True, background=True)
-        await db.users.create_index("role", background=True)
-        await db.users.create_index("assigned_town", background=True)
+        await master_db.users.create_index("id", unique=True, background=True)
+        await master_db.users.create_index("username", unique=True, background=True)
+        await master_db.users.create_index("role", background=True)
+        await master_db.users.create_index("assigned_town", background=True)
         
         # Submissions collection indexes
         await get_db().submissions.create_index("id", unique=True, background=True)
@@ -565,7 +565,7 @@ async def get_current_user(authorization: str = Header(None)):
         # Try master DB first, then fall back to legacy DB
         user = await master_db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         if not user:
-            user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+            user = await master_db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -588,7 +588,7 @@ async def login(data: UserLogin):
     user = await master_db.users.find_one({"username": data.username}, {"_id": 0})
     if not user:
         # Fallback to legacy DB for backward compatibility
-        user = await db.users.find_one({"username": data.username}, {"_id": 0})
+        user = await master_db.users.find_one({"username": data.username}, {"_id": 0})
     
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -1426,7 +1426,7 @@ async def assign_properties(data: AssignmentRequest, current_user: dict = Depend
         raise HTTPException(status_code=400, detail="At least one employee must be selected")
     
     # Get all selected employees
-    new_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0}).to_list(None)
+    new_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0}).to_list(None)
     if not new_employees:
         raise HTTPException(status_code=404, detail="No employees found")
     
@@ -1447,7 +1447,7 @@ async def assign_properties(data: AssignmentRequest, current_user: dict = Depend
         combined_emp_ids = list(set(existing_emp_ids + new_emp_ids))
         
         # Get all employee names for the combined list
-        all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+        all_employees = await master_db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
         combined_names = ", ".join([emp["name"] for emp in all_employees])
         
         # Update the property with merged assignments
@@ -1476,7 +1476,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
         raise HTTPException(status_code=400, detail="At least one employee must be selected")
     
     # Get all selected employees
-    new_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0}).to_list(None)
+    new_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0}).to_list(None)
     if not new_employees:
         raise HTTPException(status_code=404, detail="No employees found")
     
@@ -1550,7 +1550,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
                 combined_emp_ids = list(set(existing_emp_ids + [emp_id]))
                 
                 # Get all employee names
-                all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+                all_employees = await master_db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
                 combined_names = ", ".join([e["name"] for e in all_employees])
                 
                 await get_db().properties.update_one(
@@ -1578,7 +1578,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             
             combined_emp_ids = list(set(existing_emp_ids + new_emp_ids))
             
-            all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+            all_employees = await master_db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
             combined_names = ", ".join([emp["name"] for emp in all_employees])
             
             await get_db().properties.update_one(
@@ -1593,7 +1593,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
         
         # Update all assigned employees with the area
         for emp_id in new_emp_ids:
-            await db.users.update_one(
+            await master_db.users.update_one(
                 {"id": emp_id},
                 {"$set": {"assigned_area": data.area}}
             )
@@ -1612,7 +1612,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
     
     # If specific employee, only unassign that employee
     if data.employee_id:
-        employee = await db.users.find_one({"id": data.employee_id}, {"_id": 0, "name": 1})
+        employee = await master_db.users.find_one({"id": data.employee_id}, {"_id": 0, "name": 1})
         emp_name = employee["name"] if employee else "Unknown"
         
         # Find properties assigned to this employee in this area
@@ -1633,7 +1633,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
             
             if new_emp_ids:
                 # Still has other employees
-                all_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "name": 1}).to_list(None)
+                all_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "name": 1}).to_list(None)
                 combined_names = ", ".join([e["name"] for e in all_employees])
                 
                 await get_db().properties.update_one(
@@ -1704,7 +1704,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
             
             if new_emp_ids:
                 # Get remaining employee names
-                remaining_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+                remaining_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
                 remaining_names = ", ".join([emp["name"] for emp in remaining_employees])
                 
                 await get_db().properties.update_one(
@@ -1739,7 +1739,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
         updated_count += 1
     
     if data.employee_id:
-        emp = await db.users.find_one({"id": data.employee_id}, {"_id": 0, "name": 1})
+        emp = await master_db.users.find_one({"id": data.employee_id}, {"_id": 0, "name": 1})
         emp_name = emp["name"] if emp else "Employee"
         return {"message": f"Unassigned {emp_name} from {updated_count} properties"}
     else:
@@ -1755,7 +1755,7 @@ async def unassign_all_properties_from_employee(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Get employee name
-    employee = await db.users.find_one({"id": employee_id}, {"_id": 0, "name": 1})
+    employee = await master_db.users.find_one({"id": employee_id}, {"_id": 0, "name": 1})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
@@ -1777,7 +1777,7 @@ async def unassign_all_properties_from_employee(
         new_emp_ids = [eid for eid in existing_emp_ids if eid != employee_id]
         
         if new_emp_ids:
-            remaining_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+            remaining_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
             remaining_names = ", ".join([emp["name"] for emp in remaining_employees])
             
             await get_db().properties.update_one(
@@ -2611,7 +2611,7 @@ async def list_submissions(
                 {"mobile": {"$regex": search_term, "$options": "i"}}
             ]
         }
-        matching_employees = await db.users.find(employee_search_query, {"id": 1, "_id": 0}).to_list(None)
+        matching_employees = await master_db.users.find(employee_search_query, {"id": 1, "_id": 0}).to_list(None)
         search_employee_ids = [e["id"] for e in matching_employees]
         
         # Build combined query - match either property OR employee
@@ -2812,7 +2812,7 @@ async def export_submissions(
         emp_id = sub.get("employee_id")
         if emp_id:
             if emp_id not in employee_cache:
-                emp = await db.users.find_one({"id": emp_id}, {"name": 1, "_id": 0})
+                emp = await master_db.users.find_one({"id": emp_id}, {"name": 1, "_id": 0})
                 employee_cache[emp_id] = emp.get("name", "Unknown") if emp else "Unknown"
             sub["employee_name"] = employee_cache[emp_id]
     
@@ -5678,7 +5678,7 @@ async def split_bills_by_specific_employees(
     # Verify employees exist
     employees = []
     for emp_id in emp_ids:
-        emp = await db.users.find_one({"id": emp_id}, {"_id": 0, "id": 1, "name": 1, "username": 1})
+        emp = await master_db.users.find_one({"id": emp_id}, {"_id": 0, "id": 1, "name": 1, "username": 1})
         if emp:
             employees.append(emp)
     
@@ -6166,7 +6166,7 @@ async def clear_self_certification(current_user: dict = Depends(get_current_user
 @api_router.post("/init-admin")
 async def init_admin():
     """Initialize default admin user if not exists"""
-    existing = await db.users.find_one({"username": "admin"})
+    existing = await master_db.users.find_one({"username": "admin"})
     if existing:
         return {"message": "Admin already exists"}
     
@@ -6179,7 +6179,7 @@ async def init_admin():
         "assigned_area": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.users.insert_one(admin_doc)
+    await master_db.users.insert_one(admin_doc)
     return {"message": "Admin user created", "username": "admin", "password": "admin123"}
 
 # Include the router
