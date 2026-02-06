@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import Login from "./pages/Login";
+import SelectTown from "./pages/SelectTown";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEmployees from "./pages/admin/Employees";
 import AdminProperties from "./pages/admin/Properties";
@@ -18,13 +19,15 @@ import EmployeeSurvey from "./pages/employee/Survey";
 import EmployeeAttendance from "./pages/employee/Attendance";
 import EmployeePropertyMap from "./pages/employee/PropertyMap";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { TownProvider } from "./context/TownContext";
+import { TownProvider, useTown } from "./context/TownContext";
 import "@/App.css";
 
-function ProtectedRoute({ children, allowedRoles }) {
+// Protected Route with Town requirement
+function ProtectedRoute({ children, allowedRoles, requireTown = true }) {
   const { user, loading } = useAuth();
+  const { selectedTown, loading: townLoading, towns } = useTown();
   
-  if (loading) {
+  if (loading || townLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="animate-pulse-slow text-slate-600">Loading...</div>
