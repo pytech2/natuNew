@@ -138,6 +138,58 @@ def get_submissions_db(user: dict, town_code: Optional[str] = None):
 
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
+async def create_town_indexes(town_db):
+    """Create MongoDB indexes for Town-specific DB"""
+    try:
+        # Properties collection indexes (Town DB)
+        await town_db.properties.create_index("id", unique=True, background=True)
+        await town_db.properties.create_index("batch_id", background=True)
+        await town_db.properties.create_index("ward", background=True)
+        await town_db.properties.create_index("colony", background=True)
+        await town_db.properties.create_index("status", background=True)
+        await town_db.properties.create_index("assigned_employee_id", background=True)
+        await town_db.properties.create_index("assigned_employee_ids", background=True)
+        await town_db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
+        await town_db.properties.create_index("serial_number", background=True)
+        await town_db.properties.create_index("bill_sr_no", background=True)
+        await town_db.properties.create_index("property_id", background=True)
+        # Compound indexes for common query patterns
+        await town_db.properties.create_index([("ward", 1), ("status", 1)], background=True)
+        await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
+        await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
+        
+        # Submissions collection indexes (Town DB)
+        await town_db.submissions.create_index("id", unique=True, background=True)
+        await town_db.submissions.create_index("property_record_id", background=True)
+        await town_db.submissions.create_index("employee_id", background=True)
+        await town_db.submissions.create_index("status", background=True)
+        await town_db.submissions.create_index("submitted_at", background=True)
+        await town_db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        
+        # Bills collection indexes (Town DB)
+        await town_db.bills.create_index("id", unique=True, background=True)
+        await town_db.bills.create_index("colony", background=True)
+        await town_db.bills.create_index("bill_sr_no", background=True)
+        
+        # Attendance collection indexes (Town DB)
+        await town_db.attendance.create_index("employee_id", background=True)
+        await town_db.attendance.create_index("date", background=True)
+        await town_db.attendance.create_index([("employee_id", 1), ("date", 1)], unique=True, background=True)
+        
+        # Batches collection (Town DB)
+        await town_db.batches.create_index("id", unique=True, background=True)
+        await town_db.batches.create_index("status", background=True)
+        
+        # Generated PDFs collection (Town DB)
+        await town_db.generated_pdfs.create_index("id", unique=True, background=True)
+        await town_db.generated_pdfs.create_index("colony", background=True)
+        await town_db.generated_pdfs.create_index("created_at", background=True)
+        await town_db.generated_pdfs.create_index("pdf_type", background=True)
+        
+        logging.info("Town DB indexes created successfully")
+    except Exception as e:
+        logging.warning(f"Town DB index creation warning (may already exist): {e}")
+
 async def create_indexes():
     """Create MongoDB indexes for faster queries"""
     try:
