@@ -538,11 +538,39 @@ def get_today_start():
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
+    # Try master DB first, then fall back to legacy DB
     user = await master_db.users.find_one({"username": data.username}, {"_id": 0})
+    if not user:
+        # Fallback to legacy DB for backward compatibility
+        user = await db.users.find_one({"username": data.username}, {"_id": 0})
+    
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Log login audit
+    await master_db.audit_login.insert_one({
+        "user_id": user["id"],
+        "username": user["username"],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ip_address": None  # Would need request context to get IP
+    })
+    
     token = create_token(user["id"], user["role"])
+    
+    # Get user's accessible towns
+    user_towns = []
+    if user["role"] == "ADMIN":
+        # Admin can access all active towns
+        towns = await master_db.towns.find({"is_active": True}, {"_id": 0}).to_list(None)
+        user_towns = towns
+    else:
+        # Other users only access assigned town
+        assigned_town = user.get("assigned_town")
+        if assigned_town:
+            town = await master_db.towns.find_one({"id": assigned_town, "is_active": True}, {"_id": 0})
+            if town:
+                user_towns = [town]
+    
     return {
         "token": token,
         "user": {
@@ -551,10 +579,12 @@ async def login(data: UserLogin):
             "name": user["name"],
             "role": user["role"],
             "assigned_area": user.get("assigned_area"),
+            "assigned_town": user.get("assigned_town"),
             "authority": user.get("authority"),
             "permissions": user.get("permissions"),
             "created_at": user["created_at"]
-        }
+        },
+        "accessible_towns": user_towns
     }
 
 @api_router.get("/auth/me")
