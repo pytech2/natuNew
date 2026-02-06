@@ -125,31 +125,21 @@ def get_town_gridfs(town_code: str):
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
 # ============== MULTI-TENANT HELPER FUNCTIONS ==============
-def get_user_town_context(user: dict) -> Optional[str]:
-    """Get the town code for a user's context"""
-    assigned_town_id = user.get("assigned_town")
-    if not assigned_town_id:
-        return None
-    
-    # This would need to be cached or looked up from master_db
-    # For now, return None to use legacy DB
-    return None
-
-def get_properties_db(user: dict, town_code: Optional[str] = None):
-    """Get the appropriate database for properties based on user context"""
+async def get_town_data_db(request: Request):
+    """FastAPI dependency: resolve the town-scoped database from request headers.
+    Returns the correct DB for data operations (properties, bills, submissions, etc.).
+    Falls back to legacy DB (test_database / Thanesar) if no header."""
+    town_code = request.headers.get("x-town-code")
     if town_code:
         return get_town_db(town_code)
-    
-    # For now, use legacy DB for backward compatibility
     return db
 
-def get_submissions_db(user: dict, town_code: Optional[str] = None):
-    """Get the appropriate database for submissions based on user context"""
+async def get_town_fs(request: Request):
+    """FastAPI dependency: resolve the town-scoped GridFS from request headers."""
+    town_code = request.headers.get("x-town-code")
     if town_code:
-        return get_town_db(town_code)
-    
-    # For now, use legacy DB for backward compatibility
-    return db
+        return AsyncIOMotorGridFSBucket(get_town_db(town_code))
+    return fs_bucket
 
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
 async def create_town_indexes(town_db):
