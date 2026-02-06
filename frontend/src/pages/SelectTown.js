@@ -52,14 +52,13 @@ export default function SelectTown() {
     setSelectedId(town.id);
     selectTown(town);
     
-    // Navigate based on role
+    // Navigate based on role after short delay
     setTimeout(() => {
-      if (user?.role === 'ADMIN' || user?.role === 'SUPERVISOR' || user?.role === 'MC_OFFICER') {
-        navigate('/admin');
-      } else {
-        navigate('/employee');
-      }
-    }, 500);
+      const destination = (user?.role === 'ADMIN' || user?.role === 'SUPERVISOR' || user?.role === 'MC_OFFICER') 
+        ? '/admin' 
+        : '/employee';
+      window.location.href = destination;
+    }, 800);
   };
 
   // Filter towns based on user access
