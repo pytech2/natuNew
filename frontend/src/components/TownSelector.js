@@ -56,6 +56,8 @@ export default function TownSelector({ className = '' }) {
             onClick={() => {
               selectTown(town);
               setOpen(false);
+              // Force page reload to re-fetch all data with new town context
+              window.location.reload();
             }}
             className="flex items-center justify-between cursor-pointer"
           >
