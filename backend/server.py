@@ -641,12 +641,15 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 # ============== FAST MAP ENDPOINTS (OPTIMIZED FOR 20+ CONCURRENT USERS) ==============
 
 @api_router.get("/map/colonies")
-async def get_colonies_list(current_user: dict = Depends(get_current_user)):
+async def get_colonies_list(request: Request, current_user: dict = Depends(get_current_user)):
     """Fast endpoint to get list of colonies - CACHED"""
-    cache_key = "colonies_list"
+    town_code = request.headers.get("x-town-code", "default")
+    cache_key = f"colonies_list_{town_code}"
     cached = colonies_cache.get(cache_key)
     if cached:
         return cached
+    
+    town_db = await get_town_data_db(request)
     
     # Get unique colonies from properties
     pipeline = [
@@ -1324,6 +1327,7 @@ PERFORMANCE_DOWNLOAD_ROLES = ["ADMIN"]
 
 @api_router.get("/admin/properties")
 async def list_properties(
+    request: Request,
     batch_id: Optional[str] = None,
     ward: Optional[str] = None,
     town: Optional[str] = None,
@@ -1336,6 +1340,8 @@ async def list_properties(
 ):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town_db = await get_town_data_db(request)
     
     query = {}
     if batch_id and batch_id.strip():
@@ -1355,35 +1361,17 @@ async def list_properties(
             {"mobile": {"$regex": search, "$options": "i"}}
         ]
     
-    # Optimized projection for faster queries
     projection = {
-        "_id": 0,
-        "id": 1,
-        "property_id": 1,
-        "owner_name": 1,
-        "mobile": 1,
-        "address": 1,
-        "colony": 1,
-        "ward": 1,
-        "town": 1,
-        "latitude": 1,
-        "longitude": 1,
-        "status": 1,
-        "serial_number": 1,
-        "bill_sr_no": 1,
-        "amount": 1,
-        "category": 1,
-        "total_area": 1,
-        "assigned_employee_id": 1,
-        "assigned_employee_name": 1,
-        "assigned_employee_ids": 1,
-        "batch_id": 1,
-        "created_at": 1
+        "_id": 0, "id": 1, "property_id": 1, "owner_name": 1, "mobile": 1,
+        "address": 1, "colony": 1, "ward": 1, "town": 1, "latitude": 1,
+        "longitude": 1, "status": 1, "serial_number": 1, "bill_sr_no": 1,
+        "amount": 1, "category": 1, "total_area": 1, "assigned_employee_id": 1,
+        "assigned_employee_name": 1, "assigned_employee_ids": 1, "batch_id": 1, "created_at": 1
     }
     
     skip = (page - 1) * limit
-    total = await db.properties.count_documents(query)
-    properties = await db.properties.find(query, projection).sort("serial_number", 1).skip(skip).limit(limit).to_list(limit)
+    total = await town_db.properties.count_documents(query)
+    properties = await town_db.properties.find(query, projection).sort("serial_number", 1).skip(skip).limit(limit).to_list(limit)
     
     return {
         "properties": properties,
