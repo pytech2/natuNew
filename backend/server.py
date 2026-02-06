@@ -294,6 +294,11 @@ async def create_indexes():
         await db.attendance.create_index("employee_id", background=True)
         await db.attendance.create_index("date", background=True)
         await db.attendance.create_index("town", background=True)
+        
+        print("✅ Legacy DB indexes created successfully")
+        
+    except Exception as e:
+        logging.warning(f"Database index creation warning (may already exist): {e}")
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nstu-property-tax-secret-key-2025')
