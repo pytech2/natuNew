@@ -222,10 +222,78 @@ async def create_legacy_indexes():
     except Exception as e:
         logging.warning(f"Legacy DB index creation warning (may already exist): {e}")
 
+# ============== DATABASE INDEXES FOR PERFORMANCE ==============
 async def create_indexes():
-    """Create all MongoDB indexes"""
-    await create_master_indexes()
-    await create_legacy_indexes()
+    """Create MongoDB indexes for faster queries"""
+    try:
+        # ========== MASTER DB INDEXES ==========
+        # Users collection (global)
+        await master_db.users.create_index("id", unique=True, background=True)
+        await master_db.users.create_index("username", unique=True, background=True)
+        await master_db.users.create_index("role", background=True)
+        
+        # Towns collection
+        await master_db.towns.create_index("id", unique=True, background=True)
+        await master_db.towns.create_index("code", unique=True, background=True)
+        await master_db.towns.create_index("is_active", background=True)
+        
+        # User Town Access (which user can access which towns)
+        await master_db.user_town_access.create_index("user_id", background=True)
+        await master_db.user_town_access.create_index("town_id", background=True)
+        await master_db.user_town_access.create_index([("user_id", 1), ("town_id", 1)], unique=True, background=True)
+        
+        # Audit logs
+        await master_db.audit_login.create_index("user_id", background=True)
+        await master_db.audit_login.create_index("timestamp", background=True)
+        await master_db.audit_town_switch.create_index("user_id", background=True)
+        await master_db.audit_town_switch.create_index("timestamp", background=True)
+        
+        print("✅ Master DB indexes created successfully")
+        
+        # ========== LEGACY DB INDEXES (for backward compatibility) ==========
+        # Properties collection indexes
+        await db.properties.create_index("id", unique=True, background=True)
+        await db.properties.create_index("batch_id", background=True)
+        await db.properties.create_index("ward", background=True)
+        await db.properties.create_index("colony", background=True)
+        await db.properties.create_index("town", background=True)
+        await db.properties.create_index("status", background=True)
+        await db.properties.create_index("assigned_employee_id", background=True)
+        await db.properties.create_index("assigned_employee_ids", background=True)
+        await db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
+        await db.properties.create_index("serial_number", background=True)
+        await db.properties.create_index("bill_sr_no", background=True)
+        await db.properties.create_index("property_id", background=True)
+        await db.properties.create_index([("ward", 1), ("status", 1)], background=True)
+        await db.properties.create_index([("town", 1), ("status", 1)], background=True)
+        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
+        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
+        
+        # Users collection indexes (legacy)
+        await db.users.create_index("id", unique=True, background=True)
+        await db.users.create_index("username", unique=True, background=True)
+        await db.users.create_index("role", background=True)
+        await db.users.create_index("assigned_town", background=True)
+        
+        # Submissions collection indexes
+        await db.submissions.create_index("id", unique=True, background=True)
+        await db.submissions.create_index("property_record_id", background=True)
+        await db.submissions.create_index("employee_id", background=True)
+        await db.submissions.create_index("status", background=True)
+        await db.submissions.create_index("submitted_at", background=True)
+        await db.submissions.create_index("town", background=True)
+        await db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        
+        # Bills collection indexes
+        await db.bills.create_index("id", unique=True, background=True)
+        await db.bills.create_index("colony", background=True)
+        await db.bills.create_index("bill_sr_no", background=True)
+        await db.bills.create_index("town", background=True)
+        
+        # Attendance collection indexes
+        await db.attendance.create_index("employee_id", background=True)
+        await db.attendance.create_index("date", background=True)
+        await db.attendance.create_index("town", background=True)
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nstu-property-tax-secret-key-2025')
