@@ -881,7 +881,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    existing = await db.users.find_one({"username": data.username})
+    existing = await master_db.users.find_one({"username": data.username})
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
@@ -911,7 +911,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "permissions": user_permissions,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.users.insert_one(user_doc)
+    await master_db.users.insert_one(user_doc)
     
     return {
         "id": user_doc["id"],
