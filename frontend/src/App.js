@@ -126,7 +126,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/admin/towns" element={
-        <ProtectedRoute allowedRoles={['ADMIN']}>
+        <ProtectedRoute allowedRoles={['ADMIN']} requireTown={false}>
           <AdminTowns />
         </ProtectedRoute>
       } />
