@@ -337,7 +337,7 @@ api_router = APIRouter(prefix="/api")
 
 async def save_file_to_gridfs(file_content: bytes, filename: str, content_type: str = "application/octet-stream") -> str:
     """Save file to MongoDB GridFS and return file_id"""
-    file_id = await fs_bucket.upload_from_stream(
+    file_id = await get_fs().upload_from_stream(
         filename,
         file_content,
         metadata={"content_type": content_type, "uploaded_at": datetime.now(timezone.utc).isoformat()}
@@ -347,7 +347,7 @@ async def save_file_to_gridfs(file_content: bytes, filename: str, content_type: 
 async def get_file_from_gridfs(file_id: str) -> tuple:
     """Get file from GridFS by file_id, returns (content, filename, content_type)"""
     try:
-        grid_out = await fs_bucket.open_download_stream(ObjectId(file_id))
+        grid_out = await get_fs().open_download_stream(ObjectId(file_id))
         content = await grid_out.read()
         filename = grid_out.filename
         content_type = grid_out.metadata.get("content_type", "application/octet-stream") if grid_out.metadata else "application/octet-stream"
@@ -358,7 +358,7 @@ async def get_file_from_gridfs(file_id: str) -> tuple:
 async def delete_file_from_gridfs(file_id: str) -> bool:
     """Delete file from GridFS"""
     try:
-        await fs_bucket.delete(ObjectId(file_id))
+        await get_fs().delete(ObjectId(file_id))
         return True
     except Exception:
         return False
