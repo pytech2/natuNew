@@ -4198,7 +4198,7 @@ async def upload_pdf_bills(
     na_serial_count = 0
     
     # Load self-certified PIDs from database for matching
-    self_certified_docs = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+    self_certified_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
     self_certified_pids = set(doc["pid"].upper() for doc in self_certified_docs if doc.get("pid"))
     self_certified_count = 0
     not_self_certified_count = 0
@@ -5494,7 +5494,7 @@ async def copy_bills_to_properties(
         return False
     
     # Load self-certified PIDs from database for matching
-    self_certified_docs = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+    self_certified_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
     self_certified_pids = set(doc["pid"].upper() for doc in self_certified_docs)
     self_certified_count = 0
     not_self_certified_count = 0
@@ -5955,7 +5955,7 @@ async def save_generated_pdf(
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.generated_pdfs.insert_one(pdf_doc)
+    await get_db().generated_pdfs.insert_one(pdf_doc)
     
     return {
         "message": "PDF record saved",
@@ -5979,7 +5979,7 @@ async def list_generated_pdfs(
     if pdf_type and pdf_type.strip():
         query["pdf_type"] = pdf_type
     
-    pdfs = await db.generated_pdfs.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    pdfs = await get_db().generated_pdfs.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
     
     # Check which files still exist
     for pdf in pdfs:
@@ -6007,7 +6007,7 @@ async def get_pdfs_by_colony(current_user: dict = Depends(get_current_user)):
         {"$sort": {"_id": 1}}
     ]
     
-    result = await db.generated_pdfs.aggregate(pipeline).to_list(None)
+    result = await get_db().generated_pdfs.aggregate(pipeline).to_list(None)
     
     colonies_with_pdfs = []
     for r in result:
@@ -6031,7 +6031,7 @@ async def delete_generated_pdf(pdf_id: str, current_user: dict = Depends(get_cur
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    pdf = await db.generated_pdfs.find_one({"id": pdf_id}, {"_id": 0})
+    pdf = await get_db().generated_pdfs.find_one({"id": pdf_id}, {"_id": 0})
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF record not found")
     
@@ -6040,7 +6040,7 @@ async def delete_generated_pdf(pdf_id: str, current_user: dict = Depends(get_cur
     if file_path.exists():
         file_path.unlink()
     
-    await db.generated_pdfs.delete_one({"id": pdf_id})
+    await get_db().generated_pdfs.delete_one({"id": pdf_id})
     
     return {"message": "PDF record deleted", "filename": pdf["filename"]}
 
@@ -6116,7 +6116,7 @@ async def upload_self_certification(
         
         # Store in database - create or update the self_certified_pids collection
         # First, get existing PIDs to avoid duplicates
-        existing = await db.self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+        existing = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
         existing_pids = set(p["pid"] for p in existing)
         
         # Only insert new PIDs
@@ -6124,10 +6124,10 @@ async def upload_self_certification(
         
         if new_pids:
             docs = [{"pid": pid, "uploaded_at": datetime.now(timezone.utc).isoformat()} for pid in new_pids]
-            await db.self_certified_pids.insert_many(docs)
+            await get_db().self_certified_pids.insert_many(docs)
         
         # Create index for fast lookups
-        await db.self_certified_pids.create_index("pid")
+        await get_db().self_certified_pids.create_index("pid")
         
         return {
             "message": f"Uploaded {len(new_pids)} new self-certified PIDs. {len(existing_pids)} already existed.",
@@ -6145,7 +6145,7 @@ async def get_self_certification_stats(current_user: dict = Depends(get_current_
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    total_certified = await db.self_certified_pids.count_documents({})
+    total_certified = await get_db().self_certified_pids.count_documents({})
     
     return {
         "total_self_certified_pids": total_certified
@@ -6157,7 +6157,7 @@ async def clear_self_certification(current_user: dict = Depends(get_current_user
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Super Admin access required")
     
-    result = await db.self_certified_pids.delete_many({})
+    result = await get_db().self_certified_pids.delete_many({})
     
     return {
         "message": f"Cleared {result.deleted_count} self-certified PIDs"
