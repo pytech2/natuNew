@@ -472,7 +472,7 @@ def get_today_start():
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    user = await db.users.find_one({"username": data.username}, {"_id": 0})
+    user = await master_db.users.find_one({"username": data.username}, {"_id": 0})
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
