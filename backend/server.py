@@ -426,6 +426,7 @@ class TokenResponse(BaseModel):
     token: str
     user: UserResponse
     selected_town: Optional[dict] = None
+    accessible_towns: Optional[List[dict]] = None
 
 class DatasetBatchCreate(BaseModel):
     name: str
