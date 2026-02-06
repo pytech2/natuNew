@@ -38,6 +38,7 @@ import base64
 import asyncio
 from functools import lru_cache
 import time
+from contextvars import ContextVar
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
