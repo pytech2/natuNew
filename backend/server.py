@@ -907,16 +907,10 @@ async def list_towns_admin(current_user: dict = Depends(get_current_user)):
     
     towns = await master_db.towns.find({}, {"_id": 0}).sort("name", 1).to_list(None)
     
-    # Get stats for each town - check both legacy and town-specific DBs
+    # Get stats for each town from their specific DB
     for town in towns:
-        # Legacy property count
-        legacy_count = await get_db().properties.count_documents({"town": town["id"]})
-        
-        # Town-specific property count
         town_db = get_town_db(town["code"])
-        town_count = await town_db.properties.count_documents({})
-        
-        town["property_count"] = legacy_count + town_count
+        town["property_count"] = await town_db.properties.count_documents({})
         town["user_count"] = await master_db.users.count_documents({"assigned_town": town["id"]})
     
     return {"towns": towns}
