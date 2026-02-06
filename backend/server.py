@@ -243,22 +243,22 @@ async def create_indexes():
         
         # ========== LEGACY DB INDEXES (for backward compatibility) ==========
         # Properties collection indexes
-        await db.properties.create_index("id", unique=True, background=True)
-        await db.properties.create_index("batch_id", background=True)
-        await db.properties.create_index("ward", background=True)
-        await db.properties.create_index("colony", background=True)
-        await db.properties.create_index("town", background=True)
-        await db.properties.create_index("status", background=True)
-        await db.properties.create_index("assigned_employee_id", background=True)
-        await db.properties.create_index("assigned_employee_ids", background=True)
-        await db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
-        await db.properties.create_index("serial_number", background=True)
-        await db.properties.create_index("bill_sr_no", background=True)
-        await db.properties.create_index("property_id", background=True)
-        await db.properties.create_index([("ward", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("town", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
+        await get_db().properties.create_index("id", unique=True, background=True)
+        await get_db().properties.create_index("batch_id", background=True)
+        await get_db().properties.create_index("ward", background=True)
+        await get_db().properties.create_index("colony", background=True)
+        await get_db().properties.create_index("town", background=True)
+        await get_db().properties.create_index("status", background=True)
+        await get_db().properties.create_index("assigned_employee_id", background=True)
+        await get_db().properties.create_index("assigned_employee_ids", background=True)
+        await get_db().properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
+        await get_db().properties.create_index("serial_number", background=True)
+        await get_db().properties.create_index("bill_sr_no", background=True)
+        await get_db().properties.create_index("property_id", background=True)
+        await get_db().properties.create_index([("ward", 1), ("status", 1)], background=True)
+        await get_db().properties.create_index([("town", 1), ("status", 1)], background=True)
+        await get_db().properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
+        await get_db().properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
         
         # Users collection indexes (legacy)
         await db.users.create_index("id", unique=True, background=True)
@@ -267,24 +267,24 @@ async def create_indexes():
         await db.users.create_index("assigned_town", background=True)
         
         # Submissions collection indexes
-        await db.submissions.create_index("id", unique=True, background=True)
-        await db.submissions.create_index("property_record_id", background=True)
-        await db.submissions.create_index("employee_id", background=True)
-        await db.submissions.create_index("status", background=True)
-        await db.submissions.create_index("submitted_at", background=True)
-        await db.submissions.create_index("town", background=True)
-        await db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        await get_db().submissions.create_index("id", unique=True, background=True)
+        await get_db().submissions.create_index("property_record_id", background=True)
+        await get_db().submissions.create_index("employee_id", background=True)
+        await get_db().submissions.create_index("status", background=True)
+        await get_db().submissions.create_index("submitted_at", background=True)
+        await get_db().submissions.create_index("town", background=True)
+        await get_db().submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
         
         # Bills collection indexes
-        await db.bills.create_index("id", unique=True, background=True)
-        await db.bills.create_index("colony", background=True)
-        await db.bills.create_index("bill_sr_no", background=True)
-        await db.bills.create_index("town", background=True)
+        await get_db().bills.create_index("id", unique=True, background=True)
+        await get_db().bills.create_index("colony", background=True)
+        await get_db().bills.create_index("bill_sr_no", background=True)
+        await get_db().bills.create_index("town", background=True)
         
         # Attendance collection indexes
-        await db.attendance.create_index("employee_id", background=True)
-        await db.attendance.create_index("date", background=True)
-        await db.attendance.create_index("town", background=True)
+        await get_db().attendance.create_index("employee_id", background=True)
+        await get_db().attendance.create_index("date", background=True)
+        await get_db().attendance.create_index("town", background=True)
         
         print("✅ Legacy DB indexes created successfully")
         
@@ -767,7 +767,7 @@ async def get_map_properties(
         "address": 1
     }
     
-    properties = await db.properties.find(query, projection).limit(limit).to_list(limit)
+    properties = await get_db().properties.find(query, projection).limit(limit).to_list(limit)
     
     # Remove duplicates - keep unique by property_id ONLY
     seen_property_ids = set()
@@ -833,7 +833,7 @@ async def get_employee_map_properties(
     }
     
     # OPTIMIZED: Use index hint and batch size for faster queries
-    properties = await db.properties.find(
+    properties = await get_db().properties.find(
         query, 
         projection,
         batch_size=1000  # Faster batch processing
@@ -877,7 +877,7 @@ async def get_submission_by_property(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Search by property_record_id or property_id
-    submission = await db.submissions.find_one(
+    submission = await get_db().submissions.find_one(
         {"$or": [
             {"property_record_id": property_id},
             {"property_id": property_id}
@@ -909,7 +909,7 @@ async def list_towns_admin(current_user: dict = Depends(get_current_user)):
     # Get stats for each town - check both legacy and town-specific DBs
     for town in towns:
         # Legacy property count
-        legacy_count = await db.properties.count_documents({"town": town["id"]})
+        legacy_count = await get_db().properties.count_documents({"town": town["id"]})
         
         # Town-specific property count
         town_db = get_town_db(town["code"])
@@ -987,7 +987,7 @@ async def delete_town(town_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Town not found")
     
     # Check if town has associated data in legacy DB
-    legacy_count = await db.properties.count_documents({"town": town_id})
+    legacy_count = await get_db().properties.count_documents({"town": town_id})
     
     # Check town-specific DB
     town_db = get_town_db(town["code"])
@@ -1295,14 +1295,14 @@ async def upload_batch(
         "status": "ACTIVE",
         "total_records": len(properties)
     }
-    await db.batches.insert_one(batch_doc)
+    await get_db().batches.insert_one(batch_doc)
     
     # Add batch_id to properties and insert
     for prop in properties:
         prop["batch_id"] = batch_doc["id"]
     
     if properties:
-        await db.properties.insert_many(properties)
+        await get_db().properties.insert_many(properties)
     
     return {
         "batch_id": batch_doc["id"],
@@ -1316,7 +1316,7 @@ async def list_batches(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    batches = await db.batches.find({"status": {"$ne": "DELETED"}}, {"_id": 0}).to_list(100)
+    batches = await get_db().batches.find({"status": {"$ne": "DELETED"}}, {"_id": 0}).to_list(100)
     return batches
 
 @api_router.post("/admin/batch/{batch_id}/archive")
@@ -1324,7 +1324,7 @@ async def archive_batch(batch_id: str, current_user: dict = Depends(get_current_
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    result = await db.batches.update_one(
+    result = await get_db().batches.update_one(
         {"id": batch_id},
         {"$set": {"status": "ARCHIVED"}}
     )
@@ -1337,9 +1337,9 @@ async def delete_batch(batch_id: str, current_user: dict = Depends(get_current_u
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    await db.properties.delete_many({"batch_id": batch_id})
-    await db.submissions.delete_many({"batch_id": batch_id})
-    await db.batches.delete_one({"id": batch_id})
+    await get_db().properties.delete_many({"batch_id": batch_id})
+    await get_db().submissions.delete_many({"batch_id": batch_id})
+    await get_db().batches.delete_one({"id": batch_id})
     
     return {"message": "Batch and all related data deleted"}
 
@@ -1434,7 +1434,7 @@ async def assign_properties(data: AssignmentRequest, current_user: dict = Depend
     updated_count = 0
     for prop_id in data.property_ids:
         # Get existing property to check current assignments
-        prop = await db.properties.find_one({"id": prop_id}, {"_id": 0})
+        prop = await get_db().properties.find_one({"id": prop_id}, {"_id": 0})
         if not prop:
             continue
         
@@ -1451,7 +1451,7 @@ async def assign_properties(data: AssignmentRequest, current_user: dict = Depend
         combined_names = ", ".join([emp["name"] for emp in all_employees])
         
         # Update the property with merged assignments
-        await db.properties.update_one(
+        await get_db().properties.update_one(
             {"id": prop_id},
             {"$set": {
                 "assigned_employee_ids": combined_emp_ids,
@@ -1486,7 +1486,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
     query = {"ward": data.area}
     
     # Get ALL properties in the ward/area (serial filtering done in Python to handle N-prefix)
-    properties = await db.properties.find(query, {"_id": 0, "id": 1, "serial_number": 1, "bill_sr_no": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
+    properties = await get_db().properties.find(query, {"_id": 0, "id": 1, "serial_number": 1, "bill_sr_no": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
     
     # RANGE ASSIGNMENT: Filter by serial number range (handles N-prefix)
     if data.serial_from is not None and data.serial_to is not None:
@@ -1553,7 +1553,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
                 all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
                 combined_names = ", ".join([e["name"] for e in all_employees])
                 
-                await db.properties.update_one(
+                await get_db().properties.update_one(
                     {"id": prop["id"]},
                     {"$set": {
                         "assigned_employee_ids": combined_emp_ids,
@@ -1581,7 +1581,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             all_employees = await db.users.find({"id": {"$in": combined_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
             combined_names = ", ".join([emp["name"] for emp in all_employees])
             
-            await db.properties.update_one(
+            await get_db().properties.update_one(
                 {"id": prop["id"]},
                 {"$set": {
                     "assigned_employee_ids": combined_emp_ids,
@@ -1616,7 +1616,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
         emp_name = employee["name"] if employee else "Unknown"
         
         # Find properties assigned to this employee in this area
-        properties = await db.properties.find({
+        properties = await get_db().properties.find({
             "ward": data.area,
             "$or": [
                 {"assigned_employee_id": data.employee_id},
@@ -1636,7 +1636,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
                 all_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "name": 1}).to_list(None)
                 combined_names = ", ".join([e["name"] for e in all_employees])
                 
-                await db.properties.update_one(
+                await get_db().properties.update_one(
                     {"id": prop["id"]},
                     {"$set": {
                         "assigned_employee_ids": new_emp_ids,
@@ -1646,7 +1646,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
                 )
             else:
                 # No employees left, clear all
-                await db.properties.update_one(
+                await get_db().properties.update_one(
                     {"id": prop["id"]},
                     {"$set": {
                         "assigned_employee_ids": [],
@@ -1660,7 +1660,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
     
     else:
         # Unassign ALL employees from ALL properties in this area
-        result = await db.properties.update_many(
+        result = await get_db().properties.update_many(
             query,
             {"$set": {
                 "assigned_employee_ids": [],
@@ -1688,7 +1688,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
     updated_count = 0
     
     for prop_id in data.property_ids:
-        prop = await db.properties.find_one({"id": prop_id}, {"_id": 0})
+        prop = await get_db().properties.find_one({"id": prop_id}, {"_id": 0})
         if not prop:
             continue
         
@@ -1707,7 +1707,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
                 remaining_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
                 remaining_names = ", ".join([emp["name"] for emp in remaining_employees])
                 
-                await db.properties.update_one(
+                await get_db().properties.update_one(
                     {"id": prop_id},
                     {"$set": {
                         "assigned_employee_ids": new_emp_ids,
@@ -1717,7 +1717,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
                 )
             else:
                 # No employees left - clear all assignment fields
-                await db.properties.update_one(
+                await get_db().properties.update_one(
                     {"id": prop_id},
                     {"$set": {
                         "assigned_employee_ids": [],
@@ -1727,7 +1727,7 @@ async def unassign_properties(data: UnassignRequest, current_user: dict = Depend
                 )
         else:
             # Unassign ALL employees
-            await db.properties.update_one(
+            await get_db().properties.update_one(
                 {"id": prop_id},
                 {"$set": {
                     "assigned_employee_ids": [],
@@ -1760,7 +1760,7 @@ async def unassign_all_properties_from_employee(
         raise HTTPException(status_code=404, detail="Employee not found")
     
     # Find all properties assigned to this employee
-    properties = await db.properties.find({
+    properties = await get_db().properties.find({
         "$or": [
             {"assigned_employee_id": employee_id},
             {"assigned_employee_ids": employee_id}
@@ -1780,7 +1780,7 @@ async def unassign_all_properties_from_employee(
             remaining_employees = await db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
             remaining_names = ", ".join([emp["name"] for emp in remaining_employees])
             
-            await db.properties.update_one(
+            await get_db().properties.update_one(
                 {"id": prop["id"]},
                 {"$set": {
                     "assigned_employee_ids": new_emp_ids,
@@ -1789,7 +1789,7 @@ async def unassign_all_properties_from_employee(
                 }}
             )
         else:
-            await db.properties.update_one(
+            await get_db().properties.update_one(
                 {"id": prop["id"]},
                 {"$set": {
                     "assigned_employee_ids": [],
@@ -1816,10 +1816,10 @@ async def bulk_delete_properties(data: BulkDeleteRequest, current_user: dict = D
         raise HTTPException(status_code=400, detail="No properties selected for deletion")
     
     # Delete associated submissions first
-    await db.submissions.delete_many({"property_record_id": {"$in": data.property_ids}})
+    await get_db().submissions.delete_many({"property_record_id": {"$in": data.property_ids}})
     
     # Delete the properties
-    result = await db.properties.delete_many({"id": {"$in": data.property_ids}})
+    result = await get_db().properties.delete_many({"id": {"$in": data.property_ids}})
     
     return {
         "message": f"Successfully deleted {result.deleted_count} properties",
@@ -1857,20 +1857,20 @@ async def delete_all_properties(
         ]
     
     # Get count first
-    count = await db.properties.count_documents(query)
+    count = await get_db().properties.count_documents(query)
     
     if count == 0:
         return {"message": "No properties found to delete", "deleted_count": 0}
     
     # Get all property IDs to delete submissions
-    properties = await db.properties.find(query, {"id": 1, "_id": 0}).to_list(None)
+    properties = await get_db().properties.find(query, {"id": 1, "_id": 0}).to_list(None)
     property_ids = [p["id"] for p in properties]
     
     # Delete associated submissions first
-    await db.submissions.delete_many({"property_record_id": {"$in": property_ids}})
+    await get_db().submissions.delete_many({"property_record_id": {"$in": property_ids}})
     
     # Delete the properties
-    result = await db.properties.delete_many(query)
+    result = await get_db().properties.delete_many(query)
     
     return {
         "message": f"Successfully deleted {result.deleted_count} properties",
@@ -1893,7 +1893,7 @@ async def delete_colony_properties(
         {"ward": {"$regex": f"^{colony}$", "$options": "i"}}
     ]}
     
-    properties = await db.properties.find(query, {"id": 1, "_id": 0}).to_list(None)
+    properties = await get_db().properties.find(query, {"id": 1, "_id": 0}).to_list(None)
     property_ids = [p["id"] for p in properties]
     
     if not property_ids:
@@ -1902,7 +1902,7 @@ async def delete_colony_properties(
     # If keep_surveyed, exclude properties with submissions
     ids_to_delete = property_ids
     if keep_surveyed:
-        submissions = await db.submissions.find(
+        submissions = await get_db().submissions.find(
             {"property_record_id": {"$in": property_ids}},
             {"property_record_id": 1, "_id": 0}
         ).to_list(None)
@@ -1913,7 +1913,7 @@ async def delete_colony_properties(
         return {"message": "All properties in this colony have surveys. Nothing deleted.", "deleted_count": 0, "kept_surveyed": len(property_ids)}
     
     # Delete properties
-    result = await db.properties.delete_many({"id": {"$in": ids_to_delete}})
+    result = await get_db().properties.delete_many({"id": {"$in": ids_to_delete}})
     
     # Clear cache
     await clear_map_cache()
@@ -1945,13 +1945,13 @@ async def delete_duplicate_properties(
         ]
     
     # Get all properties
-    properties = await db.properties.find(query, {"_id": 0}).to_list(None)
+    properties = await get_db().properties.find(query, {"_id": 0}).to_list(None)
     
     if not properties:
         return {"message": "No properties found", "deleted_count": 0}
     
     # Get all submissions to know which properties have surveys
-    all_submissions = await db.submissions.find({}, {"property_record_id": 1, "_id": 0}).to_list(None)
+    all_submissions = await get_db().submissions.find({}, {"property_record_id": 1, "_id": 0}).to_list(None)
     surveyed_property_ids = set(s["property_record_id"] for s in all_submissions)
     
     # Group properties by property_id and by owner+mobile
@@ -2012,7 +2012,7 @@ async def delete_duplicate_properties(
         return {"message": "No duplicate properties found", "deleted_count": 0}
     
     # Delete duplicates
-    result = await db.properties.delete_many({"id": {"$in": list(ids_to_delete)}})
+    result = await get_db().properties.delete_many({"id": {"$in": list(ids_to_delete)}})
     
     # Clear cache
     await clear_map_cache()
@@ -2038,7 +2038,7 @@ async def arrange_properties_by_route(
         query["ward"] = ward
     
     # Get all properties with GPS
-    properties = await db.properties.find(query, {"_id": 0}).to_list(None)
+    properties = await get_db().properties.find(query, {"_id": 0}).to_list(None)
     
     if not properties:
         raise HTTPException(status_code=404, detail="No properties with GPS found")
@@ -2069,7 +2069,7 @@ async def arrange_properties_by_route(
     
     # Update serial numbers based on route order
     for i, prop in enumerate(sorted_props):
-        await db.properties.update_one(
+        await get_db().properties.update_one(
             {"id": prop["id"]},
             {"$set": {"serial_number": i + 1, "route_ordered": True}}
         )
@@ -2093,14 +2093,14 @@ async def save_arranged_data(
         query["ward"] = ward
     
     # Get properties sorted by current serial_number
-    properties = await db.properties.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    properties = await get_db().properties.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not properties:
         raise HTTPException(status_code=404, detail="No properties found")
     
     # Re-assign serial numbers to ensure they're consecutive
     for i, prop in enumerate(properties):
-        await db.properties.update_one(
+        await get_db().properties.update_one(
             {"id": prop["id"]},
             {"$set": {"serial_number": i + 1, "arrangement_saved": True, "saved_at": datetime.now(timezone.utc).isoformat()}}
         )
@@ -2127,7 +2127,7 @@ async def download_properties_pdf(
         query["ward"] = ward
     
     # Get properties sorted by serial_number
-    properties = await db.properties.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    properties = await get_db().properties.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not properties:
         raise HTTPException(status_code=404, detail="No properties found")
@@ -2227,7 +2227,7 @@ async def list_wards(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    wards = await db.properties.distinct("ward")
+    wards = await get_db().properties.distinct("ward")
     wards = [w for w in wards if w]
     return {"wards": wards}
 
@@ -2600,7 +2600,7 @@ async def list_submissions(
         except ValueError:
             pass
         
-        matching_properties = await db.properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
+        matching_properties = await get_db().properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
         search_property_ids = [p["id"] for p in matching_properties]
         
         # Search in employees/users collection by name or username
@@ -2639,7 +2639,7 @@ async def list_submissions(
     # If colony filter is provided, first get property IDs in that colony
     property_ids_in_colony = None
     if colony and colony.strip():
-        properties_in_colony = await db.properties.find(
+        properties_in_colony = await get_db().properties.find(
             {"ward": colony}, 
             {"id": 1, "_id": 0}
         ).to_list(None)
@@ -2661,13 +2661,13 @@ async def list_submissions(
             }
     
     skip = (page - 1) * limit
-    total = await db.submissions.count_documents(query)
-    submissions = await db.submissions.find(query, {"_id": 0}).sort("submitted_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await get_db().submissions.count_documents(query)
+    submissions = await get_db().submissions.find(query, {"_id": 0}).sort("submitted_at", -1).skip(skip).limit(limit).to_list(limit)
     
     # Enrich with property details
     for sub in submissions:
         if sub.get("property_record_id"):
-            prop = await db.properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
+            prop = await get_db().properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
             if prop:
                 sub["property_owner_name"] = prop.get("owner_name", "")
                 sub["property_mobile"] = prop.get("mobile", "")
@@ -2772,14 +2772,14 @@ async def export_submissions(
         except ValueError:
             pass
         
-        matching_properties = await db.properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
+        matching_properties = await get_db().properties.find(search_query, {"id": 1, "_id": 0}).to_list(None)
         search_property_ids = [p["id"] for p in matching_properties]
         if search_property_ids:
             query["property_record_id"] = {"$in": search_property_ids}
     
     # Colony filter
     if colony and colony.strip():
-        properties_in_colony = await db.properties.find(
+        properties_in_colony = await get_db().properties.find(
             {"ward": colony}, 
             {"id": 1, "_id": 0}
         ).to_list(None)
@@ -2792,13 +2792,13 @@ async def export_submissions(
                 query["property_record_id"] = {"$in": property_ids_in_colony}
     
     # Fetch all submissions (no pagination for export)
-    submissions = await db.submissions.find(query, {"_id": 0}).sort("submitted_at", -1).to_list(None)
+    submissions = await get_db().submissions.find(query, {"_id": 0}).sort("submitted_at", -1).to_list(None)
     
     # Enrich with property and employee details
     employee_cache = {}
     for sub in submissions:
         if sub.get("property_record_id"):
-            prop = await db.properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
+            prop = await get_db().properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
             if prop:
                 sub["property_owner_name"] = prop.get("owner_name", "")
                 sub["property_mobile"] = prop.get("mobile", "")
@@ -2907,7 +2907,7 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    submission = await db.submissions.find_one({"id": data.submission_id}, {"_id": 0})
+    submission = await get_db().submissions.find_one({"id": data.submission_id}, {"_id": 0})
     if not submission:
         raise HTTPException(status_code=404, detail="Submission not found")
     
@@ -2925,7 +2925,7 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
     if data.remarks:
         update_data["review_remarks"] = data.remarks
     
-    await db.submissions.update_one(
+    await get_db().submissions.update_one(
         {"id": data.submission_id},
         {"$set": update_data}
     )
@@ -2945,7 +2945,7 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
         # Unlock property on rejection so surveyor can re-submit
         prop_update["locked"] = False
     
-    await db.properties.update_one(
+    await get_db().properties.update_one(
         {"id": submission["property_record_id"]},
         {"$set": prop_update}
     )
@@ -2991,7 +2991,7 @@ async def edit_submission(
     update_data["edited_by"] = current_user["id"]
     update_data["edited_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.submissions.update_one(
+    await get_db().submissions.update_one(
         {"id": submission_id},
         {"$set": update_data}
     )
@@ -3026,7 +3026,7 @@ async def upload_submission_photo(
         "photo_type": photo_type
     }
     
-    await db.submissions.update_one(
+    await get_db().submissions.update_one(
         {"id": submission_id},
         {"$push": {"photos": photo_data}}
     )
@@ -3056,7 +3056,7 @@ async def edit_property(
     update_data["edited_by"] = current_user["id"]
     update_data["edited_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.properties.update_one(
+    await get_db().properties.update_one(
         {"id": property_id},
         {"$set": update_data}
     )
@@ -3101,7 +3101,7 @@ async def export_data(
     
     # If we have submission filters, get property IDs from matching submissions
     if submission_query:
-        submissions = await db.submissions.find(submission_query, {"property_record_id": 1, "_id": 0}).to_list(100000)
+        submissions = await get_db().submissions.find(submission_query, {"property_record_id": 1, "_id": 0}).to_list(100000)
         property_ids = [s["property_record_id"] for s in submissions]
         
         if not property_ids:
@@ -3125,7 +3125,7 @@ async def export_data(
         else:
             prop_query["id"] = {"$in": property_ids}
     
-    properties = await db.properties.find(prop_query, {"_id": 0}).to_list(100000)
+    properties = await get_db().properties.find(prop_query, {"_id": 0}).to_list(100000)
     
     wb = Workbook()
     ws = wb.active
@@ -3149,7 +3149,7 @@ async def export_data(
         cell.alignment = Alignment(horizontal="center")
     
     for row_idx, prop in enumerate(properties, 2):
-        submission = await db.submissions.find_one(
+        submission = await get_db().submissions.find_one(
             {"property_record_id": prop["id"]}, 
             {"_id": 0}
         )
@@ -3297,7 +3297,7 @@ async def export_pdf(
         else:
             submission_query["submitted_at"] = {"$lte": date_to}
     
-    submissions = await db.submissions.find(submission_query, {"_id": 0}).to_list(10000)
+    submissions = await get_db().submissions.find(submission_query, {"_id": 0}).to_list(10000)
     
     if not submissions:
         # Return empty PDF with message
@@ -3324,7 +3324,7 @@ async def export_pdf(
     if colony and colony.strip():
         prop_query["ward"] = colony
     
-    properties = await db.properties.find(prop_query, {"_id": 0}).to_list(10000)
+    properties = await get_db().properties.find(prop_query, {"_id": 0}).to_list(10000)
     
     pdf_path = UPLOAD_DIR / f"survey_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     doc = SimpleDocTemplate(
@@ -3348,7 +3348,7 @@ async def export_pdf(
     story.append(Spacer(1, 20))
     
     for prop in properties:
-        submission = await db.submissions.find_one({"property_record_id": prop["id"]}, {"_id": 0})
+        submission = await get_db().submissions.find_one({"property_record_id": prop["id"]}, {"_id": 0})
         
         if not submission:
             continue
@@ -3569,10 +3569,10 @@ async def get_employee_properties(
     }
     
     skip = (page - 1) * limit
-    total = await db.properties.count_documents(query)
+    total = await get_db().properties.count_documents(query)
     
     # Use sort for consistent ordering - pending first, then by serial number
-    properties = await db.properties.find(query, projection).sort([
+    properties = await get_db().properties.find(query, projection).sort([
         ("status", 1),  # Pending first
         ("serial_number", 1)
     ]).skip(skip).limit(limit).to_list(limit)
@@ -3586,7 +3586,7 @@ async def get_employee_properties(
 
 @api_router.get("/employee/property/{property_id}")
 async def get_property_detail(property_id: str, current_user: dict = Depends(get_current_user)):
-    prop = await db.properties.find_one({"id": property_id}, {"_id": 0})
+    prop = await get_db().properties.find_one({"id": property_id}, {"_id": 0})
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
@@ -3598,7 +3598,7 @@ async def get_property_detail(property_id: str, current_user: dict = Depends(get
     if current_user["role"] != "ADMIN" and not is_assigned:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    submission = await db.submissions.find_one({"property_record_id": property_id}, {"_id": 0})
+    submission = await get_db().submissions.find_one({"property_record_id": property_id}, {"_id": 0})
     
     return {
         "property": prop,
@@ -3637,7 +3637,7 @@ async def submit_survey(
 ):
     current_user = await get_current_user(authorization)
     
-    prop = await db.properties.find_one({"id": property_id}, {"_id": 0})
+    prop = await get_db().properties.find_one({"id": property_id}, {"_id": 0})
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
@@ -3742,17 +3742,17 @@ async def submit_survey(
     }
     
     # Check if submission already exists
-    existing = await db.submissions.find_one({"property_record_id": property_id})
+    existing = await get_db().submissions.find_one({"property_record_id": property_id})
     if existing:
-        await db.submissions.update_one(
+        await get_db().submissions.update_one(
             {"property_record_id": property_id},
             {"$set": submission_doc}
         )
     else:
-        await db.submissions.insert_one(submission_doc)
+        await get_db().submissions.insert_one(submission_doc)
     
     # Update property status to In Progress (until approved)
-    await db.properties.update_one(
+    await get_db().properties.update_one(
         {"id": property_id},
         {"$set": {"status": "In Progress"}}
     )
@@ -3766,7 +3766,7 @@ async def submit_survey(
 async def reject_property(property_id: str, remarks: str = Form(...), authorization: str = Form(...)):
     current_user = await get_current_user(authorization)
     
-    prop = await db.properties.find_one({"id": property_id}, {"_id": 0})
+    prop = await get_db().properties.find_one({"id": property_id}, {"_id": 0})
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
@@ -3778,7 +3778,7 @@ async def reject_property(property_id: str, remarks: str = Form(...), authorizat
     if current_user["role"] != "ADMIN" and not is_assigned:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    await db.properties.update_one(
+    await get_db().properties.update_one(
         {"id": property_id},
         {"$set": {"status": "Rejected", "reject_remarks": remarks}}
     )
@@ -3797,32 +3797,32 @@ async def get_employee_own_progress(current_user: dict = Depends(get_current_use
         ]
     }
     
-    total = await db.properties.count_documents(assign_query)
-    completed = await db.properties.count_documents({
+    total = await get_db().properties.count_documents(assign_query)
+    completed = await get_db().properties.count_documents({
         **assign_query,
         "status": "Completed"
     })
-    pending = await db.properties.count_documents({
+    pending = await get_db().properties.count_documents({
         **assign_query,
         "status": "Pending"
     })
-    rejected = await db.properties.count_documents({
+    rejected = await get_db().properties.count_documents({
         **assign_query,
         "status": "Rejected"
     })
-    in_progress = await db.properties.count_documents({
+    in_progress = await get_db().properties.count_documents({
         **assign_query,
         "status": "In Progress"
     })
     
     # Today's completed
-    today_completed = await db.submissions.count_documents({
+    today_completed = await get_db().submissions.count_documents({
         "employee_id": current_user["id"],
         "submitted_at": {"$gte": today_start}
     })
     
     # Total completed (all time)
-    total_completed = await db.submissions.count_documents({
+    total_completed = await get_db().submissions.count_documents({
         "employee_id": current_user["id"]
     })
     
@@ -3843,7 +3843,7 @@ async def check_today_attendance(current_user: dict = Depends(get_current_user))
     """Check if employee has marked attendance today"""
     today_date = get_today_start().strftime("%Y-%m-%d")
     
-    attendance = await db.attendance.find_one({
+    attendance = await get_db().attendance.find_one({
         "employee_id": current_user["id"],
         "date": today_date
     }, {"_id": 0})
@@ -3866,7 +3866,7 @@ async def mark_attendance(
     today_date = get_today_start().strftime("%Y-%m-%d")
     
     # Check if already marked
-    existing = await db.attendance.find_one({
+    existing = await get_db().attendance.find_one({
         "employee_id": current_user["id"],
         "date": today_date
     })
@@ -3894,7 +3894,7 @@ async def mark_attendance(
         "longitude": longitude
     }
     
-    await db.attendance.insert_one(attendance_doc)
+    await get_db().attendance.insert_one(attendance_doc)
     
     return {
         "message": "Attendance marked successfully",
@@ -3921,8 +3921,8 @@ async def get_attendance_records(
         query["employee_id"] = employee_id
     
     skip = (page - 1) * limit
-    total = await db.attendance.count_documents(query)
-    records = await db.attendance.find(query, {"_id": 0}).sort("marked_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await get_db().attendance.count_documents(query)
+    records = await get_db().attendance.find(query, {"_id": 0}).sort("marked_at", -1).skip(skip).limit(limit).to_list(limit)
     
     return {
         "attendance": records,
@@ -4328,7 +4328,7 @@ async def upload_pdf_bills(
     
     # Insert bills into database
     if bills:
-        await db.bills.insert_many(bills)
+        await get_db().bills.insert_many(bills)
         batch_doc["total_records"] = len(bills)
         batch_doc["skip_stats"] = {
             "skipped_na_empty": skipped_count,
@@ -4340,7 +4340,7 @@ async def upload_pdf_bills(
             "upload_message": upload_message
         }
     
-    await db.batches.insert_one(batch_doc)
+    await get_db().batches.insert_one(batch_doc)
     
     # Get unique colonies with their bill counts
     colony_stats = {}
@@ -4394,7 +4394,7 @@ async def export_bills_excel(
         query["$or"] = [{"self_certified": False}, {"self_certified": {"$exists": False}}]
     
     # Get bills
-    bills = await db.bills.find(query, {"_id": 0}).to_list(None)
+    bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
     
     # Get count for the filter description
     filter_desc = "All Bills"
@@ -4475,11 +4475,11 @@ async def list_bills(
     if status and status.strip():
         query["status"] = status
     
-    total = await db.bills.count_documents(query)
+    total = await get_db().bills.count_documents(query)
     
     if sorted_by_route:
         # Get all matching bills and sort by GPS route
-        all_bills = await db.bills.find(query, {"_id": 0}).to_list(None)
+        all_bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
         sorted_bills = sort_by_gps_route(all_bills)
         
         # Assign new serial numbers
@@ -4491,7 +4491,7 @@ async def list_bills(
         bills = sorted_bills[start:start + limit]
     else:
         # Sort by page_number to maintain original PDF sequence
-        bills = await db.bills.find(query, {"_id": 0}).sort("page_number", 1).skip((page - 1) * limit).limit(limit).to_list(limit)
+        bills = await get_db().bills.find(query, {"_id": 0}).sort("page_number", 1).skip((page - 1) * limit).limit(limit).to_list(limit)
     
     return {
         "bills": bills,
@@ -4513,7 +4513,7 @@ async def get_bill_colonies(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     
-    colonies = await db.bills.distinct("colony", query)
+    colonies = await get_db().bills.distinct("colony", query)
     colonies = [c for c in colonies if c and c.strip()]
     
     return {"colonies": sorted(colonies)}
@@ -4527,7 +4527,7 @@ async def get_batch_stats(
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    batch = await db.batches.find_one({"id": batch_id}, {"_id": 0})
+    batch = await get_db().batches.find_one({"id": batch_id}, {"_id": 0})
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     
@@ -4542,7 +4542,7 @@ async def get_batch_stats(
         }},
         {"$sort": {"_id": 1}}
     ]
-    colony_stats = await db.bills.aggregate(pipeline).to_list(None)
+    colony_stats = await get_db().bills.aggregate(pipeline).to_list(None)
     
     return {
         "batch": batch,
@@ -4571,20 +4571,20 @@ async def get_colony_stats(
     colony_name = unquote(colony_name)
     
     # Get total bills in colony
-    total_bills = await db.bills.count_documents({"colony": colony_name})
+    total_bills = await get_db().bills.count_documents({"colony": colony_name})
     
     # Get NA serial count
-    na_serial_count = await db.bills.count_documents({"colony": colony_name, "serial_na": True})
+    na_serial_count = await get_db().bills.count_documents({"colony": colony_name, "serial_na": True})
     
     # Get valid serial count
-    valid_serial_count = await db.bills.count_documents({"colony": colony_name, "serial_na": {"$ne": True}, "serial_number": {"$gt": 0}})
+    valid_serial_count = await get_db().bills.count_documents({"colony": colony_name, "serial_na": {"$ne": True}, "serial_number": {"$gt": 0}})
     
     # Get bills with GPS
-    with_gps = await db.bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
+    with_gps = await get_db().bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
     
     # Get self-certified counts
-    self_certified_count = await db.bills.count_documents({"colony": colony_name, "self_certified": True})
-    not_self_certified_count = await db.bills.count_documents({
+    self_certified_count = await get_db().bills.count_documents({"colony": colony_name, "self_certified": True})
+    not_self_certified_count = await get_db().bills.count_documents({
         "colony": colony_name, 
         "$or": [{"self_certified": False}, {"self_certified": {"$exists": False}}]
     })
@@ -4595,17 +4595,17 @@ async def get_colony_stats(
         {"$group": {"_id": "$category", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}}
     ]
-    category_stats = await db.bills.aggregate(category_pipeline).to_list(None)
+    category_stats = await get_db().bills.aggregate(category_pipeline).to_list(None)
     
     # Get batch info for this colony (to get skip stats and messages)
-    batch_ids = await db.bills.distinct("batch_id", {"colony": colony_name})
+    batch_ids = await get_db().bills.distinct("batch_id", {"colony": colony_name})
     skip_stats = {"skipped_na_empty": 0, "skipped_vacant": 0, "na_serial_count": na_serial_count}
     upload_messages = []
     add_to_properties_messages = []
     
     for batch_id in batch_ids:
         if batch_id:
-            batch = await db.batches.find_one(
+            batch = await get_db().batches.find_one(
                 {"id": batch_id}, 
                 {"_id": 0, "name": 1, "skip_stats": 1, "add_to_properties_stats": 1}
             )
@@ -4665,7 +4665,7 @@ async def update_bill(
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    bill = await db.bills.find_one({"id": bill_id})
+    bill = await get_db().bills.find_one({"id": bill_id})
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
     
@@ -4687,7 +4687,7 @@ async def update_bill(
     if colony is not None:
         update_data["colony"] = colony
     
-    await db.bills.update_one({"id": bill_id}, {"$set": update_data})
+    await get_db().bills.update_one({"id": bill_id}, {"$set": update_data})
     
     return {"message": "Bill updated successfully"}
 
@@ -4708,7 +4708,7 @@ async def arrange_bills_by_route(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get all matching bills
-    all_bills = await db.bills.find(query, {"_id": 0}).to_list(None)
+    all_bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
     
     if not all_bills:
         raise HTTPException(status_code=404, detail="No bills found")
@@ -4725,14 +4725,14 @@ async def arrange_bills_by_route(
     
     # Update serial numbers for sorted bills and mark as GPS arranged
     for i, bill in enumerate(sorted_bills):
-        await db.bills.update_one(
+        await get_db().bills.update_one(
             {"id": bill["id"]},
             {"$set": {"serial_number": i + 1, "gps_arranged": True}}
         )
     
     # Mark N/A bills as skipped from ordering
     for bill in na_bills:
-        await db.bills.update_one(
+        await get_db().bills.update_one(
             {"id": bill["id"]},
             {"$set": {"gps_arranged": False, "skipped_from_order": True}}
         )
@@ -4770,7 +4770,7 @@ async def generate_arranged_pdf(
     elif self_certified_filter == "not_self_certified":
         query["self_certified"] = {"$ne": True}
     
-    bills = await db.bills.find(query, {"_id": 0}).sort("page_number", 1).to_list(None)
+    bills = await get_db().bills.find(query, {"_id": 0}).sort("page_number", 1).to_list(None)
     
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found")
@@ -4804,7 +4804,7 @@ async def generate_arranged_pdf(
     all_bills_for_serial_lookup = bills
     bills = valid_bills  # Use filtered bills for PDF generation
     
-    batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
+    batch = await get_db().batches.find_one({"id": bills[0]["batch_id"]})
     if not batch or not batch.get("pdf_filename"):
         raise HTTPException(status_code=404, detail="Original PDF not found")
     
@@ -5119,7 +5119,7 @@ async def split_bills_by_employee(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get arranged bills
-    all_bills = await db.bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    all_bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not all_bills:
         raise HTTPException(status_code=404, detail="No bills found")
@@ -5142,7 +5142,7 @@ async def split_bills_by_employee(
         raise HTTPException(status_code=404, detail="No valid bills found after filtering")
     
     # Get original PDF
-    batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
+    batch = await get_db().batches.find_one({"id": bills[0]["batch_id"]})
     if not batch or not batch.get("pdf_filename"):
         raise HTTPException(status_code=404, detail="Original PDF not found")
     
@@ -5330,7 +5330,7 @@ async def get_bills_map_data(
     query["latitude"] = {"$ne": None}
     query["longitude"] = {"$ne": None}
     
-    bills = await db.bills.find(query, {
+    bills = await get_db().bills.find(query, {
         "_id": 0,
         "id": 1,
         "serial_number": 1,
@@ -5356,10 +5356,10 @@ async def delete_bill_batch(batch_id: str, current_user: dict = Depends(get_curr
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Delete bills
-    result = await db.bills.delete_many({"batch_id": batch_id})
+    result = await get_db().bills.delete_many({"batch_id": batch_id})
     
     # Delete batch
-    await db.batches.delete_one({"id": batch_id})
+    await get_db().batches.delete_one({"id": batch_id})
     
     return {"message": f"Deleted batch and {result.deleted_count} bills"}
 
@@ -5380,24 +5380,24 @@ async def delete_all_bills(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get count first
-    count = await db.bills.count_documents(query)
+    count = await get_db().bills.count_documents(query)
     
     if count == 0:
         return {"message": "No bills found to delete", "deleted_count": 0}
     
     # Delete the bills
-    result = await db.bills.delete_many(query)
+    result = await get_db().bills.delete_many(query)
     
     # Update batch record counts if batch_id specified
     if batch_id and batch_id.strip():
-        remaining = await db.bills.count_documents({"batch_id": batch_id})
-        await db.batches.update_one(
+        remaining = await get_db().bills.count_documents({"batch_id": batch_id})
+        await get_db().batches.update_one(
             {"id": batch_id},
             {"$set": {"total_records": remaining}}
         )
         # If no bills left, delete the batch
         if remaining == 0:
-            await db.batches.delete_one({"id": batch_id})
+            await get_db().batches.delete_one({"id": batch_id})
     
     return {
         "message": f"Successfully deleted {result.deleted_count} bills",
@@ -5429,7 +5429,7 @@ async def copy_bills_to_properties(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get bills to copy
-    bills = await db.bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found to copy")
@@ -5439,7 +5439,7 @@ async def copy_bills_to_properties(
     existing_keys = set()
     
     if should_skip_duplicates:
-        existing_properties = await db.properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "_id": 0}).to_list(None)
+        existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "_id": 0}).to_list(None)
         existing_property_ids = set(p.get("property_id", "") for p in existing_properties)
         for p in existing_properties:
             owner = (p.get("owner_name") or "").strip().upper()
@@ -5630,19 +5630,19 @@ async def copy_bills_to_properties(
     
     # Insert properties
     if properties:
-        await db.properties.insert_many(properties)
+        await get_db().properties.insert_many(properties)
         prop_batch_doc["total_records"] = len(properties)
         prop_batch_doc["add_to_properties_stats"] = add_to_properties_stats
-        await db.batches.update_one({"id": prop_batch_id}, {"$set": {"total_records": len(properties)}})
+        await get_db().batches.update_one({"id": prop_batch_id}, {"$set": {"total_records": len(properties)}})
     
     # Also update the source PDF batch with these stats
     if batch_id:
-        await db.batches.update_one(
+        await get_db().batches.update_one(
             {"id": batch_id},
             {"$set": {"add_to_properties_stats": add_to_properties_stats}}
         )
     
-    await db.batches.insert_one(prop_batch_doc)
+    await get_db().batches.insert_one(prop_batch_doc)
     
     return {
         "message": ". ".join(msg_parts) + ".",
@@ -5692,13 +5692,13 @@ async def split_bills_by_specific_employees(
         query["colony"] = {"$regex": colony, "$options": "i"}
     
     # Get arranged bills
-    bills = await db.bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
+    bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found")
     
     # Get original PDF
-    batch = await db.batches.find_one({"id": bills[0]["batch_id"]})
+    batch = await get_db().batches.find_one({"id": bills[0]["batch_id"]})
     if not batch or not batch.get("pdf_filename"):
         raise HTTPException(status_code=404, detail="Original PDF not found")
     
