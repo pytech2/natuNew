@@ -956,7 +956,7 @@ async def update_user(user_id: str, data: UpdateUserRequest, current_user: dict 
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Check if user exists
-    user = await db.users.find_one({"id": user_id})
+    user = await master_db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -972,10 +972,10 @@ async def update_user(user_id: str, data: UpdateUserRequest, current_user: dict 
         update_data["assigned_area"] = data.assigned_area
     
     if update_data:
-        await db.users.update_one({"id": user_id}, {"$set": update_data})
+        await master_db.users.update_one({"id": user_id}, {"$set": update_data})
     
     # Return updated user
-    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    updated_user = await master_db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
     return updated_user
 
 class ResetPasswordRequest(BaseModel):
