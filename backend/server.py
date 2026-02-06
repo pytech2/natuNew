@@ -2327,17 +2327,17 @@ async def get_employee_progress(
     return progress
 
 @api_router.get("/admin/employee-progress/{employee_id}/colonies")
-async def get_employee_colony_progress(employee_id: str, current_user: dict = Depends(get_current_user)):
+async def get_employee_colony_progress(employee_id: str, request: Request, current_user: dict = Depends(get_current_user)):
     """Get detailed colony-wise progress for a specific employee"""
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Get employee details
-    employee = await db.users.find_one({"id": employee_id}, {"_id": 0})
+    town_db = await get_town_data_db(request)
+    
+    employee = await master_db.users.find_one({"id": employee_id}, {"_id": 0})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
-    # Get assigned colonies
     pipeline = [
         {"$match": {"assigned_employee_id": employee_id}},
         {"$group": {
@@ -2350,11 +2350,11 @@ async def get_employee_colony_progress(employee_id: str, current_user: dict = De
         {"$sort": {"_id": 1}}
     ]
     
-    colony_stats = await db.properties.aggregate(pipeline).to_list(None)
+    colony_stats = await town_db.properties.aggregate(pipeline).to_list(None)
     
     colonies = []
     for c in colony_stats:
-        if c["_id"]:  # Skip None colony
+        if c["_id"]:
             percentage = round((c["completed"] / c["total"]) * 100) if c["total"] > 0 else 0
             colonies.append({
                 "colony": c["_id"],
@@ -2375,21 +2375,22 @@ async def get_employee_colony_progress(employee_id: str, current_user: dict = De
 
 @api_router.post("/admin/employee/remove-from-colony")
 async def remove_employee_from_colony(
+    request: Request,
     employee_id: str = Form(...),
     colony: str = Form(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove an employee from a specific colony - unassign all properties in that colony"""
+    """Remove an employee from a specific colony"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Check employee exists
-    employee = await db.users.find_one({"id": employee_id}, {"_id": 0})
+    town_db = await get_town_data_db(request)
+    
+    employee = await master_db.users.find_one({"id": employee_id}, {"_id": 0})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
-    # Count properties to be unassigned
-    count = await db.properties.count_documents({
+    count = await town_db.properties.count_documents({
         "assigned_employee_id": employee_id,
         "ward": colony
     })
@@ -2397,19 +2398,9 @@ async def remove_employee_from_colony(
     if count == 0:
         raise HTTPException(status_code=404, detail=f"No properties found for {employee['name']} in {colony}")
     
-    # Unassign properties in this colony
-    result = await db.properties.update_many(
-        {
-            "assigned_employee_id": employee_id,
-            "ward": colony
-        },
-        {
-            "$set": {
-                "assigned_employee_id": None,
-                "assigned_employee_name": None,
-                "assignment_date": None
-            }
-        }
+    result = await town_db.properties.update_many(
+        {"assigned_employee_id": employee_id, "ward": colony},
+        {"$set": {"assigned_employee_id": None, "assigned_employee_name": None, "assignment_date": None}}
     )
     
     return {
