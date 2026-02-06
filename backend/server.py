@@ -838,25 +838,32 @@ async def delete_town(town_id: str, current_user: dict = Depends(get_current_use
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    town = await db.towns.find_one({"id": town_id})
+    town = await master_db.towns.find_one({"id": town_id})
     if not town:
         raise HTTPException(status_code=404, detail="Town not found")
     
-    # Check if town has associated data
-    property_count = await db.properties.count_documents({"town": town_id})
-    if property_count > 0:
+    # Check if town has associated data in legacy DB
+    legacy_count = await db.properties.count_documents({"town": town_id})
+    
+    # Check town-specific DB
+    town_db = get_town_db(town["code"])
+    town_count = await town_db.properties.count_documents({})
+    
+    total_properties = legacy_count + town_count
+    
+    if total_properties > 0:
         # Soft delete
-        await db.towns.update_one({"id": town_id}, {"$set": {"is_active": False}})
-        return {"message": f"Town deactivated (has {property_count} properties)"}
+        await master_db.towns.update_one({"id": town_id}, {"$set": {"is_active": False}})
+        return {"message": f"Town deactivated (has {total_properties} properties)"}
     else:
         # Hard delete if no data
-        await db.towns.delete_one({"id": town_id})
+        await master_db.towns.delete_one({"id": town_id})
         return {"message": "Town deleted successfully"}
 
 @api_router.post("/admin/towns/{town_id}/set-active")
 async def set_current_town(town_id: str, current_user: dict = Depends(get_current_user)):
     """Set the active town for the current session"""
-    town = await db.towns.find_one({"id": town_id, "is_active": True}, {"_id": 0})
+    town = await master_db.towns.find_one({"id": town_id, "is_active": True}, {"_id": 0})
     if not town:
         raise HTTPException(status_code=404, detail="Town not found or inactive")
     
