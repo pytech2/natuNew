@@ -783,7 +783,7 @@ async def create_town(data: TownCreate, current_user: dict = Depends(get_current
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Check if code already exists
-    existing = await db.towns.find_one({"code": data.code.upper()})
+    existing = await master_db.towns.find_one({"code": data.code.upper()})
     if existing:
         raise HTTPException(status_code=400, detail="Town code already exists")
     
@@ -795,7 +795,11 @@ async def create_town(data: TownCreate, current_user: dict = Depends(get_current
         "is_active": data.is_active,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.towns.insert_one(town_doc)
+    await master_db.towns.insert_one(town_doc)
+    
+    # Initialize town-specific database with indexes
+    town_db = get_town_db(data.code.upper())
+    await create_town_indexes(town_db)
     
     return {"message": "Town created successfully", "town": {k: v for k, v in town_doc.items() if k != "_id"}}
 
