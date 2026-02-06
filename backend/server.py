@@ -110,73 +110,95 @@ def get_town_gridfs(town_code: str):
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
-async def create_indexes():
-    """Create MongoDB indexes for faster queries"""
+async def create_master_indexes():
+    """Create MongoDB indexes for Master DB (global data)"""
     try:
-        # Towns collection indexes
+        # Towns collection indexes (Master DB)
+        await master_db.towns.create_index("id", unique=True, background=True)
+        await master_db.towns.create_index("code", unique=True, background=True)
+        await master_db.towns.create_index("name", background=True)
+        
+        # Users collection indexes (Master DB)
+        await master_db.users.create_index("id", unique=True, background=True)
+        await master_db.users.create_index("username", unique=True, background=True)
+        await master_db.users.create_index("role", background=True)
+        await master_db.users.create_index("assigned_town", background=True)
+        
+        logging.info("Master DB indexes created successfully")
+    except Exception as e:
+        logging.warning(f"Master DB index creation warning (may already exist): {e}")
+
+async def create_town_indexes(town_db):
+    """Create MongoDB indexes for Town-specific DB"""
+    try:
+        # Properties collection indexes (Town DB)
+        await town_db.properties.create_index("id", unique=True, background=True)
+        await town_db.properties.create_index("batch_id", background=True)
+        await town_db.properties.create_index("ward", background=True)
+        await town_db.properties.create_index("colony", background=True)
+        await town_db.properties.create_index("status", background=True)
+        await town_db.properties.create_index("assigned_employee_id", background=True)
+        await town_db.properties.create_index("assigned_employee_ids", background=True)
+        await town_db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
+        await town_db.properties.create_index("serial_number", background=True)
+        await town_db.properties.create_index("bill_sr_no", background=True)
+        await town_db.properties.create_index("property_id", background=True)
+        # Compound indexes for common query patterns
+        await town_db.properties.create_index([("ward", 1), ("status", 1)], background=True)
+        await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
+        await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
+        
+        # Submissions collection indexes (Town DB)
+        await town_db.submissions.create_index("id", unique=True, background=True)
+        await town_db.submissions.create_index("property_record_id", background=True)
+        await town_db.submissions.create_index("employee_id", background=True)
+        await town_db.submissions.create_index("status", background=True)
+        await town_db.submissions.create_index("submitted_at", background=True)
+        await town_db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        
+        # Bills collection indexes (Town DB)
+        await town_db.bills.create_index("id", unique=True, background=True)
+        await town_db.bills.create_index("colony", background=True)
+        await town_db.bills.create_index("bill_sr_no", background=True)
+        
+        # Attendance collection indexes (Town DB)
+        await town_db.attendance.create_index("employee_id", background=True)
+        await town_db.attendance.create_index("date", background=True)
+        await town_db.attendance.create_index([("employee_id", 1), ("date", 1)], unique=True, background=True)
+        
+        # Batches collection (Town DB)
+        await town_db.batches.create_index("id", unique=True, background=True)
+        await town_db.batches.create_index("status", background=True)
+        
+        # Generated PDFs collection (Town DB)
+        await town_db.generated_pdfs.create_index("id", unique=True, background=True)
+        await town_db.generated_pdfs.create_index("colony", background=True)
+        await town_db.generated_pdfs.create_index("created_at", background=True)
+        await town_db.generated_pdfs.create_index("pdf_type", background=True)
+        
+        logging.info("Town DB indexes created successfully")
+    except Exception as e:
+        logging.warning(f"Town DB index creation warning (may already exist): {e}")
+
+async def create_legacy_indexes():
+    """Create MongoDB indexes for Legacy DB (backward compatibility)"""
+    try:
+        # Legacy collections for backward compatibility during migration
         await db.towns.create_index("id", unique=True, background=True)
         await db.towns.create_index("code", unique=True, background=True)
-        await db.towns.create_index("name", background=True)
-        
-        # Properties collection indexes
         await db.properties.create_index("id", unique=True, background=True)
-        await db.properties.create_index("batch_id", background=True)
-        await db.properties.create_index("ward", background=True)
-        await db.properties.create_index("colony", background=True)
-        await db.properties.create_index("town", background=True)  # Town index
-        await db.properties.create_index("status", background=True)
-        await db.properties.create_index("assigned_employee_id", background=True)
-        await db.properties.create_index("assigned_employee_ids", background=True)
-        await db.properties.create_index([("latitude", 1), ("longitude", 1)], background=True)
-        await db.properties.create_index("serial_number", background=True)
-        await db.properties.create_index("bill_sr_no", background=True)
-        await db.properties.create_index("property_id", background=True)
-        # Compound indexes for common query patterns
-        await db.properties.create_index([("ward", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("town", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
-        await db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
-        
-        # Users collection indexes
+        await db.properties.create_index("town", background=True)
         await db.users.create_index("id", unique=True, background=True)
         await db.users.create_index("username", unique=True, background=True)
-        await db.users.create_index("role", background=True)
-        await db.users.create_index("assigned_town", background=True)  # Town assignment
         
-        # Submissions collection indexes
-        await db.submissions.create_index("id", unique=True, background=True)
-        await db.submissions.create_index("property_record_id", background=True)
-        await db.submissions.create_index("employee_id", background=True)
-        await db.submissions.create_index("status", background=True)
-        await db.submissions.create_index("submitted_at", background=True)
-        await db.submissions.create_index("town", background=True)  # Town index
-        await db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
-        
-        # Bills collection indexes
-        await db.bills.create_index("id", unique=True, background=True)
-        await db.bills.create_index("colony", background=True)
-        await db.bills.create_index("bill_sr_no", background=True)
-        await db.bills.create_index("town", background=True)  # Town index
-        
-        # Attendance collection indexes
-        await db.attendance.create_index("employee_id", background=True)
-        await db.attendance.create_index("date", background=True)
-        await db.attendance.create_index("town", background=True)  # Town index
-        await db.attendance.create_index([("employee_id", 1), ("date", 1)], unique=True, background=True)
-        
-        # Batches collection
-        await db.batches.create_index("id", unique=True, background=True)
-        await db.batches.create_index("status", background=True)
-        
-        # Generated PDFs collection - for storing generated PDF records
-        await db.generated_pdfs.create_index("id", unique=True, background=True)
-        await db.generated_pdfs.create_index("colony", background=True)
-        await db.generated_pdfs.create_index("created_at", background=True)
-        await db.generated_pdfs.create_index("pdf_type", background=True)
-        
-        logging.info("MongoDB indexes created successfully")
+        logging.info("Legacy DB indexes created successfully")
     except Exception as e:
-        logging.warning(f"Index creation warning (may already exist): {e}")
+        logging.warning(f"Legacy DB index creation warning (may already exist): {e}")
+
+async def create_indexes():
+    """Create all MongoDB indexes"""
+    await create_master_indexes()
+    await create_legacy_indexes()
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nstu-property-tax-secret-key-2025')
