@@ -17,6 +17,7 @@ export const TownProvider = ({ children }) => {
   const [towns, setTowns] = useState([]);
   const [selectedTown, setSelectedTown] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [townRequired, setTownRequired] = useState(false);
 
   // Load towns on mount
   useEffect(() => {
@@ -26,9 +27,12 @@ export const TownProvider = ({ children }) => {
     const savedTown = localStorage.getItem('selectedTown');
     if (savedTown) {
       try {
-        setSelectedTown(JSON.parse(savedTown));
+        const town = JSON.parse(savedTown);
+        setSelectedTown(town);
+        setTownRequired(false);
       } catch (e) {
         localStorage.removeItem('selectedTown');
+        setTownRequired(true);
       }
     }
   }, []);
@@ -36,7 +40,13 @@ export const TownProvider = ({ children }) => {
   const fetchTowns = async () => {
     try {
       const response = await axios.get(`${API_URL}/towns`);
-      setTowns(response.data.towns || []);
+      const townList = response.data.towns || [];
+      setTowns(townList);
+      
+      // If towns exist but none selected, require selection
+      if (townList.length > 0 && !localStorage.getItem('selectedTown')) {
+        setTownRequired(true);
+      }
     } catch (error) {
       console.error('Failed to fetch towns:', error);
     } finally {
@@ -46,6 +56,7 @@ export const TownProvider = ({ children }) => {
 
   const selectTown = (town) => {
     setSelectedTown(town);
+    setTownRequired(false);
     if (town) {
       localStorage.setItem('selectedTown', JSON.stringify(town));
     } else {
@@ -56,12 +67,12 @@ export const TownProvider = ({ children }) => {
   const clearTown = () => {
     setSelectedTown(null);
     localStorage.removeItem('selectedTown');
+    setTownRequired(true);
   };
 
-  // Get town filter for API calls
-  const getTownFilter = () => {
-    if (!selectedTown) return {};
-    return { town: selectedTown.id };
+  // Check if town context is valid for API calls
+  const hasTownContext = () => {
+    return selectedTown !== null;
   };
 
   // Get town ID for API calls
@@ -69,14 +80,31 @@ export const TownProvider = ({ children }) => {
     return selectedTown?.id || null;
   };
 
+  // Get town code for API calls
+  const getTownCode = () => {
+    return selectedTown?.code || null;
+  };
+
+  // Add town header to axios requests
+  const getTownHeaders = () => {
+    if (!selectedTown) return {};
+    return {
+      'X-Town-ID': selectedTown.id,
+      'X-Town-Code': selectedTown.code
+    };
+  };
+
   const value = {
     towns,
     selectedTown,
     loading,
+    townRequired,
     selectTown,
     clearTown,
-    getTownFilter,
+    hasTownContext,
     getTownId,
+    getTownCode,
+    getTownHeaders,
     refreshTowns: fetchTowns
   };
 
