@@ -125,17 +125,36 @@ def get_town_gridfs(town_code: str):
 # GridFS for file storage in database (legacy)
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
+# ============== MULTI-TENANT CONTEXT VAR ==============
+# ContextVar stores the current request's town database per-async-task
+_current_town_db: ContextVar = ContextVar('current_town_db', default=None)
+_current_town_fs: ContextVar = ContextVar('current_town_fs', default=None)
+_current_town_code: ContextVar = ContextVar('current_town_code', default=None)
+
+def get_db():
+    """Get the current request's town-scoped database.
+    Set by the town_context_middleware. Falls back to legacy db."""
+    val = _current_town_db.get()
+    return val if val is not None else db
+
+def get_fs():
+    """Get the current request's town-scoped GridFS bucket."""
+    val = _current_town_fs.get()
+    return val if val is not None else fs_bucket
+
+def get_current_town_code():
+    """Get the current request's town code."""
+    return _current_town_code.get() or "THS"
+
 # ============== MULTI-TENANT HELPER FUNCTIONS ==============
 async def get_town_data_db(request: Request):
-    """FastAPI dependency: resolve the town-scoped database from request headers.
-    Returns the correct DB for data operations (properties, bills, submissions, etc.).
-    Falls back to legacy DB (test_database / Thanesar) if no header."""
+    """FastAPI dependency: resolve the town-scoped database from request headers."""
     town_code = request.headers.get("x-town-code")
     if town_code:
         return get_town_db(town_code)
     return db
 
-async def get_town_fs(request: Request):
+async def get_town_fs_dep(request: Request):
     """FastAPI dependency: resolve the town-scoped GridFS from request headers."""
     town_code = request.headers.get("x-town-code")
     if town_code:
