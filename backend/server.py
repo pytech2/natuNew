@@ -695,6 +695,7 @@ async def get_colonies_list(request: Request, current_user: dict = Depends(get_c
     ]
     
     result = await town_db.properties.aggregate(pipeline).to_list(None)
+    colonies = [{"name": r["_id"], "count": r["count"]} for r in result if r["_id"]]
     total = sum(c["count"] for c in colonies)
     
     response = {"colonies": colonies, "total": total}
