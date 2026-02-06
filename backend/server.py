@@ -809,7 +809,7 @@ async def update_town(town_id: str, data: TownUpdate, current_user: dict = Depen
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    town = await db.towns.find_one({"id": town_id})
+    town = await master_db.towns.find_one({"id": town_id})
     if not town:
         raise HTTPException(status_code=404, detail="Town not found")
     
@@ -818,7 +818,7 @@ async def update_town(town_id: str, data: TownUpdate, current_user: dict = Depen
         update_data["name"] = data.name
     if data.code is not None:
         # Check if code is unique
-        existing = await db.towns.find_one({"code": data.code.upper(), "id": {"$ne": town_id}})
+        existing = await master_db.towns.find_one({"code": data.code.upper(), "id": {"$ne": town_id}})
         if existing:
             raise HTTPException(status_code=400, detail="Town code already exists")
         update_data["code"] = data.code.upper()
@@ -828,7 +828,7 @@ async def update_town(town_id: str, data: TownUpdate, current_user: dict = Depen
         update_data["is_active"] = data.is_active
     
     if update_data:
-        await db.towns.update_one({"id": town_id}, {"$set": update_data})
+        await master_db.towns.update_one({"id": town_id}, {"$set": update_data})
     
     return {"message": "Town updated successfully"}
 
