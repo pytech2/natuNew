@@ -137,7 +137,6 @@ def get_submissions_db(user: dict, town_code: Optional[str] = None):
     return db
 
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
-# ============== DATABASE INDEXES FOR PERFORMANCE ==============
 async def create_town_indexes(town_db):
     """Create MongoDB indexes for Town-specific DB"""
     try:
