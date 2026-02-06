@@ -930,7 +930,7 @@ async def list_users(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    users = await master_db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
 @api_router.delete("/admin/users/{user_id}")
@@ -938,7 +938,7 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    result = await db.users.delete_one({"id": user_id})
+    result = await master_db.users.delete_one({"id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
