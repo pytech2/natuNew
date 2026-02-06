@@ -306,6 +306,21 @@ app = FastAPI(title="NSTU Property Tax Manager")
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 
+# Town context middleware - sets the correct DB per request based on X-Town-Code header
+@app.middleware("http")
+async def town_context_middleware(request: Request, call_next):
+    town_code = request.headers.get("x-town-code")
+    if town_code:
+        _current_town_db.set(get_town_db(town_code))
+        _current_town_fs.set(AsyncIOMotorGridFSBucket(get_town_db(town_code)))
+        _current_town_code.set(town_code)
+    else:
+        _current_town_db.set(db)
+        _current_town_fs.set(fs_bucket)
+        _current_town_code.set("THS")
+    response = await call_next(request)
+    return response
+
 # Add GZip compression for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
