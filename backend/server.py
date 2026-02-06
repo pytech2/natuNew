@@ -2265,53 +2265,59 @@ async def admin_dashboard(
 
 @api_router.get("/admin/employee-progress")
 async def get_employee_progress(
-    date: str = None,  # Optional date filter
+    request: Request,
+    date: str = None,
     current_user: dict = Depends(get_current_user)
 ):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
+    town_db = await get_town_data_db(request)
     today_start = get_today_start().isoformat()
     
-    employees = await db.users.find({"role": {"$ne": "ADMIN"}}, {"_id": 0}).to_list(100)
+    # Get employees for the current town
+    town_code = request.headers.get("x-town-code")
+    emp_filter = {"role": {"$ne": "ADMIN"}}
+    if town_code:
+        town = await master_db.towns.find_one({"code": town_code}, {"_id": 0})
+        if town:
+            emp_filter["assigned_town"] = town["id"]
+    
+    employees = await master_db.users.find(emp_filter, {"_id": 0}).to_list(100)
     progress = []
     
     for emp in employees:
-        total = await db.properties.count_documents({"assigned_employee_id": emp["id"]})
+        total = await town_db.properties.count_documents({"assigned_employee_id": emp["id"]})
         
-        # Count approved properties (Completed + Approved = done)
-        approved = await db.properties.count_documents({
+        approved = await town_db.properties.count_documents({
             "assigned_employee_id": emp["id"],
             "status": {"$in": ["Completed", "Approved"]}
         })
         
-        # Today's completed for this employee
-        today_completed = await db.submissions.count_documents({
+        today_completed = await town_db.submissions.count_documents({
             "employee_id": emp["id"],
             "submitted_at": {"$gte": today_start},
             "status": {"$ne": "Rejected"}
         })
         
-        # If date filter provided, use that instead
         if date:
             date_start = f"{date}T00:00:00"
             date_end = f"{date}T23:59:59"
-            today_completed = await db.submissions.count_documents({
+            today_completed = await town_db.submissions.count_documents({
                 "employee_id": emp["id"],
                 "submitted_at": {"$gte": date_start, "$lte": date_end},
                 "status": {"$ne": "Rejected"}
             })
         
-        # Get assigned colonies for this employee
-        assigned_colonies = await db.properties.distinct("ward", {"assigned_employee_id": emp["id"]})
-        assigned_colonies = [c for c in assigned_colonies if c]  # Filter None
+        assigned_colonies = await town_db.properties.distinct("ward", {"assigned_employee_id": emp["id"]})
+        assigned_colonies = [c for c in assigned_colonies if c]
         
         progress.append({
             "employee_id": emp["id"],
             "employee_name": emp["name"],
             "role": emp["role"],
             "total_assigned": total,
-            "completed": approved,  # Using approved (done) count
+            "completed": approved,
             "pending": total - approved,
             "today_completed": today_completed,
             "assigned_colonies": assigned_colonies,
