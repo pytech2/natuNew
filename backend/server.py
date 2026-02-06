@@ -91,12 +91,27 @@ db = client[os.environ.get('DB_NAME', 'test_database')]
 # Town DB cache
 _town_db_cache: Dict[str, Any] = {}
 
+# Special mapping for existing towns to their databases
+TOWN_DB_MAPPING = {
+    "THS": "test_database",  # Thanesar uses existing legacy database with all old data
+}
+
 def get_town_db(town_code: str):
-    """Get Town-specific Database connection"""
+    """Get Town-specific Database connection
+    
+    For Thanesar (THS): Uses existing 'test_database' with all old data
+    For new towns: Creates fresh database like 'nstu_town_ldw'
+    """
     if town_code in _town_db_cache:
         return _town_db_cache[town_code]
     
-    town_db_name = f"nstu_town_{town_code.lower()}"
+    # Check if town has special DB mapping (existing data)
+    if town_code.upper() in TOWN_DB_MAPPING:
+        town_db_name = TOWN_DB_MAPPING[town_code.upper()]
+    else:
+        # New towns get fresh databases
+        town_db_name = f"nstu_town_{town_code.lower()}"
+    
     town_db = client[town_db_name]
     _town_db_cache[town_code] = town_db
     return town_db
