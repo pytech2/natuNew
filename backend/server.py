@@ -109,6 +109,33 @@ def get_town_gridfs(town_code: str):
 # GridFS for file storage in database (legacy)
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
+# ============== MULTI-TENANT HELPER FUNCTIONS ==============
+def get_user_town_context(user: dict) -> Optional[str]:
+    """Get the town code for a user's context"""
+    assigned_town_id = user.get("assigned_town")
+    if not assigned_town_id:
+        return None
+    
+    # This would need to be cached or looked up from master_db
+    # For now, return None to use legacy DB
+    return None
+
+def get_properties_db(user: dict, town_code: Optional[str] = None):
+    """Get the appropriate database for properties based on user context"""
+    if town_code:
+        return get_town_db(town_code)
+    
+    # For now, use legacy DB for backward compatibility
+    return db
+
+def get_submissions_db(user: dict, town_code: Optional[str] = None):
+    """Get the appropriate database for submissions based on user context"""
+    if town_code:
+        return get_town_db(town_code)
+    
+    # For now, use legacy DB for backward compatibility
+    return db
+
 # ============== DATABASE INDEXES FOR PERFORMANCE ==============
 async def create_master_indexes():
     """Create MongoDB indexes for Master DB (global data)"""
