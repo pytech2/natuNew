@@ -2878,7 +2878,7 @@ async def export_submissions(
             cell.alignment = Alignment(horizontal='left')
     
     # Adjust column widths
-    column_widths = [8, 12, 12, 15, 25, 15, 35, 20, 20, 12, 15, 12, 20, 12, 15, 12, 12, 30]
+    column_widths = [8, 12, 12, 15, 25, 15, 35, 20, 20, 12, 15, 12, 20, 12, 15, 12, 12, 40, 30]
     for col, width in enumerate(column_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     
