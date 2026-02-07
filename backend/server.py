@@ -2819,9 +2819,9 @@ async def export_submissions(
     # Headers
     headers = [
         "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Mobile",
-        "Address", "Colony/Ward", "Employee Name", "Status", "Special Condition",
-        "Self Certified", "Receiver Name", "Relation", "Receiver Mobile",
-        "Submitted At", "Photos Count", "Remarks"
+        "Address", "Colony Name", "Employee Name", "Status", "Special Condition",
+        "Self Certified", "Receiver Name", "Relation", "Receiver Mobile No",
+        "Submitted At", "Photos Count", "Photo URLs", "Remarks"
     ]
     
     # Style headers
