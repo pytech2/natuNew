@@ -3350,7 +3350,7 @@ async def export_pdf(
             ["Owner Name", prop.get("owner_name", "N/A")],
             ["Mobile", prop.get("mobile", "N/A")],
             ["Address", prop.get("address", "N/A")],
-            ["Ward", prop.get("ward", "N/A")],
+            ["Colony Name", prop.get("ward", "N/A")],
             ["Amount", prop.get("amount", "N/A")],
         ]
         
@@ -3369,14 +3369,9 @@ async def export_pdf(
         
         story.append(Paragraph("Survey Information", heading_style))
         survey_data = [
-            ["New Owner Name", submission.get("new_owner_name", "N/A")],
-            ["New Mobile", submission.get("new_mobile", "N/A")],
             ["Receiver Name", submission.get("receiver_name", "N/A")],
+            ["Receiver Mobile No", submission.get("new_mobile", submission.get("receiver_mobile", "N/A"))],
             ["Relation", submission.get("relation", "N/A")],
-            ["Old Property ID", submission.get("old_property_id", "N/A")],
-            ["Family ID", submission.get("family_id", "N/A")],
-            ["Aadhar Number", submission.get("aadhar_number", "N/A")],
-            ["Ward Number", submission.get("ward_number", "N/A")],
             ["Submitted By", submission.get("employee_name", "N/A")],
             ["Submitted At", submission.get("submitted_at", "N/A")],
             ["GPS Latitude", str(submission.get("latitude", "N/A"))],
