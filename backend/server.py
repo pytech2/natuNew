@@ -2876,6 +2876,11 @@ async def export_submissions(
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
+            # Make Photo URLs column clickable
+            if col == 18 and value and str(value).startswith(("http", "/")):
+                first_url = str(value).split("\n")[0]
+                cell.hyperlink = first_url
+                cell.font = Font(color="0563C1", underline="single")
     
     # Adjust column widths
     column_widths = [8, 12, 12, 15, 25, 15, 35, 20, 20, 12, 15, 12, 20, 12, 15, 12, 12, 40, 30]
