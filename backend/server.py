@@ -3126,9 +3126,9 @@ async def export_data(
     header_font = Font(color="FFFFFF", bold=True)
     
     headers = [
-        "Property ID", "Owner Name", "Mobile", "Address", "Total Area", "Amount", "Ward",
-        "Assigned Employee", "Status", "New Owner Name", "New Mobile", "Receiver Name",
-        "Relation", "Old Property ID", "Family ID", "Aadhar Number", "Ward Number",
+        "Property ID", "Owner Name", "Mobile", "Address", "Total Area", "Amount", "Colony Name",
+        "Assigned Employee", "Status", "Receiver Name", "Receiver Mobile No",
+        "Relation", "Submitted By",
         "GPS Latitude", "GPS Longitude", "Submission Date", "Signature URL", "Photo URLs",
         "Approval Status", "Review Remarks"
     ]
@@ -3156,23 +3156,30 @@ async def export_data(
         ws.cell(row=row_idx, column=9, value=prop.get("status", ""))
         
         if submission:
-            ws.cell(row=row_idx, column=10, value=submission.get("new_owner_name", ""))
-            ws.cell(row=row_idx, column=11, value=submission.get("new_mobile", ""))
-            ws.cell(row=row_idx, column=12, value=submission.get("receiver_name", ""))
-            ws.cell(row=row_idx, column=13, value=submission.get("relation", ""))
-            ws.cell(row=row_idx, column=14, value=submission.get("old_property_id", ""))
-            ws.cell(row=row_idx, column=15, value=submission.get("family_id", ""))
-            ws.cell(row=row_idx, column=16, value=submission.get("aadhar_number", ""))
-            ws.cell(row=row_idx, column=17, value=submission.get("ward_number", ""))
-            ws.cell(row=row_idx, column=18, value=submission.get("latitude", ""))
-            ws.cell(row=row_idx, column=19, value=submission.get("longitude", ""))
-            ws.cell(row=row_idx, column=20, value=submission.get("submitted_at", ""))
-            ws.cell(row=row_idx, column=21, value=submission.get("signature_url", ""))
+            ws.cell(row=row_idx, column=10, value=submission.get("receiver_name", ""))
+            ws.cell(row=row_idx, column=11, value=submission.get("new_mobile", submission.get("receiver_mobile", "")))
+            ws.cell(row=row_idx, column=12, value=submission.get("relation", ""))
+            ws.cell(row=row_idx, column=13, value=submission.get("employee_name", ""))
+            ws.cell(row=row_idx, column=14, value=submission.get("latitude", ""))
+            ws.cell(row=row_idx, column=15, value=submission.get("longitude", ""))
+            ws.cell(row=row_idx, column=16, value=submission.get("submitted_at", ""))
+            ws.cell(row=row_idx, column=17, value=submission.get("signature_url", ""))
             photos = submission.get("photos", [])
-            photo_urls = ", ".join([p.get("file_url", "") for p in photos])
-            ws.cell(row=row_idx, column=22, value=photo_urls)
-            ws.cell(row=row_idx, column=23, value=submission.get("status", "Pending"))
-            ws.cell(row=row_idx, column=24, value=submission.get("review_remarks", ""))
+            for p_idx, photo in enumerate(photos):
+                photo_url = photo.get("file_url", "")
+                if photo_url:
+                    cell = ws.cell(row=row_idx, column=18)
+                    if p_idx == 0:
+                        cell.value = photo_url
+                        cell.hyperlink = photo_url
+                        cell.font = Font(color="0563C1", underline="single")
+                    else:
+                        existing = cell.value or ""
+                        cell.value = existing + "\n" + photo_url
+            if not photos:
+                ws.cell(row=row_idx, column=18, value="")
+            ws.cell(row=row_idx, column=19, value=submission.get("status", "Pending"))
+            ws.cell(row=row_idx, column=20, value=submission.get("review_remarks", ""))
     
     for col in ws.columns:
         max_length = 0
