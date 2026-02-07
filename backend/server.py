@@ -2848,6 +2848,7 @@ async def export_submissions(
         
         photos = sub.get("photos", [])
         photos_count = len(photos) if photos else 0
+        photo_urls_list = [p.get("file_url", "") for p in (photos or []) if p.get("file_url")]
         
         row_data = [
             row_num - 1,
@@ -2864,9 +2865,10 @@ async def export_submissions(
             sub.get("self_certified", "No"),
             sub.get("receiver_name", ""),
             sub.get("relation", ""),
-            sub.get("receiver_mobile", ""),
+            sub.get("receiver_mobile", sub.get("new_mobile", "")),
             sub.get("submitted_at", "")[:10] if sub.get("submitted_at") else "",
             photos_count,
+            "\n".join(photo_urls_list) if photo_urls_list else "",
             sub.get("remarks", sub.get("review_remarks", ""))
         ]
         
