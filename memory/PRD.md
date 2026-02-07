@@ -8,7 +8,8 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - **Frontend**: React on port 3000
 - **Database**: MongoDB with hybrid multi-tenant model
   - `nstu_master`: Global DB for users, towns, auth
-  - Per-town DBs: `test_database` (Thanesar/THS), `nstu_town_xxx` (new towns)
+  - Per-town DBs: Uses `DB_NAME` from `.env` for Thanesar (THS), `nstu_town_xxx` for new towns
+  - **IMPORTANT**: `TOWN_DB_MAPPING["THS"]` reads from `os.environ.get('DB_NAME')` — works on both dev (`test_database`) and VPS (`nstu_property_tax`)
 - **Multi-Tenant**: ContextVar middleware + axios interceptor for X-Town-Code header
 
 ## What's Been Implemented
@@ -16,7 +17,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] Town selection page after login
 - [x] Town management (CRUD) for admins
 - [x] Town switcher in admin header
-- [x] **Complete data scoping** - ALL endpoints use town-scoped DB via ContextVar middleware
+- [x] Complete data scoping - ALL endpoints use town-scoped DB via ContextVar middleware
 - [x] User migration from legacy DB to master_db
 - [x] Advanced search on submissions page
 - [x] Surveyor workflow (map colors, form locking)
@@ -25,6 +26,17 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] Attendance tracking
 - [x] Property assignment (single/bulk)
 - [x] GridFS file storage (town-scoped)
+- [x] Export PDF/Excel updated: Ward→Colony Name, removed unwanted fields, clickable photo URLs
+
+## Export Fields (PDF & Excel)
+### Property Details:
+Property ID, Owner Name, Mobile, Address, Colony Name, Amount
+
+### Survey Information:
+Receiver Name, Receiver Mobile No, Relation, Submitted By, Time, GPS Lat/Lng, Status, Photo
+
+### Removed from exports:
+New Owner Name, Old Property ID, Family ID, Aadhar Number, Ward Number
 
 ## Prioritized Backlog
 
@@ -33,29 +45,20 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 
 ### P1 (High)
 - User-town assignment UI (admin can assign employees to specific towns)
-- Upload data scoped to selected town (batch upload uses town context)
 - Surveyor login auto-routing to assigned town
 
-### P2 (Medium)  
+### P2 (Medium)
 - Offline support for surveyor mobile interface
 - Download all split-employee PDFs as ZIP
-- Map marker → survey form shortcut
+- Map marker to survey form shortcut
 - Refactor server.py into modular route files (APIRouter)
 
-### P3 (Low)
-- VPS deployment optimization guide
-- Performance monitoring dashboard
+## VPS Deployment
+- DB_NAME on VPS: `nstu_property_tax` (NOT `test_database`)
+- Backend: systemd service (`nstu-backend.service`) with uvicorn + venv
+- Frontend: npm build served by Nginx at `app.nstuindia.com`
+- Migration script needed after each deploy to sync users to `nstu_master`
 
-## Credentials
+## Credentials (Dev)
 - Admin: admin / nastu123
 - Surveyor: surveyor1 / test123
-- Supervisor: a / test123
-- MC Officer: 1234567890 / test123
-
-## Key Files
-- `/app/backend/server.py` - Main backend (6200+ lines)
-- `/app/backend/db_architecture.py` - DB architecture docs
-- `/app/frontend/src/App.js` - React app with axios interceptor
-- `/app/frontend/src/context/TownContext.js` - Town state management
-- `/app/frontend/src/components/TownSelector.js` - Town switcher
-- `/app/frontend/src/pages/SelectTown.js` - Town selection page
