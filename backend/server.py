@@ -2242,12 +2242,20 @@ async def admin_dashboard(
         date_end = f"{date}T23:59:59"
         date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
     
-    # Property counts from town DB
-    total = await town_db.properties.count_documents({})
-    approved = await town_db.properties.count_documents({"status": "Approved"})
-    completed = await town_db.properties.count_documents({"status": "Completed"})
-    pending = await town_db.properties.count_documents({"status": "Pending"})
-    rejected = await town_db.properties.count_documents({"status": "Rejected"})
+    if date:
+        # Date-filtered view: count submissions for that date
+        total = await town_db.submissions.count_documents(date_filter)
+        approved = await town_db.submissions.count_documents({**date_filter, "status": {"$in": ["Approved", "Completed"]}})
+        pending = await town_db.submissions.count_documents({**date_filter, "status": {"$in": ["Pending", "Completed"]}})
+        rejected = await town_db.submissions.count_documents({**date_filter, "status": "Rejected"})
+    else:
+        # All time view: count properties
+        total = await town_db.properties.count_documents({})
+        approved_count = await town_db.properties.count_documents({"status": "Approved"})
+        completed_count = await town_db.properties.count_documents({"status": "Completed"})
+        approved = approved_count + completed_count
+        pending = await town_db.properties.count_documents({"status": "Pending"})
+        rejected = await town_db.properties.count_documents({"status": "Rejected"})
     
     # Employee count: non-admin users assigned to current town
     town_code = request.headers.get("x-town-code")
