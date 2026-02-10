@@ -232,6 +232,63 @@ export default function Dashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div data-testid="admin-dashboard" className="space-y-6">
+        {/* View Mode Toggle + Date Picker */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 bg-white rounded-lg border p-1 shadow-sm">
+            <button
+              data-testid="view-mode-all"
+              onClick={() => setViewMode('all')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'all' 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              All Time
+            </button>
+            <button
+              data-testid="view-mode-today"
+              onClick={() => { setViewMode('today'); setSelectedDate(new Date().toISOString().split('T')[0]); }}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'today' 
+                  ? 'bg-emerald-600 text-white shadow-sm' 
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Calendar className="w-4 h-4 inline mr-1" />
+              Today Report
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {viewMode === 'today' && (
+              <input
+                type="date"
+                data-testid="date-picker"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              data-testid="download-today-report"
+              className="flex items-center gap-2"
+              onClick={downloadTodayReport}
+            >
+              <Download className="w-4 h-4" />
+              {viewMode === 'today' ? 'Download Day Report' : 'Download Report'}
+            </Button>
+          </div>
+        </div>
+
+        {viewMode === 'today' && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2 text-sm text-emerald-700 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Showing report for: <strong>{selectedDate === new Date().toISOString().split('T')[0] ? 'Today' : selectedDate}</strong>
+          </div>
+        )}
         {/* Main Stats - Property Status */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="stat-card border-l-4 border-l-slate-500">
