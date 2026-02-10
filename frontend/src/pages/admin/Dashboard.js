@@ -60,6 +60,8 @@ export default function Dashboard() {
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
   const [townStats, setTownStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('all'); // 'all' or 'today'
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Employee Colony Detail Dialog
   const [colonyDialog, setColonyDialog] = useState(false);
@@ -74,25 +76,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [viewMode, selectedDate]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const todayDate = new Date().toISOString().split('T')[0];
+      const dateParam = viewMode === 'today' ? `?date=${selectedDate}` : '';
+      const dateParamJoin = viewMode === 'today' ? `&date=${selectedDate}` : '';
       
       const [statsRes, progressRes, attendanceRes, submissionsRes, townStatsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/dashboard`, {
+        axios.get(`${API_URL}/admin/dashboard${dateParam}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API_URL}/admin/employee-progress`, {
+        axios.get(`${API_URL}/admin/employee-progress${dateParam}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        // Fetch today's attendance for the attendance card
         axios.get(`${API_URL}/admin/attendance?date=${todayDate}&limit=100`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { attendance: [], total: 0 } })),
-        axios.get(`${API_URL}/admin/submission-stats`, {
+        axios.get(`${API_URL}/admin/submission-stats${dateParam}`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { total: 0, pending: 0, approved: 0, rejected: 0 } })),
         axios.get(`${API_URL}/admin/town-stats`, {
@@ -104,7 +107,6 @@ export default function Dashboard() {
       setSubmissionStats(submissionsRes.data);
       setTownStats(townStatsRes.data.towns || []);
       
-      // Calculate attendance stats - use attendance array length for present count
       const attendanceTotal = attendanceRes.data?.attendance?.length || 0;
       const totalEmployees = progressRes.data?.length || 0;
       setAttendanceStats({
@@ -116,6 +118,43 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Download Today's Surveyor Report
+  const downloadTodayReport = () => {
+    const dateForReport = viewMode === 'today' ? selectedDate : new Date().toISOString().split('T')[0];
+    const headers = ['Employee', 'Role', 'Assigned', 'Today Completed', 'Overall Completed', 'Pending', 'Progress %', 'Colonies'];
+    const sortedData = [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0));
+    const rows = sortedData.map(emp => {
+      const percentage = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
+      return [
+        emp.employee_name,
+        ROLE_LABELS[emp.role] || emp.role,
+        emp.total_assigned || 0,
+        emp.today_completed || 0,
+        emp.completed || 0,
+        emp.pending || 0,
+        percentage + '%',
+        (emp.assigned_colonies || []).join('; ')
+      ];
+    });
+    
+    // Add summary row
+    const totalAssigned = sortedData.reduce((s, e) => s + (e.total_assigned || 0), 0);
+    const totalToday = sortedData.reduce((s, e) => s + (e.today_completed || 0), 0);
+    const totalCompleted = sortedData.reduce((s, e) => s + (e.completed || 0), 0);
+    const totalPending = sortedData.reduce((s, e) => s + (e.pending || 0), 0);
+    rows.push(['', '', '', '', '', '', '', '']);
+    rows.push(['TOTAL', '', totalAssigned, totalToday, totalCompleted, totalPending, totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) + '%' : '0%', '']);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `surveyor_report_${dateForReport}.csv`;
+    a.click();
+    toast.success(`Downloaded surveyor report for ${dateForReport}`);
   };
 
   // View employee's colony-wise progress
