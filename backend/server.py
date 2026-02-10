@@ -345,6 +345,11 @@ async def save_file_to_gridfs(file_content: bytes, filename: str, content_type: 
     )
     return str(file_id)
 
+def make_file_url(file_id: str) -> str:
+    """Create a file URL that includes town code for cross-town access"""
+    town_code = get_current_town_code()
+    return f"/api/file/{town_code}/{file_id}"
+
 async def get_file_from_gridfs(file_id: str) -> tuple:
     """Get file from GridFS by file_id, returns (content, filename, content_type)"""
     try:
