@@ -3748,21 +3748,21 @@ async def submit_survey(
         content = await house_photo.read()
         house_filename = f"{property_id}_house_{timestamp}{Path(house_photo.filename).suffix}"
         file_id = await save_file_to_gridfs(content, house_filename, house_photo.content_type or "image/jpeg")
-        photos.append({"photo_type": "HOUSE", "file_url": f"/api/file/{file_id}", "file_id": file_id})
+        photos.append({"photo_type": "HOUSE", "file_url": make_file_url(file_id), "file_id": file_id})
     
     # Gate photo - SAVE TO GRIDFS
     if gate_photo and gate_photo.filename:
         content = await gate_photo.read()
         gate_filename = f"{property_id}_gate_{timestamp}{Path(gate_photo.filename).suffix}"
         file_id = await save_file_to_gridfs(content, gate_filename, gate_photo.content_type or "image/jpeg")
-        photos.append({"photo_type": "GATE", "file_url": f"/api/file/{file_id}", "file_id": file_id})
+        photos.append({"photo_type": "GATE", "file_url": make_file_url(file_id), "file_id": file_id})
     
     # Signature - SAVE TO GRIDFS
     if signature and signature.filename:
         content = await signature.read()
         signature_filename = f"{property_id}_signature_{timestamp}.png"
         file_id = await save_file_to_gridfs(content, signature_filename, "image/png")
-        signature_url = f"/api/file/{file_id}"
+        signature_url = make_file_url(file_id)
     
     # Extra photos - SAVE TO GRIDFS
     for idx, photo in enumerate(extra_photos):
@@ -3770,7 +3770,7 @@ async def submit_survey(
             content = await photo.read()
             extra_filename = f"{property_id}_extra{idx}_{timestamp}{Path(photo.filename).suffix}"
             file_id = await save_file_to_gridfs(content, extra_filename, photo.content_type or "image/jpeg")
-            photos.append({"photo_type": "EXTRA", "file_url": f"/api/file/{file_id}", "file_id": file_id})
+            photos.append({"photo_type": "EXTRA", "file_url": make_file_url(file_id), "file_id": file_id})
     
     # Set receiver name based on special condition if empty
     final_receiver_name = receiver_name
