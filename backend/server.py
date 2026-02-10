@@ -2282,7 +2282,7 @@ async def admin_dashboard(
                 "assigned_town": town["id"]
             })
         else:
-            employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
+            employees = 0
     else:
         employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
     
