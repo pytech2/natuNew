@@ -2277,7 +2277,7 @@ async def admin_dashboard(
     
     return {
         "total": total,
-        "approved": approved + completed,
+        "approved": approved,
         "pending": pending,
         "rejected": rejected,
         "employees": employees,
