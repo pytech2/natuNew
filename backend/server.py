@@ -366,22 +366,66 @@ async def delete_file_from_gridfs(file_id: str) -> bool:
 
 # ============== FILE SERVE ENDPOINTS ==============
 
-@api_router.get("/file/{file_id}")
-async def serve_file(file_id: str):
-    """Serve file from GridFS by file_id"""
+@api_router.get("/file/{town_code}/{file_id}")
+async def serve_file_with_town(town_code: str, file_id: str):
+    """Serve file from town-specific GridFS by town_code and file_id"""
     try:
-        content, filename, content_type = await get_file_from_gridfs(file_id)
-        if content is None:
-            raise HTTPException(status_code=404, detail="File not found")
+        town_fs = AsyncIOMotorGridFSBucket(get_town_db(town_code))
+        grid_out = await town_fs.open_download_stream(ObjectId(file_id))
+        content = await grid_out.read()
+        filename = grid_out.filename
+        content_type = grid_out.metadata.get("content_type", "application/octet-stream") if grid_out.metadata else "application/octet-stream"
         
         return Response(
             content=content,
             media_type=content_type,
             headers={
                 "Content-Disposition": f'inline; filename="{filename}"',
-                "Cache-Control": "public, max-age=86400"  # Cache for 24 hours
+                "Cache-Control": "public, max-age=86400"
             }
         )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"File not found: {str(e)}")
+
+@api_router.get("/file/{file_id}")
+async def serve_file(file_id: str):
+    """Serve file from GridFS - searches current town DB then all towns"""
+    try:
+        # Try current context DB first
+        content, filename, content_type = await get_file_from_gridfs(file_id)
+        if content is not None:
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": f'inline; filename="{filename}"',
+                    "Cache-Control": "public, max-age=86400"
+                }
+            )
+        
+        # Fallback: search all town databases
+        towns = await master_db.towns.find({}, {"_id": 0, "code": 1}).to_list(50)
+        for town in towns:
+            try:
+                town_fs = AsyncIOMotorGridFSBucket(get_town_db(town["code"]))
+                grid_out = await town_fs.open_download_stream(ObjectId(file_id))
+                content = await grid_out.read()
+                filename = grid_out.filename
+                content_type = grid_out.metadata.get("content_type", "application/octet-stream") if grid_out.metadata else "application/octet-stream"
+                return Response(
+                    content=content,
+                    media_type=content_type,
+                    headers={
+                        "Content-Disposition": f'inline; filename="{filename}"',
+                        "Cache-Control": "public, max-age=86400"
+                    }
+                )
+            except Exception:
+                continue
+        
+        raise HTTPException(status_code=404, detail="File not found in any town database")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found: {str(e)}")
 
