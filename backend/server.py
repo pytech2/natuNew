@@ -3951,7 +3951,7 @@ async def mark_attendance(
     selfie_filename = f"attendance_{current_user['id']}_{timestamp}{Path(selfie.filename).suffix}"
     content = await selfie.read()
     file_id = await save_file_to_gridfs(content, selfie_filename, selfie.content_type or "image/jpeg")
-    selfie_url = f"/api/file/{file_id}"
+    selfie_url = make_file_url(file_id)
     
     # Create attendance record
     attendance_doc = {
