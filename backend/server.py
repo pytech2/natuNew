@@ -3087,7 +3087,7 @@ async def upload_submission_photo(
     filename = f"{submission_id}_{photo_type.lower()}_{timestamp}.jpg"
     file_id = await save_file_to_gridfs(content, filename, file.content_type or "image/jpeg")
     
-    file_url = f"/api/file/{file_id}"
+    file_url = make_file_url(file_id)
     
     # Add photo to submission
     photo_data = {
