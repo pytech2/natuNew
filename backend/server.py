@@ -1012,7 +1012,7 @@ async def set_current_town(town_id: str, current_user: dict = Depends(get_curren
 # ============== ADMIN USER ROUTES ==============
 
 @api_router.post("/admin/users", response_model=UserResponse)
-async def create_user(data: UserCreate, current_user: dict = Depends(get_current_user)):
+async def create_user(data: UserCreate, request: Request, current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -1020,18 +1020,22 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
-    # Set permissions based on role
+    # Auto-assign to current town if not explicitly set
+    assigned_town = data.assigned_town
+    if not assigned_town:
+        town_code = request.headers.get("x-town-code")
+        if town_code:
+            town = await master_db.towns.find_one({"code": town_code}, {"_id": 0})
+            if town:
+                assigned_town = town["id"]
+    
     user_permissions = None
     if data.role in ["SUPERVISOR", "MC_OFFICER"]:
-        # Use provided permissions or default to basic view permissions
         if data.permissions:
-            # Validate permissions
             user_permissions = [p for p in data.permissions if p in AVAILABLE_PERMISSIONS]
         else:
-            # Default permissions for SUPERVISOR/MC_OFFICER
             user_permissions = ["dashboard", "properties", "map", "submissions"]
     elif data.role == "ADMIN":
-        # Admin has all permissions
         user_permissions = AVAILABLE_PERMISSIONS.copy()
     
     user_doc = {
@@ -1041,7 +1045,7 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
         "name": data.name,
         "role": data.role,
         "assigned_area": data.assigned_area,
-        "assigned_town": data.assigned_town,  # Town assignment
+        "assigned_town": assigned_town,
         "authority": data.authority if data.role in ["SUPERVISOR", "MC_OFFICER"] else None,
         "permissions": user_permissions,
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -1061,11 +1065,22 @@ async def create_user(data: UserCreate, current_user: dict = Depends(get_current
     }
 
 @api_router.get("/admin/users", response_model=List[UserResponse])
-async def list_users(current_user: dict = Depends(get_current_user)):
+async def list_users(request: Request, current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    users = await master_db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    # Filter users by selected town
+    query = {}
+    town_code = request.headers.get("x-town-code")
+    if town_code:
+        town = await master_db.towns.find_one({"code": town_code}, {"_id": 0})
+        if town:
+            query = {"$or": [
+                {"assigned_town": town["id"]},
+                {"role": "ADMIN"}
+            ]}
+    
+    users = await master_db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
 @api_router.delete("/admin/users/{user_id}")
