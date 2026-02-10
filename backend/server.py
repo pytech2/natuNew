@@ -3557,11 +3557,16 @@ async def export_pdf(
             
             temp_sig_path = None
             
-            # Handle GridFS signature (new format)
+            # Handle GridFS signature (new format with town code or legacy)
             if signature_url.startswith("/api/file/"):
                 try:
-                    sig_file_id = signature_url.replace("/api/file/", "")
+                    parts = signature_url.replace("/api/file/", "").split("/")
+                    sig_file_id = parts[-1]  # last part is file_id
                     content, filename, _ = await get_file_from_gridfs(sig_file_id)
+                    if content is None and len(parts) > 1:
+                        town_fs_temp = AsyncIOMotorGridFSBucket(get_town_db(parts[0]))
+                        grid_out = await town_fs_temp.open_download_stream(ObjectId(sig_file_id))
+                        content = await grid_out.read()
                     if content:
                         temp_sig_path = UPLOAD_DIR / f"temp_sig_{uuid.uuid4()}.png"
                         async with aiofiles.open(temp_sig_path, 'wb') as f:
