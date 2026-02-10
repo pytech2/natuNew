@@ -3492,11 +3492,27 @@ async def export_pdf(
                 
                 temp_photo_path = None
                 
-                # Handle GridFS files (new format)
+                # Handle GridFS files (new format with town code or legacy)
                 if file_id or photo_url.startswith("/api/file/"):
                     try:
-                        grid_file_id = file_id or photo_url.replace("/api/file/", "")
+                        if file_id:
+                            grid_file_id = file_id
+                        else:
+                            # Parse: /api/file/{file_id} or /api/file/{town_code}/{file_id}
+                            parts = photo_url.replace("/api/file/", "").split("/")
+                            grid_file_id = parts[-1]  # last part is always file_id
+                        
+                        # Try current context DB first
                         content, filename, _ = await get_file_from_gridfs(grid_file_id)
+                        
+                        # If not found, try with town code from URL
+                        if content is None and len(parts) > 1 if not file_id else False:
+                            town_code_from_url = parts[0]
+                            town_fs_temp = AsyncIOMotorGridFSBucket(get_town_db(town_code_from_url))
+                            grid_out = await town_fs_temp.open_download_stream(ObjectId(grid_file_id))
+                            content = await grid_out.read()
+                            filename = grid_out.filename
+                        
                         if content:
                             temp_photo_path = UPLOAD_DIR / f"temp_pdf_{uuid.uuid4()}{Path(filename).suffix}"
                             async with aiofiles.open(temp_photo_path, 'wb') as f:
