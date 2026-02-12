@@ -1404,6 +1404,28 @@ export default function BillsPage() {
                     : 'Only include properties that are NOT self-certified'}
                 </p>
               </div>
+
+              {/* Skip Empty Names option */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Empty/Vacant Data</Label>
+                <Select 
+                  value={pdfOptions.skip_empty_names ? 'skip' : 'include'} 
+                  onValueChange={(val) => setPdfOptions({...pdfOptions, skip_empty_names: val === 'skip'})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="skip">Skip Empty/Vacant Names</SelectItem>
+                    <SelectItem value="include">Include All (Complete PDF)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  {pdfOptions.skip_empty_names 
+                    ? 'Bills without owner name or vacant plots will be skipped' 
+                    : 'All bills will be included, even without owner name'}
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setGenerateDialog(false)}>
