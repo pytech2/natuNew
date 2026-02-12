@@ -120,9 +120,10 @@ export default function BillsPage() {
   // Copy to properties state
   const [copyDialog, setCopyDialog] = useState(false);
   const [copying, setCopying] = useState(false);
-  const [skipDuplicates, setSkipDuplicates] = useState(false); // NEW: Option to skip or add all
-  const [skipVacantPlots, setSkipVacantPlots] = useState(false); // Skip vacant/empty plots
-  const [skipDuplicateGPS, setSkipDuplicateGPS] = useState(false); // Skip duplicate lat/lng
+  const [skipDuplicates, setSkipDuplicates] = useState(false);
+  const [skipVacantPlots, setSkipVacantPlots] = useState(false);
+  const [skipNaNames, setSkipNaNames] = useState(false);
+  const [skipDuplicateGPS, setSkipDuplicateGPS] = useState(false);
 
   // Excel Export state
   const [excelDialog, setExcelDialog] = useState(false);
