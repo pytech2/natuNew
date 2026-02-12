@@ -5614,8 +5614,12 @@ async def copy_bills_to_properties(
     for i, bill in enumerate(bills):
         bill_prop_id = bill.get("property_id", "")
         
-        # Skip vacant plots and invalid owner names (SAME logic as Generate PDF)
-        if should_skip_vacant and should_skip_for_property(bill):
+        # Skip based on individual filters
+        skip_reason = should_skip_bill(bill)
+        if skip_reason == "na":
+            skipped_vacant += 1
+            continue
+        if skip_reason == "vacant":
             skipped_vacant += 1
             continue
         
