@@ -637,6 +637,7 @@ export default function BillsPage() {
       if (filters.colony) formData.append('colony', filters.colony);
       formData.append('skip_duplicates', skipDuplicates.toString());
       formData.append('skip_vacant_plots', skipVacantPlots.toString());
+      formData.append('skip_na_names', skipNaNames.toString());
       formData.append('skip_duplicate_gps', skipDuplicateGPS.toString());
 
       const response = await axios.post(`${API_URL}/admin/bills/copy-to-properties`, formData, {
