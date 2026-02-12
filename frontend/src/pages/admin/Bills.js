@@ -95,9 +95,10 @@ export default function BillsPage() {
     sn_position: 'top-right',
     sn_font_size: 48,
     sn_color: 'red',
-    bills_per_page: '1',  // Default: 1 bill per page (full size)
-    print_serial: true,   // Print serial number on PDF
-    self_certified_filter: 'all'  // Filter: 'all', 'self_certified', 'not_self_certified'
+    bills_per_page: '1',
+    print_serial: true,
+    self_certified_filter: 'all',
+    skip_empty_names: true
   });
   
   // Split by employee state
