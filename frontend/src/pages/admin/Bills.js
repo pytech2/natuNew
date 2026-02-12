@@ -1330,15 +1330,14 @@ export default function BillsPage() {
             <DialogHeader>
               <DialogTitle>Generate PDF</DialogTitle>
               <DialogDescription>
-                Generate PDF in original sequence. Bills without owner name are already skipped.
+                Generate PDF in original sequence.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-600">
-                  • PDF will keep original sequence from uploaded file<br/>
-                  • Bills with missing owner names are excluded<br/>
-                  • Serial numbers are from original PDF (N/A if missing)
+                  PDF will keep original sequence from uploaded file.
+                  Serial numbers are from original PDF (N/A if missing).
                 </p>
               </div>
               
