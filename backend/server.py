@@ -5238,8 +5238,17 @@ async def split_bills_by_employee(
             return True
         return False
     
-    if should_skip_empty:
-        bills = [b for b in all_bills if not should_skip_for_pdf(b)]
+    def should_skip(bill):
+        owner = (bill.get("owner_name") or "").strip().lower()
+        category = (bill.get("category") or "").strip().lower()
+        if should_skip_na and (not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']):
+            return True
+        if should_skip_vacant and ("vacant" in category or "empty" in category or "vacant" in owner or "empty plot" in owner or "खाली" in owner):
+            return True
+        return False
+    
+    if should_skip_na or should_skip_vacant:
+        bills = [b for b in all_bills if not should_skip(b)]
     else:
         bills = all_bills
     
