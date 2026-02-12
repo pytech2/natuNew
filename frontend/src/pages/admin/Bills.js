@@ -98,7 +98,8 @@ export default function BillsPage() {
     bills_per_page: '1',
     print_serial: true,
     self_certified_filter: 'all',
-    skip_empty_names: true
+    skip_na_names: true,
+    skip_vacant: true
   });
   
   // Split by employee state
