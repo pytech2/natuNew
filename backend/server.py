@@ -5202,11 +5202,14 @@ async def split_bills_by_employee(
     employee_count: int = Form(...),
     sn_font_size: int = Form(48),
     sn_color: str = Form("red"),
+    skip_empty_names: str = Form("true"),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills into separate PDFs for each employee"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    should_skip_empty = skip_empty_names.lower() == "true"
     
     if employee_count < 1 or employee_count > 100:
         raise HTTPException(status_code=400, detail="Employee count must be between 1 and 100")
@@ -5217,13 +5220,11 @@ async def split_bills_by_employee(
     if colony and colony.strip():
         query["colony"] = {"$regex": colony, "$options": "i"}
     
-    # Get arranged bills
     all_bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
     if not all_bills:
         raise HTTPException(status_code=404, detail="No bills found")
     
-    # Skip vacant plots and invalid owner names (same logic as generate-pdf)
     def should_skip_for_pdf(bill):
         owner = (bill.get("owner_name") or "").strip().lower()
         category = (bill.get("category") or "").strip().lower()
@@ -5235,7 +5236,10 @@ async def split_bills_by_employee(
             return True
         return False
     
-    bills = [b for b in all_bills if not should_skip_for_pdf(b)]
+    if should_skip_empty:
+        bills = [b for b in all_bills if not should_skip_for_pdf(b)]
+    else:
+        bills = all_bills
     
     if not bills:
         raise HTTPException(status_code=404, detail="No valid bills found after filtering")
