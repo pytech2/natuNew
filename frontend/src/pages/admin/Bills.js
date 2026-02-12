@@ -511,7 +511,8 @@ export default function BillsPage() {
       formData.append('employee_ids', selectedEmployees.join(','));
       formData.append('sn_font_size', pdfOptions.sn_font_size);
       formData.append('sn_color', pdfOptions.sn_color);
-      formData.append('skip_empty_names', pdfOptions.skip_empty_names ? 'true' : 'false');
+      formData.append('skip_na_names', pdfOptions.skip_na_names ? 'true' : 'false');
+      formData.append('skip_vacant', pdfOptions.skip_vacant ? 'true' : 'false');
 
       const response = await axios.post(`${API_URL}/admin/bills/split-by-employees`, formData, {
         headers: { 
