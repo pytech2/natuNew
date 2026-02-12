@@ -1655,11 +1655,30 @@ export default function BillsPage() {
                   className="w-4 h-4 text-amber-600 rounded border-gray-300"
                 />
                 <label htmlFor="skipVacantPlots" className="text-sm">
-                  <span className="font-medium">Skip Vacant Plots</span>
+                  <span className="font-medium">Skip Vacant/Empty Plots</span>
                   <p className="text-xs text-slate-500">
                     {skipVacantPlots 
-                      ? "Vacant plots, empty plots, and 'NA' entries will be skipped" 
+                      ? "Vacant plots and empty plots will be skipped" 
                       : "All entries including vacant plots will be added"}
+                  </p>
+                </label>
+              </div>
+
+              {/* Skip NA/Empty Names Option */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="skipNaNames"
+                  checked={skipNaNames}
+                  onChange={(e) => setSkipNaNames(e.target.checked)}
+                  className="w-4 h-4 text-red-600 rounded border-gray-300"
+                />
+                <label htmlFor="skipNaNames" className="text-sm">
+                  <span className="font-medium">Skip NA/Empty Owner Names</span>
+                  <p className="text-xs text-slate-500">
+                    {skipNaNames 
+                      ? "Owner name NA, N/A, empty wale entries skip honge" 
+                      : "All entries including NA owner names will be added"}
                   </p>
                 </label>
               </div>
