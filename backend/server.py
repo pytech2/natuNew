@@ -5590,23 +5590,15 @@ async def copy_bills_to_properties(
                 "lng": b["longitude"]
             })
     
-    # Vacant plot keywords - SAME as Generate PDF function
-    def should_skip_for_property(bill):
-        """Skip vacant plots and bills with no valid owner name - SAME as PDF generation"""
+    # Skip filters (separate for NA names and vacant plots)
+    def should_skip_bill(bill):
         owner = (bill.get("owner_name") or "").strip().lower()
         category = (bill.get("category") or "").strip().lower()
-        
-        # Skip if no owner name or invalid owner
-        if not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']:
-            return True
-        
-        # Skip vacant plots
-        if "vacant" in category or "empty" in category:
-            return True
-        if "vacant" in owner or "empty plot" in owner or "खाली" in owner:
-            return True
-        
-        return False
+        if should_skip_na and (not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']):
+            return "na"
+        if should_skip_vacant and ("vacant" in category or "empty" in category or "vacant" in owner or "empty plot" in owner or "खाली" in owner):
+            return "vacant"
+        return None
     
     # Load self-certified PIDs from database for matching
     self_certified_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
