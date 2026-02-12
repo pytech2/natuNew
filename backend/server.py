@@ -4404,7 +4404,7 @@ async def upload_pdf_bills(
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
     
     # Build upload message
-    upload_message = f"Uploaded {len(bills)} bills. Skipped {skipped_count} records with NA/empty owner names."
+    upload_message = f"Uploaded {len(bills)} bills successfully."
     if skipped_vacant > 0:
         upload_message += f" Skipped {skipped_vacant} vacant plots."
     if self_certified_count > 0:
