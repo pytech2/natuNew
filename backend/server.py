@@ -4331,15 +4331,8 @@ async def upload_pdf_bills(
             owner_name = bill_data.get("owner_name", "")
             category = bill_data.get("category", "")
             
-            # Use conservative skip logic - only skip obvious invalid records
-            if should_skip_record(owner_name, category):
-                skipped_count += 1
-                continue
-            
-            # Skip only obvious vacant plots with no owner
-            if is_vacant_plot(owner_name, category):
-                skipped_vacant += 1
-                continue
+            # Upload ALL records - no skipping during upload
+            # Filtering is done at PDF print time via skip_empty_names option
             
             bill_data["id"] = str(uuid.uuid4())
             bill_data["batch_id"] = batch_id
