@@ -4883,16 +4883,21 @@ async def generate_arranged_pdf(
         
         return False
     
-    # Filter out vacant plots and invalid owner names (optional)
-    if should_skip_empty:
-        valid_bills = [b for b in bills if not should_skip_for_pdf(b)]
-        skipped_count = len(bills) - len(valid_bills)
-    else:
-        valid_bills = bills
-        skipped_count = 0
+    # Filter based on individual checkbox selections
+    def should_skip(bill):
+        owner = (bill.get("owner_name") or "").strip().lower()
+        category = (bill.get("category") or "").strip().lower()
+        if should_skip_na and (not owner or owner in ['na', 'n/a', 'n.a.', '-', '--', 'nil', 'none']):
+            return True
+        if should_skip_vacant and ("vacant" in category or "empty" in category or "vacant" in owner or "empty plot" in owner or "खाली" in owner):
+            return True
+        return False
+    
+    valid_bills = [b for b in bills if not should_skip(b)]
+    skipped_count = len(bills) - len(valid_bills)
     
     if not valid_bills:
-        raise HTTPException(status_code=404, detail=f"No valid bills found (skipped {skipped_count} vacant/invalid records)")
+        raise HTTPException(status_code=404, detail=f"No valid bills found (skipped {skipped_count} records based on filters)")
     
     # Keep original bills for serial number lookup (N/A serials need ALL valid serials for nearby lookup)
     all_bills_for_serial_lookup = bills
