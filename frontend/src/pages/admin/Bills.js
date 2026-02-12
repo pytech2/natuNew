@@ -1408,26 +1408,36 @@ export default function BillsPage() {
                 </p>
               </div>
 
-              {/* Skip Empty Names option */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Empty/Vacant Data</Label>
-                <Select 
-                  value={pdfOptions.skip_empty_names ? 'skip' : 'include'} 
-                  onValueChange={(val) => setPdfOptions({...pdfOptions, skip_empty_names: val === 'skip'})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="skip">Skip Empty/Vacant Names</SelectItem>
-                    <SelectItem value="include">Include All (Complete PDF)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500">
-                  {pdfOptions.skip_empty_names 
-                    ? 'Bills without owner name or vacant plots will be skipped' 
-                    : 'All bills will be included, even without owner name'}
-                </p>
+              {/* Skip Filter Checkboxes */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Skip Filters</Label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-2 rounded-lg border cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={pdfOptions.skip_na_names}
+                      onChange={(e) => setPdfOptions({...pdfOptions, skip_na_names: e.target.checked})}
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium">Skip NA/Empty Owner Names</span>
+                      <p className="text-xs text-slate-500">Owner name NA, N/A, empty wale bills hata dega</p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center gap-3 p-2 rounded-lg border cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={pdfOptions.skip_vacant}
+                      onChange={(e) => setPdfOptions({...pdfOptions, skip_vacant: e.target.checked})}
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium">Skip Vacant/Empty Plots</span>
+                      <p className="text-xs text-slate-500">Vacant plot, empty plot wale bills hata dega</p>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
             <DialogFooter>
