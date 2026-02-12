@@ -441,6 +441,7 @@ export default function BillsPage() {
       formData.append('bills_per_page', pdfOptions.bills_per_page || '1');
       formData.append('print_serial', pdfOptions.print_serial ? 'true' : 'false');
       formData.append('self_certified_filter', pdfOptions.self_certified_filter || 'all');
+      formData.append('skip_empty_names', pdfOptions.skip_empty_names ? 'true' : 'false');
 
       const response = await axios.post(`${API_URL}/admin/bills/generate-pdf`, formData, {
         headers: { 
