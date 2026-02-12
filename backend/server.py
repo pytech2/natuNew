@@ -5202,14 +5202,16 @@ async def split_bills_by_employee(
     employee_count: int = Form(...),
     sn_font_size: int = Form(48),
     sn_color: str = Form("red"),
-    skip_empty_names: str = Form("true"),
+    skip_na_names: str = Form("true"),
+    skip_vacant: str = Form("true"),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills into separate PDFs for each employee"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    should_skip_empty = skip_empty_names.lower() == "true"
+    should_skip_na = skip_na_names.lower() == "true"
+    should_skip_vacant = skip_vacant.lower() == "true"
     
     if employee_count < 1 or employee_count > 100:
         raise HTTPException(status_code=400, detail="Employee count must be between 1 and 100")
