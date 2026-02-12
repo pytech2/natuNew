@@ -5524,6 +5524,7 @@ async def copy_bills_to_properties(
     colony: str = Form(None),
     skip_duplicates: str = Form("false"),
     skip_vacant_plots: str = Form("false"),
+    skip_na_names: str = Form("false"),
     skip_duplicate_gps: str = Form("false"),
     current_user: dict = Depends(get_current_user)
 ):
@@ -5531,9 +5532,9 @@ async def copy_bills_to_properties(
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Parse options
     should_skip_duplicates = skip_duplicates.lower() == "true"
     should_skip_vacant = skip_vacant_plots.lower() == "true"
+    should_skip_na = skip_na_names.lower() == "true"
     should_skip_duplicate_gps = skip_duplicate_gps.lower() == "true"
     
     query = {}
