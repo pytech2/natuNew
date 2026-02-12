@@ -4836,7 +4836,8 @@ async def generate_arranged_pdf(
     bills_per_page: int = Form(1),
     print_serial: str = Form("true"),
     self_certified_filter: str = Form("all"),
-    skip_empty_names: str = Form("true"),
+    skip_na_names: str = Form("true"),
+    skip_vacant: str = Form("true"),
     current_user: dict = Depends(get_current_user)
 ):
     """Generate PDF with invoices. 3 per page = landscape bills scaled & stacked vertically on A4."""
@@ -4844,7 +4845,8 @@ async def generate_arranged_pdf(
         raise HTTPException(status_code=403, detail="Only Admin can generate PDF")
     
     should_print_serial = print_serial.lower() == "true"
-    should_skip_empty = skip_empty_names.lower() == "true"
+    should_skip_na = skip_na_names.lower() == "true"
+    should_skip_vacant = skip_vacant.lower() == "true"
     
     query = {}
     if batch_id and batch_id.strip():
