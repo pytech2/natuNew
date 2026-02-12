@@ -4888,9 +4888,13 @@ async def generate_arranged_pdf(
         
         return False
     
-    # Filter out vacant plots and invalid owner names
-    valid_bills = [b for b in bills if not should_skip_for_pdf(b)]
-    skipped_count = len(bills) - len(valid_bills)
+    # Filter out vacant plots and invalid owner names (optional)
+    if should_skip_empty:
+        valid_bills = [b for b in bills if not should_skip_for_pdf(b)]
+        skipped_count = len(bills) - len(valid_bills)
+    else:
+        valid_bills = bills
+        skipped_count = 0
     
     if not valid_bills:
         raise HTTPException(status_code=404, detail=f"No valid bills found (skipped {skipped_count} vacant/invalid records)")
