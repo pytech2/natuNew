@@ -213,9 +213,8 @@ export default function Dashboard() {
   };
 
   const pieData = stats ? [
-    { name: 'Completed', value: stats.completed },
+    { name: 'Approved', value: stats.approved },
     { name: 'Pending', value: stats.pending },
-    { name: 'In Progress', value: stats.in_progress },
     { name: 'Rejected', value: stats.rejected }
   ].filter(d => d.value > 0) : [];
 
