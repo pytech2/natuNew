@@ -245,6 +245,10 @@ export default function PropertyMap() {
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Full Town Map state
+  const [showFullTown, setShowFullTown] = useState(false);
+  const [loadingFullTown, setLoadingFullTown] = useState(false);
+
   // Default center (Kurukshetra, Haryana)
   const defaultCenter = [29.9506, 76.8378];
 
