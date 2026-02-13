@@ -683,6 +683,17 @@ export default function Survey() {
                 <p className="font-mono text-xs">{property?.latitude?.toFixed(6)}, {property?.longitude?.toFixed(6)}</p>
               </div>
             )}
+            {property?.photo_url && (
+              <div className="pt-2 border-t" data-testid="old-property-photo">
+                <span className="text-slate-500 text-xs">Property Image</span>
+                <img 
+                  src={property.photo_url} 
+                  alt="Property" 
+                  className="mt-1 rounded-lg w-full max-h-48 object-cover border border-slate-200"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
