@@ -5549,13 +5549,12 @@ async def copy_bills_to_properties(
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found to copy")
     
-    # Get existing property_ids to check for duplicates (only if skip_duplicates is true)
-    existing_property_ids = set()
+    # ALWAYS get existing property_ids to prevent duplicates by property_id
+    existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "_id": 0}).to_list(None)
+    existing_property_ids = set(p.get("property_id", "") for p in existing_properties)
     existing_keys = set()
     
     if should_skip_duplicates:
-        existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "_id": 0}).to_list(None)
-        existing_property_ids = set(p.get("property_id", "") for p in existing_properties)
         for p in existing_properties:
             owner = (p.get("owner_name") or "").strip().upper()
             mobile = (p.get("mobile") or "").strip()
