@@ -9,7 +9,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - **Database**: MongoDB with hybrid multi-tenant model
   - `nstu_master`: Global DB for users, towns, auth
   - Per-town DBs: Uses `DB_NAME` from `.env` for Thanesar (THS), `nstu_town_xxx` for new towns
-  - **IMPORTANT**: `TOWN_DB_MAPPING["THS"]` reads from `os.environ.get('DB_NAME')` — works on both dev and VPS
+  - **IMPORTANT**: `TOWN_DB_MAPPING["THS"]` reads from `os.environ.get('DB_NAME')`
 - **Multi-Tenant**: ContextVar middleware + axios interceptor for X-Town-Code header
 - **File Storage**: GridFS per-town DB, URLs include town code: `/api/file/{town_code}/{file_id}`
 
@@ -20,32 +20,44 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] Town switcher in admin header
 - [x] Complete data scoping - ALL endpoints use town-scoped DB
 - [x] User migration from legacy DB to master_db
-- [x] Employees scoped to town (new town = fresh employees)
-- [x] Auto-assign new employees to selected town
+- [x] Employees scoped to town
 - [x] Dashboard Today Report toggle with date picker
-- [x] Download Day Report (CSV)
-- [x] Export PDF/Excel: Ward→Colony Name, removed unwanted fields
+- [x] Export PDF/Excel: Ward to Colony Name, removed unwanted fields
 - [x] Clickable Photo URLs in Excel exports
-- [x] Cross-town file serving: URLs include town code `/api/file/{town_code}/{file_id}`
-- [x] Fallback file search across all town DBs for legacy URLs
+- [x] Cross-town file serving with fallback
 - [x] Advanced search on submissions page
 - [x] Surveyor workflow (map colors, form locking)
 - [x] PDF generation with Hindi notes
+- [x] **Old Photo Migration API** - Upload Excel to update property photo_url (Feb 2026)
+- [x] **Block Assign/Unassign Colonies** - Multi-colony, multi-surveyor assignment (Feb 2026)
+- [x] **Relation dropdown text change** - "Padosi" changed to "ग्राहक" (Feb 2026)
+- [x] **Duplicate Prevention** - Always checks property_id before adding to properties (Feb 2026)
+- [x] **Show Full Town Map** - Button to display all properties on map (Feb 2026)
+- [x] **Property Image in Survey** - Shows old photo_url in surveyor form (Feb 2026)
+- [x] **Excel Export with Property ID** - Bills export includes Property ID column (Feb 2026)
 
-## Export Fields
-### Property Details: Property ID, Owner Name, Mobile, Address, Colony Name, Amount
-### Survey Information: Receiver Name, Receiver Mobile No, Relation, Submitted By, Time, GPS, Photo
-### Removed: New Owner Name, Old Property ID, Family ID, Aadhar Number, Ward Number
+## Credentials (Dev)
+- Admin: admin / nastu123
+- Surveyor: surveyor1 / test123
 
 ## Prioritized Backlog
-### P1: Surveyor login auto-routing to assigned town
-### P2: Offline surveyor support, ZIP PDF download, refactor server.py
+### P1
+- Bulk PDF Upload (multiple colonies at once)
+- Surveyor login auto-routing to assigned town
+
+### P2
+- Offline surveyor support
+- ZIP PDF download (all split-employee PDFs)
+- server.py refactoring into APIRouter modules (6400+ lines)
+- Map marker shortcut to survey form
 
 ## VPS Deployment
 - DB_NAME on VPS: `nstu_property_tax`
 - Backend: systemd service with uvicorn + venv
 - After git pull, must fix TOWN_DB_MAPPING: replace "test_database" with "nstu_property_tax"
 
-## Credentials (Dev)
-- Admin: admin / nastu123
-- Surveyor: surveyor1 / test123
+## Key API Endpoints (New)
+- `GET /api/admin/colonies` - List all colonies in current town
+- `POST /api/admin/block-assign-colonies` - Assign multiple colonies to surveyors
+- `POST /api/admin/block-unassign-colonies` - Unassign all surveyors from colonies
+- `POST /api/admin/upload-old-photos` - Upload Excel with old photo URLs
