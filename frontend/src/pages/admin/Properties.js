@@ -124,6 +124,14 @@ export default function Properties() {
   const [detailDialog, setDetailDialog] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
 
+  // Block Assign Colonies dialog
+  const [blockColonyDialog, setBlockColonyDialog] = useState(false);
+  const [blockColonyMode, setBlockColonyMode] = useState('assign'); // 'assign' or 'unassign'
+  const [allColonies, setAllColonies] = useState([]);
+  const [selectedColonies, setSelectedColonies] = useState([]);
+  const [blockColonyEmployees, setBlockColonyEmployees] = useState([]);
+  const [blockColonyLoading, setBlockColonyLoading] = useState(false);
+
   // Toggle employee selection for multi-assign
   const toggleEmployeeSelection = (empId) => {
     setAssignEmployeeIds(prev => {
