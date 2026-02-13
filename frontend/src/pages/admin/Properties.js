@@ -711,6 +711,26 @@ export default function Properties() {
                 Unassign Employee
               </Button>
 
+              <Button
+                variant="outline"
+                data-testid="block-assign-colonies-btn"
+                onClick={() => openBlockColonyDialog('assign')}
+                className="border-green-500 text-green-600 hover:bg-green-50"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Block Assign Colonies
+              </Button>
+
+              <Button
+                variant="outline"
+                data-testid="block-unassign-colonies-btn"
+                onClick={() => openBlockColonyDialog('unassign')}
+                className="border-red-400 text-red-600 hover:bg-red-50"
+              >
+                <UserMinus className="w-4 h-4 mr-2" />
+                Block Unassign Colonies
+              </Button>
+
               {/* Delete Colony Button */}
               <Button
                 variant="outline"
