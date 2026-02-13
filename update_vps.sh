@@ -1,59 +1,59 @@
 #!/bin/bash
-# VPS Quick Update Script for NSTU Property Tax Manager
-# Run this on your VPS to update the application
+# NSTU VPS Update Script - Feb 2026
+# Run this on your VPS to update to latest code
 
-set -e
+echo "=========================================="
+echo "  NSTU VPS UPDATE - Starting..."
+echo "=========================================="
 
-echo "========================================"
-echo "🚀 NSTU App Quick Update Script"
-echo "========================================"
+cd /root/nstu-property-tax || cd ~/nstu-property-tax || { echo "ERROR: Project folder not found!"; exit 1; }
 
-# Navigate to app directory
-cd /var/www/nstu-app || { echo "❌ App directory not found!"; exit 1; }
-
+# Step 1: Save local changes and pull latest
 echo ""
-echo "📥 Step 1: Pulling latest code from GitHub..."
-git stash 2>/dev/null || true
+echo "[1/5] Git Pull..."
+git stash
 git pull origin main
+git stash pop 2>/dev/null
 
+# Step 2: Fix TOWN_DB_MAPPING for VPS (nstu_property_tax instead of test_database)
 echo ""
-echo "🐍 Step 2: Updating backend dependencies..."
+echo "[2/5] Fixing DB mapping for VPS..."
+sed -i 's/TOWN_DB_MAPPING\["THS"\] = os.environ.get("DB_NAME", "test_database")/TOWN_DB_MAPPING["THS"] = os.environ.get("DB_NAME", "nstu_property_tax")/g' backend/server.py
+sed -i 's/"test_database"/"nstu_property_tax"/g' backend/.env 2>/dev/null
+echo "DB mapping fixed: THS -> nstu_property_tax"
+
+# Step 3: Install any new Python packages
+echo ""
+echo "[3/5] Installing Python packages..."
 cd backend
-source venv/bin/activate
+source venv/bin/activate 2>/dev/null || source ../venv/bin/activate 2>/dev/null
 pip install -r requirements.txt --quiet
-deactivate
+cd ..
+
+# Step 4: Rebuild Frontend
+echo ""
+echo "[4/5] Building Frontend..."
+cd frontend
+npm install --legacy-peer-deps
+npm run build
+cd ..
+
+# Step 5: Restart Services
+echo ""
+echo "[5/5] Restarting Services..."
+sudo systemctl restart nstu-backend 2>/dev/null || sudo systemctl restart backend 2>/dev/null
+sudo systemctl restart nginx
 
 echo ""
-echo "⚛️ Step 3: Updating frontend..."
-cd ../frontend
-yarn install --silent 2>/dev/null || npm install --legacy-peer-deps
-yarn build 2>/dev/null || npm run build
-
+echo "=========================================="
+echo "  UPDATE COMPLETE!"
+echo "=========================================="
 echo ""
-echo "📁 Step 4: Ensuring uploads directory exists..."
-mkdir -p /var/www/nstu-app/backend/uploads
-chmod -R 755 /var/www/nstu-app/backend/uploads
-
+echo "New features added:"
+echo "  - Bulk Assign/Unassign Colonies"
+echo "  - Old Photo Upload (Upload Data page)"
+echo "  - Show Full Town Map button"
+echo "  - Duplicate prevention in Add to Property"
+echo "  - Relation: Padosi -> ग्राहक"
 echo ""
-echo "🔄 Step 5: Restarting backend service..."
-pm2 restart nstu-backend 2>/dev/null || {
-    echo "PM2 service not found, starting fresh..."
-    cd /var/www/nstu-app
-    pm2 start ecosystem.config.js
-}
-
-echo ""
-echo "🌐 Step 6: Reloading Nginx..."
-nginx -t && systemctl reload nginx
-
-echo ""
-echo "========================================"
-echo "✅ Update Complete!"
-echo "========================================"
-echo ""
-echo "🔍 Check status with:"
-echo "   pm2 status"
-echo "   pm2 logs nstu-backend --lines 20"
-echo ""
-echo "🌐 Visit: https://app.nstuindia.com"
-echo ""
+echo "Check: sudo systemctl status nstu-backend"
