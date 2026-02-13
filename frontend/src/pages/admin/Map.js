@@ -294,11 +294,30 @@ export default function PropertyMap() {
       const response = await axios.get(`${API_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Filter to get surveyors and field employees
       const empList = (response.data || []).filter(u => u.role !== 'ADMIN');
       setEmployees(empList);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
+    }
+  };
+
+  // Fetch ALL properties for full town map
+  const fetchFullTownMap = async () => {
+    setLoadingFullTown(true);
+    setShowFullTown(true);
+    try {
+      const response = await axios.get(`${API_URL}/map/properties?limit=50000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      let props = response.data.properties || [];
+      setProperties(props);
+      const uniqueCategories = [...new Set(props.map(p => p.category).filter(Boolean))];
+      setCategories(uniqueCategories.sort());
+      toast.success(`Loaded ${props.length} properties for full town map`);
+    } catch (error) {
+      toast.error('Failed to load full town map');
+    } finally {
+      setLoadingFullTown(false);
     }
   };
 
