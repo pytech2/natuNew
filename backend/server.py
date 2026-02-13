@@ -6274,6 +6274,141 @@ async def clear_self_certification(current_user: dict = Depends(get_current_user
         "message": f"Cleared {result.deleted_count} self-certified PIDs"
     }
 
+@api_router.post("/admin/upload-old-photos")
+async def upload_old_photos(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload old-photo Excel file to update property photo_url for the current town"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Please upload an Excel (.xlsx, .xls) file")
+    
+    contents = await file.read()
+    df = pd.read_excel(io.BytesIO(contents), header=None)
+    
+    updated = 0
+    not_found = 0
+    skipped = 0
+    
+    for idx in range(2, len(df)):  # Skip header rows (0 and 1)
+        prop_id = str(df.iloc[idx, 1] if pd.notna(df.iloc[idx, 1]) else "").strip()
+        photo_url = str(df.iloc[idx, 7] if pd.notna(df.iloc[idx, 7]) else "").strip()
+        
+        if not prop_id or not photo_url or not photo_url.startswith("http"):
+            skipped += 1
+            continue
+        
+        result = await get_db().properties.update_one(
+            {"property_id": prop_id},
+            {"$set": {"photo_url": photo_url}}
+        )
+        if result.modified_count > 0:
+            updated += 1
+        else:
+            not_found += 1
+    
+    return {
+        "message": f"Updated {updated} properties with old photos. {not_found} not found in current town. {skipped} skipped (no data).",
+        "updated": updated,
+        "not_found": not_found,
+        "skipped": skipped
+    }
+
+@api_router.get("/admin/colonies")
+async def get_all_colonies(current_user: dict = Depends(get_current_user)):
+    """Get all distinct colony/ward names in the current town"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    colonies = await get_db().properties.distinct("ward")
+    colonies = [c for c in colonies if c]
+    colonies.sort()
+    return {"colonies": colonies}
+
+@api_router.post("/admin/block-assign-colonies")
+async def block_assign_colonies(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Assign multiple colonies to multiple surveyors"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    colony_names = data.get("colonies", [])
+    employee_ids = data.get("employee_ids", [])
+    
+    if not colony_names or not employee_ids:
+        raise HTTPException(status_code=400, detail="colonies and employee_ids are required")
+    
+    employees = await master_db.users.find({"id": {"$in": employee_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(None)
+    emp_map = {e["id"]: e["name"] for e in employees}
+    
+    total_updated = 0
+    results = []
+    
+    # Distribute colonies equally among employees
+    for i, colony in enumerate(colony_names):
+        emp_id = employee_ids[i % len(employee_ids)]
+        emp_name = emp_map.get(emp_id, "Unknown")
+        
+        result = await get_db().properties.update_many(
+            {"ward": colony, "$or": [
+                {"assigned_employee_id": None},
+                {"assigned_employee_id": {"$exists": False}},
+                {"assigned_employee_id": ""}
+            ]},
+            {"$set": {
+                "assigned_employee_id": emp_id,
+                "assigned_employee_name": emp_name
+            },
+            "$addToSet": {"assigned_employee_ids": emp_id}}
+        )
+        total_updated += result.modified_count
+        results.append({
+            "colony": colony,
+            "employee": emp_name,
+            "assigned": result.modified_count
+        })
+    
+    return {
+        "message": f"Assigned {total_updated} properties across {len(colony_names)} colonies to {len(employee_ids)} surveyors",
+        "total_assigned": total_updated,
+        "details": results
+    }
+
+@api_router.post("/admin/block-unassign-colonies")
+async def block_unassign_colonies(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Unassign all surveyors from multiple colonies"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    colony_names = data.get("colonies", [])
+    if not colony_names:
+        raise HTTPException(status_code=400, detail="colonies list is required")
+    
+    total_unassigned = 0
+    for colony in colony_names:
+        result = await get_db().properties.update_many(
+            {"ward": colony},
+            {"$set": {
+                "assigned_employee_id": None,
+                "assigned_employee_name": None,
+                "assigned_employee_ids": []
+            }}
+        )
+        total_unassigned += result.modified_count
+    
+    return {
+        "message": f"Unassigned {total_unassigned} properties from {len(colony_names)} colonies",
+        "total_unassigned": total_unassigned
+    }
+
 @api_router.post("/init-admin")
 async def init_admin():
     """Initialize default admin user if not exists"""
