@@ -238,7 +238,90 @@ export default function UploadPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Old Photo Upload Section */}
+        <OldPhotoUpload token={token} />
       </div>
     </AdminLayout>
+  );
+}
+
+function OldPhotoUpload({ token }) {
+  const [photoFile, setPhotoFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState(null);
+  const photoRef = useRef(null);
+
+  const handleUpload = async () => {
+    if (!photoFile) return;
+    setUploading(true);
+    setResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', photoFile);
+      const res = await axios.post(`${API_URL}/admin/upload-old-photos`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      setResult(res.data);
+      toast.success(res.data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Card className="border-purple-200">
+      <CardHeader>
+        <CardTitle className="font-heading flex items-center gap-2 text-purple-800">
+          <Upload className="w-5 h-5" />
+          Upload Old Property Photos
+        </CardTitle>
+        <CardDescription>
+          Upload Excel file with Property ID and Photo URL columns to migrate old photos. When surveyor opens a property, the old photo will be displayed.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div
+          className={`photo-upload-area ${photoFile ? 'has-image' : ''}`}
+          onClick={() => photoRef.current?.click()}
+        >
+          <input
+            ref={photoRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => setPhotoFile(e.target.files[0])}
+            className="hidden"
+            data-testid="old-photo-file-input"
+          />
+          {photoFile ? (
+            <div className="flex items-center justify-center gap-3">
+              <CheckCircle className="w-6 h-6 text-purple-600" />
+              <span className="font-medium">{photoFile.name} ({(photoFile.size / 1024).toFixed(1)} KB)</span>
+            </div>
+          ) : (
+            <div>
+              <Upload className="w-8 h-8 mx-auto text-purple-400 mb-2" />
+              <p className="text-slate-600">Click to select Old Photo Excel file</p>
+            </div>
+          )}
+        </div>
+        <Button
+          onClick={handleUpload}
+          disabled={!photoFile || uploading}
+          data-testid="upload-old-photos-btn"
+          className="w-full bg-purple-700 hover:bg-purple-800"
+        >
+          {uploading ? 'Uploading & Processing...' : 'Upload Old Photos'}
+        </Button>
+        {result && (
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm">
+            <p className="font-semibold text-purple-800">{result.message}</p>
+            <p className="text-purple-600">Updated: {result.updated} | Not found: {result.not_found} | Skipped: {result.skipped}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
