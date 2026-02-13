@@ -718,7 +718,7 @@ export default function Properties() {
                 className="border-green-500 text-green-600 hover:bg-green-50"
               >
                 <Users className="w-4 h-4 mr-2" />
-                Block Assign Colonies
+                Bulk Assign Colonies
               </Button>
 
               <Button
@@ -728,7 +728,7 @@ export default function Properties() {
                 className="border-red-400 text-red-600 hover:bg-red-50"
               >
                 <UserMinus className="w-4 h-4 mr-2" />
-                Block Unassign Colonies
+                Bulk Unassign Colonies
               </Button>
 
               {/* Delete Colony Button */}
@@ -1641,7 +1641,7 @@ export default function Properties() {
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle data-testid="block-colony-dialog-title">
-                {blockColonyMode === 'assign' ? 'Block Assign Colonies' : 'Block Unassign Colonies'}
+                {blockColonyMode === 'assign' ? 'Bulk Assign Colonies' : 'Bulk Unassign Colonies'}
               </DialogTitle>
               <DialogDescription>
                 {blockColonyMode === 'assign'
