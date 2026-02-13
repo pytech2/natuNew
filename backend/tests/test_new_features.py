@@ -26,7 +26,7 @@ def admin_token():
         "password": "nastu123"
     })
     if response.status_code == 200:
-        return response.json().get("access_token")
+        return response.json().get("token")  # API returns 'token' not 'access_token'
     pytest.skip(f"Admin login failed: {response.text}")
     
 @pytest.fixture(scope="module")
