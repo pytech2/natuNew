@@ -5634,14 +5634,13 @@ async def copy_bills_to_properties(
                     continue
                 seen_gps.add(gps_key)
         
-        # Only check duplicates if option is enabled
+        # ALWAYS check for duplicate by property_id (prevents re-adding same property)
+        if bill_prop_id and bill_prop_id in existing_property_ids:
+            skipped_duplicates += 1
+            continue
+        
+        # Check additional duplicates by name+mobile only if skip_duplicates option is enabled
         if should_skip_duplicates:
-            # Check for duplicate by property_id
-            if bill_prop_id and bill_prop_id in existing_property_ids:
-                skipped_duplicates += 1
-                continue
-            
-            # Check for duplicate by owner_name + mobile
             owner = (bill.get("owner_name") or "").strip().upper()
             mobile = (bill.get("mobile") or "").strip()
             if owner and mobile:
