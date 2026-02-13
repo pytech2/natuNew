@@ -1635,6 +1635,76 @@ export default function Properties() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Block Assign/Unassign Colonies Dialog */}
+        <Dialog open={blockColonyDialog} onOpenChange={setBlockColonyDialog}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle data-testid="block-colony-dialog-title">
+                {blockColonyMode === 'assign' ? 'Block Assign Colonies' : 'Block Unassign Colonies'}
+              </DialogTitle>
+              <DialogDescription>
+                {blockColonyMode === 'assign'
+                  ? 'Select colonies and surveyors to assign'
+                  : 'Select colonies to unassign all surveyors'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-semibold">Select Colonies ({selectedColonies.length} selected)</Label>
+                <div className="max-h-40 overflow-y-auto border rounded-lg p-2 mt-1 space-y-1">
+                  {allColonies.length === 0 ? (
+                    <p className="text-sm text-slate-400 py-2 text-center">Loading colonies...</p>
+                  ) : allColonies.map(colony => (
+                    <label key={colony} className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-50 cursor-pointer">
+                      <Checkbox
+                        checked={selectedColonies.includes(colony)}
+                        onCheckedChange={() => toggleColonySelection(colony)}
+                        data-testid={`colony-check-${colony}`}
+                      />
+                      <span className="text-sm">{colony}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {blockColonyMode === 'assign' && (
+                <div>
+                  <Label className="text-sm font-semibold">Select Surveyors ({blockColonyEmployees.length} selected)</Label>
+                  <div className="max-h-40 overflow-y-auto border rounded-lg p-2 mt-1 space-y-1">
+                    {employees.filter(e => e.role === 'SURVEYOR').map(emp => (
+                      <label key={emp.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-50 cursor-pointer">
+                        <Checkbox
+                          checked={blockColonyEmployees.includes(emp.id)}
+                          onCheckedChange={() => {
+                            setBlockColonyEmployees(prev =>
+                              prev.includes(emp.id) ? prev.filter(id => id !== emp.id) : [...prev, emp.id]
+                            );
+                          }}
+                          data-testid={`block-emp-check-${emp.id}`}
+                        />
+                        <span className="text-sm">{emp.name} ({emp.mobile || emp.username})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBlockColonyDialog(false)}>Cancel</Button>
+              <Button
+                onClick={handleBlockColonyAction}
+                disabled={blockColonyLoading}
+                className={blockColonyMode === 'assign' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                data-testid="block-colony-submit-btn"
+              >
+                {blockColonyLoading ? 'Processing...' : blockColonyMode === 'assign' ? 'Assign' : 'Unassign'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
