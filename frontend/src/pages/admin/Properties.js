@@ -358,6 +358,58 @@ export default function Properties() {
     }
   };
 
+  // Block Assign/Unassign Colonies
+  const openBlockColonyDialog = async (mode) => {
+    setBlockColonyMode(mode);
+    setSelectedColonies([]);
+    setBlockColonyEmployees([]);
+    setBlockColonyDialog(true);
+    try {
+      const res = await axios.get(`${API_URL}/admin/colonies`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAllColonies(res.data.colonies || []);
+    } catch (error) {
+      toast.error('Failed to load colonies');
+    }
+  };
+
+  const toggleColonySelection = (colony) => {
+    setSelectedColonies(prev =>
+      prev.includes(colony) ? prev.filter(c => c !== colony) : [...prev, colony]
+    );
+  };
+
+  const handleBlockColonyAction = async () => {
+    if (selectedColonies.length === 0) {
+      toast.error('Please select at least one colony');
+      return;
+    }
+    if (blockColonyMode === 'assign' && blockColonyEmployees.length === 0) {
+      toast.error('Please select at least one employee');
+      return;
+    }
+    setBlockColonyLoading(true);
+    try {
+      const url = blockColonyMode === 'assign'
+        ? `${API_URL}/admin/block-assign-colonies`
+        : `${API_URL}/admin/block-unassign-colonies`;
+      const payload = blockColonyMode === 'assign'
+        ? { colonies: selectedColonies, employee_ids: blockColonyEmployees }
+        : { colonies: selectedColonies };
+      const res = await axios.post(url, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setBlockColonyDialog(false);
+      fetchProperties();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed');
+    } finally {
+      setBlockColonyLoading(false);
+    }
+  };
+
   const handleDeleteAll = async () => {
     setDeleting(true);
     try {
