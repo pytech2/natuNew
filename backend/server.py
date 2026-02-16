@@ -4555,7 +4555,7 @@ async def list_bills(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     if town and town.strip():
         query["town"] = town
     if status and status.strip():
