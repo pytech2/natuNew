@@ -854,6 +854,17 @@ export default function BillsPage() {
 
               <Button
                 variant="outline"
+                onClick={handleGenerateSerialByGps}
+                disabled={pagination.total === 0 || generatingSerial}
+                className="border-purple-400 text-purple-600 hover:bg-purple-50"
+                data-testid="generate-serial-gps-btn"
+              >
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                {generatingSerial ? 'Generating...' : 'Generate Serial by GPS'}
+              </Button>
+
+              <Button
+                variant="outline"
                 onClick={() => setGenerateDialog(true)}
                 disabled={pagination.total === 0}
               >
