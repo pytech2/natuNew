@@ -4853,21 +4853,38 @@ async def generate_serial_by_gps(
     # Sort ALL bills by GPS route (including NA serial ones)
     sorted_bills = sort_by_gps_route(all_bills)
     
-    # Assign new serial numbers 1, 2, 3... to ALL bills
+    # Assign new serial numbers 1, 2, 3... to ALL bills AND matching properties
+    prop_updated = 0
     for i, bill in enumerate(sorted_bills):
+        new_serial = i + 1
+        # Update bill
         await get_db().bills.update_one(
             {"id": bill["id"]},
             {"$set": {
-                "serial_number": i + 1,
+                "serial_number": new_serial,
                 "serial_na": False,
                 "gps_arranged": True,
                 "gps_serial_generated": True
             }}
         )
+        # Also update matching property so map shows serial number
+        prop_id = bill.get("property_id", "")
+        if prop_id:
+            res = await get_db().properties.update_one(
+                {"property_id": prop_id},
+                {"$set": {
+                    "serial_number": new_serial,
+                    "bill_sr_no": new_serial,
+                    "gps_serial_generated": True
+                }}
+            )
+            if res.modified_count > 0:
+                prop_updated += 1
     
     return {
-        "message": f"Generated serial numbers 1 to {len(sorted_bills)} for all bills based on GPS route",
-        "total_generated": len(sorted_bills)
+        "message": f"Generated serial numbers 1 to {len(sorted_bills)} for all bills based on GPS route. {prop_updated} properties updated on map.",
+        "total_generated": len(sorted_bills),
+        "properties_updated": prop_updated
     }
 
 @api_router.post("/admin/bills/generate-pdf")
