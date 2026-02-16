@@ -4901,7 +4901,14 @@ async def generate_arranged_pdf(
     elif self_certified_filter == "not_self_certified":
         query["self_certified"] = {"$ne": True}
     
-    bills = await get_db().bills.find(query, {"_id": 0}).sort("page_number", 1).to_list(None)
+    bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
+    
+    # Sort by serial_number if GPS serials were generated, otherwise by page_number
+    has_gps_serials = any(b.get("gps_serial_generated") for b in bills)
+    if has_gps_serials:
+        bills.sort(key=lambda b: b.get("serial_number", 0))
+    else:
+        bills.sort(key=lambda b: b.get("page_number", 0))
     
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found")
