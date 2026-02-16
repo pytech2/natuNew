@@ -434,6 +434,32 @@ export default function BillsPage() {
     }
   };
 
+  const [generatingSerial, setGeneratingSerial] = useState(false);
+
+  const handleGenerateSerialByGps = async () => {
+    if (!window.confirm('GPS ke basis par sabhi bills ko naye serial numbers (1, 2, 3...) assign karein? NA serial wale bills ko bhi serial milega.')) return;
+    setGeneratingSerial(true);
+    try {
+      const formData = new FormData();
+      if (filters.batch_id) formData.append('batch_id', filters.batch_id);
+      if (filters.colony) formData.append('colony', filters.colony);
+
+      const response = await axios.post(`${API_URL}/admin/bills/generate-serial-by-gps`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success(response.data.message);
+      fetchBills();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to generate serial numbers');
+    } finally {
+      setGeneratingSerial(false);
+    }
+  };
+
   const handleGeneratePdf = async () => {
     setGenerating(true);
     try {
