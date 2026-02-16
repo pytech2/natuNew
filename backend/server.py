@@ -766,8 +766,8 @@ async def get_map_properties(
     
     if colony and colony.strip():
         query["$or"] = [
-            {"colony": {"$regex": f"^{colony}$", "$options": "i"}},
-            {"ward": {"$regex": f"^{colony}$", "$options": "i"}}
+            {"colony": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}},
+            {"ward": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}}
         ]
     
     # Filter by status if provided
@@ -1944,8 +1944,8 @@ async def delete_colony_properties(
     
     # Find properties in this colony
     query = {"$or": [
-        {"colony": {"$regex": f"^{colony}$", "$options": "i"}},
-        {"ward": {"$regex": f"^{colony}$", "$options": "i"}}
+        {"colony": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}},
+        {"ward": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}}
     ]}
     
     properties = await get_db().properties.find(query, {"id": 1, "_id": 0}).to_list(None)
@@ -1995,8 +1995,8 @@ async def delete_duplicate_properties(
     query = {}
     if colony and colony.strip():
         query["$or"] = [
-            {"colony": {"$regex": f"^{colony}$", "$options": "i"}},
-            {"ward": {"$regex": f"^{colony}$", "$options": "i"}}
+            {"colony": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}},
+            {"ward": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}}
         ]
     
     # Get all properties
@@ -6084,7 +6084,7 @@ async def list_generated_pdfs(
     
     query = {}
     if colony and colony.strip():
-        query["colony"] = {"$regex": f"^{colony}$", "$options": "i"}
+        query["colony"] = {"$regex": f"^{re.escape(colony)}$", "$options": "i"}
     if pdf_type and pdf_type.strip():
         query["pdf_type"] = pdf_type
     
