@@ -4829,6 +4829,47 @@ async def arrange_bills_by_route(
         "skipped_na": len(na_bills)
     }
 
+@api_router.post("/admin/bills/generate-serial-by-gps")
+async def generate_serial_by_gps(
+    batch_id: str = Form(None),
+    colony: str = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate new serial numbers for ALL bills (including NA) based on GPS route order"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if batch_id and batch_id.strip():
+        query["batch_id"] = batch_id
+    if colony and colony.strip():
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
+    
+    all_bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
+    
+    if not all_bills:
+        raise HTTPException(status_code=404, detail="No bills found")
+    
+    # Sort ALL bills by GPS route (including NA serial ones)
+    sorted_bills = sort_by_gps_route(all_bills)
+    
+    # Assign new serial numbers 1, 2, 3... to ALL bills
+    for i, bill in enumerate(sorted_bills):
+        await get_db().bills.update_one(
+            {"id": bill["id"]},
+            {"$set": {
+                "serial_number": i + 1,
+                "serial_na": False,
+                "gps_arranged": True,
+                "gps_serial_generated": True
+            }}
+        )
+    
+    return {
+        "message": f"Generated serial numbers 1 to {len(sorted_bills)} for all bills based on GPS route",
+        "total_generated": len(sorted_bills)
+    }
+
 @api_router.post("/admin/bills/generate-pdf")
 async def generate_arranged_pdf(
     batch_id: str = Form(None),
