@@ -4791,7 +4791,7 @@ async def arrange_bills_by_route(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Get all matching bills
     all_bills = await get_db().bills.find(query, {"_id": 0}).to_list(None)
@@ -4852,7 +4852,7 @@ async def generate_arranged_pdf(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Add self_certified filter
     if self_certified_filter == "self_certified":
@@ -5220,7 +5220,7 @@ async def split_bills_by_employee(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     all_bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
     
@@ -5438,7 +5438,7 @@ async def get_bills_map_data(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Only get bills with GPS coordinates
     query["latitude"] = {"$ne": None}
@@ -5541,7 +5541,7 @@ async def copy_bills_to_properties(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Get bills to copy
     bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
@@ -5798,7 +5798,7 @@ async def split_bills_by_specific_employees(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Get arranged bills
     bills = await get_db().bills.find(query, {"_id": 0}).sort("serial_number", 1).to_list(None)
