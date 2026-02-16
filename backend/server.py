@@ -5491,7 +5491,7 @@ async def delete_all_bills(
     if batch_id and batch_id.strip():
         query["batch_id"] = batch_id
     if colony and colony.strip():
-        query["colony"] = {"$regex": colony, "$options": "i"}
+        query["colony"] = {"$regex": re.escape(colony.strip()), "$options": "i"}
     
     # Get count first
     count = await get_db().bills.count_documents(query)
