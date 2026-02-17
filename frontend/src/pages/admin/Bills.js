@@ -1268,9 +1268,9 @@ export default function BillsPage() {
         <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Upload PDF Bills (Single or Bulk)</DialogTitle>
+              <DialogTitle>Upload PDF Bills (1-5 files)</DialogTitle>
               <DialogDescription>
-                Upload one or multiple PDF files. Each page in a PDF becomes a property tax bill.
+                Upload 1 to 5 PDF files at a time. Each page in a PDF becomes a property tax bill.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
