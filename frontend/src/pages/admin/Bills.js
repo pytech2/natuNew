@@ -1262,70 +1262,92 @@ export default function BillsPage() {
         <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Upload PDF Bills</DialogTitle>
+              <DialogTitle>Upload PDF Bills (Single or Bulk)</DialogTitle>
               <DialogDescription>
-                Upload a multi-page PDF where each page is a property tax bill
+                Upload one or multiple PDF files. Each page in a PDF becomes a property tax bill.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Batch Name</Label>
+                <Label>Batch Name {files.length > 1 && <span className="text-xs text-slate-500">(Each file will use its filename as batch)</span>}</Label>
                 <Input
                   value={batchName}
                   onChange={(e) => setBatchName(e.target.value)}
                   placeholder="e.g., Akash Nagar Bills 2025-26"
+                  disabled={files.length > 1}
                 />
               </div>
               <div className="space-y-2">
-                <Label>PDF File</Label>
+                <Label>PDF Files <span className="text-xs text-blue-600 ml-2">(Select multiple files at once)</span></Label>
                 <div
-                  className={`photo-upload-area ${file ? 'has-image' : ''}`}
+                  className={`photo-upload-area ${files.length > 0 ? 'has-image' : ''}`}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf"
+                    multiple
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  {file ? (
-                    <div className="flex items-center justify-center gap-3">
-                      <CheckCircle className="w-6 h-6 text-emerald-600" />
-                      <div className="text-left">
-                        <p className="font-medium text-slate-900">{file.name}</p>
-                        <p className="text-sm text-slate-500">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                  {files.length > 0 ? (
+                    <div className="text-center">
+                      <CheckCircle className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                      <p className="font-medium text-slate-900">
+                        {files.length} PDF file{files.length > 1 ? 's' : ''} selected
+                      </p>
+                      <div className="text-sm text-slate-500 mt-1 max-h-24 overflow-y-auto">
+                        {files.map((f, i) => (
+                          <div key={i} className="truncate">
+                            {f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)
+                          </div>
+                        ))}
                       </div>
+                      <p className="text-xs text-blue-600 mt-2">Click to change selection</p>
                     </div>
                   ) : (
                     <div>
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                      <p className="text-slate-600">Click to select PDF file</p>
+                      <p className="text-slate-600">Click to select PDF file(s)</p>
+                      <p className="text-xs text-slate-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
                     </div>
                   )}
                 </div>
               </div>
+              {uploading && uploadProgress.total > 1 && (
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between text-sm text-blue-700 mb-2">
+                    <span>Uploading file {uploadProgress.current} of {uploadProgress.total}</span>
+                    <span>{Math.round((uploadProgress.current / uploadProgress.total) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all" 
+                      style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadDialog(false)}>
+              <Button variant="outline" onClick={() => { setUploadDialog(false); setFiles([]); setBatchName(''); }}>
                 Cancel
               </Button>
               <Button
                 onClick={handleUpload}
-                disabled={uploading || !file || !batchName}
+                disabled={uploading || files.length === 0 || !batchName}
                 className="bg-blue-600"
               >
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
+                    {uploadProgress.total > 1 ? `Processing ${uploadProgress.current}/${uploadProgress.total}...` : 'Processing...'}
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload & Extract
+                    Upload {files.length > 1 ? `${files.length} Files` : '& Extract'}
                   </>
                 )}
               </Button>
