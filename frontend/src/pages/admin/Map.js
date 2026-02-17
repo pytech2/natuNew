@@ -717,7 +717,7 @@ export default function PropertyMap() {
         {showMap && (
           <>
             {/* Colony Selection Info Banner - Show only when no colony selected */}
-            {!filters.colony && !showFullTown && (
+            {!filters.colony && (
               <Card className="border-2 border-blue-200 bg-blue-50/50">
                 <CardContent className="py-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
@@ -754,25 +754,10 @@ export default function PropertyMap() {
                           )}
                         </SelectContent>
                       </Select>
-                      <Button
-                        onClick={fetchFullTownMap}
-                        disabled={loadingFullTown}
-                        className="bg-green-600 hover:bg-green-700 whitespace-nowrap"
-                        data-testid="show-full-town-map-btn"
-                      >
-                        {loadingFullTown ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <MapIcon className="w-4 h-4 mr-1" />}
-                        Show Full Town Map
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
-            {showFullTown && !filters.colony && (
-              <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
-                <span className="text-sm font-medium text-green-800">Showing Full Town Map ({filteredProperties.length} properties)</span>
-                <Button size="sm" variant="outline" onClick={() => { setShowFullTown(false); setProperties([]); }} data-testid="close-full-town-btn">Close Full Town View</Button>
-              </div>
             )}
 
             {/* Stats Cards - Show only when colony selected */}
