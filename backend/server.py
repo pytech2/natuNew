@@ -1115,8 +1115,9 @@ async def create_user(data: UserCreate, request: Request, current_user: dict = D
 
 @api_router.get("/admin/users", response_model=List[UserResponse])
 async def list_users(request: Request, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admin access required")
+    # Allow ADMIN and SUPERVISOR to view users
+    if current_user["role"] not in ["ADMIN", "SUPERVISOR"]:
+        raise HTTPException(status_code=403, detail="Admin or Supervisor access required")
     
     # Filter users by selected town
     query = {}

@@ -112,7 +112,7 @@ export default function Submissions() {
 
   // Check permissions based on role
   const canEdit = user?.role === 'ADMIN';
-  const canApproveReject = user?.role === 'ADMIN';
+  const canApproveReject = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
 
   const employeeIdFilter = searchParams.get('employee_id') || '';
 
