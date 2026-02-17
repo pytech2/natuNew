@@ -1316,7 +1316,7 @@ export default function BillsPage() {
                     <div>
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                       <p className="text-slate-600">Click to select PDF file(s)</p>
-                      <p className="text-xs text-slate-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                      <p className="text-xs text-slate-400 mt-1">Hold Ctrl/Cmd to select 1-5 files</p>
                     </div>
                   )}
                 </div>
