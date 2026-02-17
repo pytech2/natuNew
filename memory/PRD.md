@@ -35,14 +35,20 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Show Full Town Map** - Button to display all properties on map (Feb 2026)
 - [x] **Property Image in Survey** - Shows old photo_url in surveyor form (Feb 2026)
 - [x] **Excel Export with Property ID** - Bills export includes Property ID column (Feb 2026)
+- [x] **GPS Serial Number Generation** - Generate serial numbers based on GPS coords for colonies (Feb 2026)
+- [x] **Colony Regex Fix** - Fixed special characters () in colony names across all endpoints (Feb 2026)
+- [x] **Bulk PDF Upload** - Upload multiple PDF files at once with progress tracking (Feb 2026)
+- [x] **Supervisor/MC Officer Approve/Reject** - These roles can now approve/reject pending submissions (Feb 2026)
+- [x] **Supervisor Employee Visibility** - Supervisor can now see employee list in dashboard (Feb 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
 - Surveyor: surveyor1 / test123
+- Supervisor: a / test123
+- MC Officer: 1234567890 / test123
 
 ## Prioritized Backlog
 ### P1
-- Bulk PDF Upload (multiple colonies at once)
 - Surveyor login auto-routing to assigned town
 
 ### P2
@@ -61,3 +67,4 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - `POST /api/admin/block-assign-colonies` - Assign multiple colonies to surveyors
 - `POST /api/admin/block-unassign-colonies` - Unassign all surveyors from colonies
 - `POST /api/admin/upload-old-photos` - Upload Excel with old photo URLs
+- `POST /api/admin/bills/generate-serial-by-gps` - Generate serial numbers by GPS coordinates
