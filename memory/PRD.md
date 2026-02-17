@@ -40,6 +40,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Bulk PDF Upload** - Upload multiple PDF files at once with progress tracking (Feb 2026)
 - [x] **Supervisor/MC Officer Approve/Reject** - These roles can now approve/reject pending submissions (Feb 2026)
 - [x] **Supervisor Employee Visibility** - Supervisor can now see employee list in dashboard (Feb 2026)
+- [x] **Performance Fix** - Removed "Show Full Town Map" feature that was loading 50k+ properties (Feb 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
