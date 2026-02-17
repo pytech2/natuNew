@@ -321,6 +321,12 @@ export default function BillsPage() {
         return;
       }
       
+      // Limit: Maximum 5 PDFs at a time
+      if (pdfFiles.length > 5) {
+        toast.error('Maximum 5 PDF files allowed at a time. Please select 1-5 files.');
+        return;
+      }
+      
       setFiles(pdfFiles);
       if (!batchName && pdfFiles.length === 1) {
         setBatchName(pdfFiles[0].name.replace('.pdf', ''));
