@@ -77,11 +77,12 @@ export default function BillsPage() {
     search: ''
   });
   
-  // Upload state
+  // Upload state - now supports multiple files
   const [uploadDialog, setUploadDialog] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [batchName, setBatchName] = useState('');
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef(null);
   
   // Edit state
@@ -305,49 +306,88 @@ export default function BillsPage() {
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (!selectedFile.name.toLowerCase().endsWith('.pdf')) {
-        toast.error('Please upload a PDF file');
+    const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length > 0) {
+      // Filter only PDF files
+      const pdfFiles = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+      const nonPdfCount = selectedFiles.length - pdfFiles.length;
+      
+      if (nonPdfCount > 0) {
+        toast.warning(`${nonPdfCount} non-PDF file(s) skipped`);
+      }
+      
+      if (pdfFiles.length === 0) {
+        toast.error('Please select PDF files only');
         return;
       }
-      setFile(selectedFile);
-      if (!batchName) {
-        setBatchName(selectedFile.name.replace('.pdf', ''));
+      
+      setFiles(pdfFiles);
+      if (!batchName && pdfFiles.length === 1) {
+        setBatchName(pdfFiles[0].name.replace('.pdf', ''));
+      } else if (!batchName && pdfFiles.length > 1) {
+        setBatchName(`Bulk Upload ${new Date().toLocaleDateString('en-IN')}`);
       }
     }
   };
 
   const handleUpload = async () => {
-    if (!file || !batchName) {
-      toast.error('Please select a file and enter batch name');
+    if (files.length === 0 || !batchName) {
+      toast.error('Please select file(s) and enter batch name');
       return;
     }
 
     setUploading(true);
+    setUploadProgress({ current: 0, total: files.length });
+    
+    let totalBills = 0;
+    let totalSkipped = 0;
+    let failedFiles = [];
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('batch_name', batchName);
-      formData.append('authorization', `Bearer ${token}`);
+      // Upload files one by one
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress({ current: i + 1, total: files.length });
+        
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          // Use file name as batch name for multiple files, else use user-provided batch name
+          const currentBatchName = files.length > 1 ? file.name.replace('.pdf', '') : batchName;
+          formData.append('batch_name', currentBatchName);
+          formData.append('authorization', `Bearer ${token}`);
 
-      const response = await axios.post(`${API_URL}/admin/bills/upload-pdf`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+          const response = await axios.post(`${API_URL}/admin/bills/upload-pdf`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
 
-      // Show detailed success message
-      const { total_bills, skipped_bills } = response.data;
-      if (skipped_bills > 0) {
-        toast.success(`✅ Uploaded ${total_bills} bills. ⚠️ Skipped ${skipped_bills} records with NA/empty owner names.`, {
-          duration: 5000
-        });
+          totalBills += response.data.total_bills || 0;
+          totalSkipped += response.data.skipped_bills || 0;
+        } catch (error) {
+          failedFiles.push(file.name);
+          console.error(`Failed to upload ${file.name}:`, error);
+        }
+      }
+
+      // Show summary message
+      if (failedFiles.length === 0) {
+        if (totalSkipped > 0) {
+          toast.success(`✅ Uploaded ${totalBills} bills from ${files.length} file(s). ⚠️ Skipped ${totalSkipped} records with NA/empty owner names.`, {
+            duration: 5000
+          });
+        } else {
+          toast.success(`✅ Successfully uploaded ${totalBills} bills from ${files.length} file(s)!`);
+        }
       } else {
-        toast.success(response.data.message);
+        toast.warning(`Uploaded ${totalBills} bills. Failed files: ${failedFiles.join(', ')}`, {
+          duration: 7000
+        });
       }
       
       setUploadDialog(false);
-      setFile(null);
+      setFiles([]);
       setBatchName('');
+      setUploadProgress({ current: 0, total: 0 });
       fetchBatches();
       fetchColonies();
       fetchBills();
