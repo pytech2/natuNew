@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTown } from '../context/TownContext';
 import { useAuth } from '../context/AuthContext';
-import { Building2, MapPin, Users, ArrowRight, Loader2, LogOut } from 'lucide-react';
+import { Building2, MapPin, Users, ArrowRight, Loader2, LogOut, ImagePlus, Upload, CheckCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
