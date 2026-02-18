@@ -197,11 +197,24 @@ export default function SelectTown() {
                       <div className={`p-3 rounded-xl ${isSelected ? 'bg-white/20' : 'bg-indigo-500/20'}`}>
                         <Building2 className={`w-8 h-8 ${isSelected ? 'text-white' : 'text-indigo-400'}`} />
                       </div>
-                      <span className={`text-sm font-mono px-2 py-1 rounded ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-white/10 text-indigo-300'
-                      }`}>
-                        {town.code}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {user?.role === 'ADMIN' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => openUploadDialog(e, town)}
+                            className={`h-8 px-2 ${isSelected ? 'text-white hover:bg-white/20' : 'text-indigo-300 hover:bg-white/10 hover:text-white'}`}
+                            title="Upload Old Property Photos"
+                          >
+                            <ImagePlus className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <span className={`text-sm font-mono px-2 py-1 rounded ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-white/10 text-indigo-300'
+                        }`}>
+                          {town.code}
+                        </span>
+                      </div>
                     </div>
                     
                     <h3 className={`text-xl font-bold mb-2 ${isSelected ? 'text-white' : 'text-white'}`}>
