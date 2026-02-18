@@ -2747,6 +2747,8 @@ async def list_submissions(
                 sub["property_serial_number"] = prop.get("serial_number", 0)
                 sub["property_serial_na"] = prop.get("serial_na", False)
                 sub["property_bill_sr_no"] = prop.get("bill_sr_no", "N/A")
+                # Add old photo URL from property
+                sub["property_photo_url"] = prop.get("photo_url", "")
     
     return {
         "submissions": submissions,
