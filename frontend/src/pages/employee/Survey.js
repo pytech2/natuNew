@@ -686,13 +686,16 @@ export default function Survey() {
             )}
             {property?.photo_url && (
               <div className="pt-2 border-t" data-testid="old-property-photo">
-                <span className="text-slate-500 text-xs">Property Image</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-amber-700 text-xs font-semibold bg-amber-100 px-2 py-0.5 rounded">📷 OLD PROPERTY IMAGE (Verify & Match)</span>
+                </div>
                 <img 
                   src={property.photo_url} 
-                  alt="Property" 
-                  className="mt-1 rounded-lg w-full max-h-48 object-cover border border-slate-200"
+                  alt="Old Property" 
+                  className="mt-1 rounded-lg w-full max-h-48 object-cover border-2 border-amber-300"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
+                <p className="text-xs text-amber-600 mt-1 text-center">↑ Match this image with current property and take NEW photo below ↓</p>
               </div>
             )}
           </CardContent>
