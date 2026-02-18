@@ -263,6 +263,87 @@ export default function SelectTown() {
           </p>
         </div>
       </main>
+
+      {/* Upload Old Photos Dialog */}
+      <Dialog open={uploadDialog} onOpenChange={setUploadDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ImagePlus className="w-5 h-5 text-purple-600" />
+              Upload Old Property Photos
+            </DialogTitle>
+            <DialogDescription>
+              Upload Excel file for <strong>{uploadTown?.name}</strong> with Property ID and Photo URL columns
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                photoFile ? 'border-purple-400 bg-purple-50' : 'border-gray-300 hover:border-purple-400'
+              }`}
+              onClick={() => photoInputRef.current?.click()}
+            >
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setPhotoFile(e.target.files[0])}
+                className="hidden"
+              />
+              {photoFile ? (
+                <div className="flex items-center justify-center gap-3">
+                  <CheckCircle className="w-6 h-6 text-purple-600" />
+                  <div>
+                    <p className="font-medium text-gray-900">{photoFile.name}</p>
+                    <p className="text-sm text-gray-500">{(photoFile.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-gray-600">Click to select Excel file</p>
+                  <p className="text-xs text-gray-400 mt-1">Format: Property ID (Col B), Photo URL (Col H)</p>
+                </div>
+              )}
+            </div>
+
+            {uploadResult && (
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm">
+                <p className="font-semibold text-purple-800">{uploadResult.message}</p>
+                <div className="flex gap-4 mt-1 text-purple-600">
+                  <span>✓ Updated: {uploadResult.updated}</span>
+                  <span>✗ Not found: {uploadResult.not_found}</span>
+                  <span>⊘ Skipped: {uploadResult.skipped}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePhotoUpload}
+              disabled={!photoFile || uploading}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Photos
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
