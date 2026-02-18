@@ -71,6 +71,43 @@ export default function SelectTown() {
     }, 800);
   };
 
+  // Open upload dialog for a specific town
+  const openUploadDialog = (e, town) => {
+    e.stopPropagation(); // Prevent town selection
+    setUploadTown(town);
+    setPhotoFile(null);
+    setUploadResult(null);
+    setUploadDialog(true);
+  };
+
+  // Handle old photo upload
+  const handlePhotoUpload = async () => {
+    if (!photoFile || !uploadTown) return;
+    
+    setUploading(true);
+    setUploadResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', photoFile);
+      
+      const res = await axios.post(`${API_URL}/admin/upload-old-photos`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'multipart/form-data',
+          'X-Town-Code': uploadTown.code
+        }
+      });
+      
+      setUploadResult(res.data);
+      toast.success(res.data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Filter towns based on user access
   const accessibleTowns = user?.role === 'ADMIN' 
     ? towns 
