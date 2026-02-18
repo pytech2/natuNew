@@ -18,6 +18,14 @@ export default function SelectTown() {
   const [townStats, setTownStats] = useState({});
   const [loadingStats, setLoadingStats] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  
+  // Old Photo Upload states
+  const [uploadDialog, setUploadDialog] = useState(false);
+  const [uploadTown, setUploadTown] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const photoInputRef = useRef(null);
 
   useEffect(() => {
     if (!user) {
