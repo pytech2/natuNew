@@ -1024,9 +1024,10 @@ export default function Survey() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Camera className="w-4 h-4" />
-                  Property Photo {!canSkipRequiredFields && '*'}
+                  <span className="text-emerald-700">NEW Property Photo</span> {!canSkipRequiredFields && '*'}
                   {canSkipRequiredFields && <span className="text-xs text-amber-600 font-normal">(Optional)</span>}
                 </CardTitle>
+                <p className="text-xs text-slate-500">Take current photo of the property</p>
               </CardHeader>
               <CardContent>
                 <input
