@@ -914,9 +914,23 @@ export default function Submissions() {
                   </div>
                 )}
 
+                {/* Old Property Photo - From Excel Upload */}
+                {selectedSubmission.property_photo_url && (
+                  <div className="border-2 border-amber-200 rounded-lg p-2 bg-amber-50">
+                    <div className="text-xs font-semibold text-amber-700 mb-2">📷 OLD Property Photo (Reference)</div>
+                    <img
+                      src={selectedSubmission.property_photo_url}
+                      alt="Old Property"
+                      className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-90"
+                      onClick={() => window.open(selectedSubmission.property_photo_url, '_blank')}
+                      onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+
                 {/* Photos - Smaller thumbnails */}
                 <div>
-                  <div className="text-xs font-semibold text-slate-500 mb-2">Photos</div>
+                  <div className="text-xs font-semibold text-emerald-700 mb-2">📸 NEW Survey Photos (Captured by Surveyor)</div>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedSubmission.photos?.filter((photo, index, self) => 
                       index === self.findIndex(p => p.file_url === photo.file_url)
