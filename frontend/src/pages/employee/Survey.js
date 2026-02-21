@@ -243,7 +243,7 @@ export default function Survey() {
   const houseGalleryRef = useRef(null);
 
   // Check if special condition allows skipping required fields (but NOT photo)
-  const canSkipRequiredFields = specialCondition === 'house_locked' || specialCondition === 'owner_denied';
+  const canSkipRequiredFields = specialCondition === 'house_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot';
 
   useEffect(() => {
     fetchProperty();
