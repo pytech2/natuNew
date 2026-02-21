@@ -226,7 +226,9 @@ export default function Survey() {
   const [selfCertMobile, setSelfCertMobile] = useState(''); // Mobile used for OTP
 
   // Special submission conditions - allows bypassing required fields
-  const [specialCondition, setSpecialCondition] = useState(''); // 'house_locked' or 'owner_denied'
+  const [specialCondition, setSpecialCondition] = useState(''); // 'house_locked', 'owner_denied', or 'vacant_plot'
+  const [houseStatus, setHouseStatus] = useState(''); // 'kachha', 'pakka', 'vacant_plot'
+  const [wrongLocation, setWrongLocation] = useState(false); // For vacant plot - property ID at wrong location
   
   // 50m radius check
   const [withinRange, setWithinRange] = useState(null);
