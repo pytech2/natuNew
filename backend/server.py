@@ -3756,7 +3756,7 @@ async def submit_survey(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if special condition allows skipping required fields
-    is_special_condition = special_condition in ['house_locked', 'owner_denied']
+    is_special_condition = special_condition in ['house_locked', 'owner_denied', 'vacant_plot']
     
     # Validate required fields only if not special condition
     if not is_special_condition:
