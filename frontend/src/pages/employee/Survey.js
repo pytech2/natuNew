@@ -862,24 +862,39 @@ export default function Survey() {
                   </div>
                 )}
                 
-                {/* Remarks field for special conditions */}
+                {/* Remarks field for special conditions - MANDATORY for all */}
                 {canSkipRequiredFields && (
                   <div className="space-y-2 pt-2">
-                    <Label className={specialCondition === 'owner_denied' ? 'text-red-700' : 'text-amber-700'}>
-                      Remarks {specialCondition === 'owner_denied' ? '*' : '(Optional)'}
+                    <Label className={`font-semibold ${
+                      specialCondition === 'owner_denied' ? 'text-red-700' : 
+                      specialCondition === 'vacant_plot' ? 'text-blue-700' : 'text-amber-700'
+                    }`}>
+                      Remarks *
                     </Label>
                     <Textarea
                       value={formData.remarks}
                       onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                      placeholder={specialCondition === 'owner_denied' 
-                        ? "Required: Please explain why owner denied..." 
-                        : "Add any additional remarks..."}
+                      placeholder={
+                        specialCondition === 'owner_denied' ? "Required: Please explain why owner denied..." :
+                        specialCondition === 'house_locked' ? "Required: Describe the situation (e.g., time, attempts made)..." :
+                        specialCondition === 'vacant_plot' ? "Required: Describe the vacant plot condition..." :
+                        "Add remarks..."
+                      }
                       rows={2}
-                      className={specialCondition === 'owner_denied' ? 'border-red-300' : 'border-amber-300'}
+                      className={`${
+                        specialCondition === 'owner_denied' ? 'border-red-300' : 
+                        specialCondition === 'vacant_plot' ? 'border-blue-300' : 'border-amber-300'
+                      }`}
                       data-testid="special-remarks-input"
                     />
-                    {specialCondition === 'owner_denied' && !formData.remarks?.trim() && (
-                      <p className="text-xs text-red-500">Remarks are required when owner denied</p>
+                    {!formData.remarks?.trim() && (
+                      <p className={`text-xs ${
+                        specialCondition === 'owner_denied' ? 'text-red-500' : 
+                        specialCondition === 'vacant_plot' ? 'text-blue-500' : 'text-amber-500'
+                      }`}>
+                        Remarks are required for {specialCondition === 'house_locked' ? 'House Locked' : 
+                        specialCondition === 'owner_denied' ? 'Owner Denied' : 'Vacant Plot'}
+                      </p>
                     )}
                   </div>
                 )}
