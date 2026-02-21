@@ -556,6 +556,12 @@ export default function Submissions() {
                           Owner Denied
                         </span>
                       </SelectItem>
+                      <SelectItem value="vacant_plot">
+                        <span className="flex items-center gap-2">
+                          <MapPin className="w-3 h-3 text-blue-600" />
+                          Vacant Plot
+                        </span>
+                      </SelectItem>
                       <SelectItem value="normal">
                         <span className="flex items-center gap-2">
                           <CheckCircle className="w-3 h-3 text-green-600" />
