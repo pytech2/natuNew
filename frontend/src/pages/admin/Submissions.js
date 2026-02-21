@@ -899,7 +899,28 @@ export default function Submissions() {
                     <span className="font-semibold text-amber-800">
                       {selectedSubmission.special_condition === 'house_locked' ? '🔒 House Locked' : 
                        selectedSubmission.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
+                       selectedSubmission.special_condition === 'vacant_plot' ? '🏗️ Vacant Plot' :
                        selectedSubmission.special_condition}
+                    </span>
+                    {selectedSubmission.wrong_location && (
+                      <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">⚠️ Wrong Location</span>
+                    )}
+                  </div>
+                )}
+
+                {/* House Status */}
+                {selectedSubmission.house_status && (
+                  <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs flex items-center gap-2">
+                    <span className="text-slate-600">House Status:</span>
+                    <span className={`font-semibold px-2 py-0.5 rounded ${
+                      selectedSubmission.house_status === 'kachha' ? 'bg-orange-100 text-orange-700' :
+                      selectedSubmission.house_status === 'pakka' ? 'bg-green-100 text-green-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {selectedSubmission.house_status === 'kachha' ? '🏠 Kachha House' : 
+                       selectedSubmission.house_status === 'pakka' ? '🏢 Pakka House' : 
+                       selectedSubmission.house_status === 'vacant_plot' ? '🏗️ Vacant Plot' :
+                       selectedSubmission.house_status}
                     </span>
                   </div>
                 )}
