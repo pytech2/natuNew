@@ -411,7 +411,7 @@ export default function Survey() {
       return;
     }
 
-    // If special condition is selected (House Locked or Owner Denied), skip other validations
+    // If special condition is selected (House Locked, Owner Denied, or Vacant Plot), skip other validations
     if (canSkipRequiredFields) {
       // Only GPS location is required for special conditions
       if (!location.latitude || !location.longitude) {
@@ -442,6 +442,12 @@ export default function Survey() {
           toast.error('Please select self-certification status');
           return;
         }
+      }
+      
+      // House Status is mandatory for normal submissions
+      if (!houseStatus) {
+        toast.error('Please select House Status (Kachha/Pakka/Vacant Plot)');
+        return;
       }
     }
 
