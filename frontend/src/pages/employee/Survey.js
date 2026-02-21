@@ -944,6 +944,55 @@ export default function Survey() {
                   </Select>
                 </div>
 
+                {/* House Status - Mandatory */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Building className="w-4 h-4" />
+                    House Status *
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setHouseStatus('kachha')}
+                      className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                        houseStatus === 'kachha'
+                          ? 'border-orange-500 bg-orange-100 text-orange-800'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-orange-300'
+                      }`}
+                      data-testid="house-status-kachha"
+                    >
+                      <Home className={`w-5 h-5 ${houseStatus === 'kachha' ? 'text-orange-600' : 'text-slate-400'}`} />
+                      <span className="text-xs font-medium">Kachha</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHouseStatus('pakka')}
+                      className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                        houseStatus === 'pakka'
+                          ? 'border-green-500 bg-green-100 text-green-800'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-green-300'
+                      }`}
+                      data-testid="house-status-pakka"
+                    >
+                      <Building className={`w-5 h-5 ${houseStatus === 'pakka' ? 'text-green-600' : 'text-slate-400'}`} />
+                      <span className="text-xs font-medium">Pakka</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHouseStatus('vacant_plot')}
+                      className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                        houseStatus === 'vacant_plot'
+                          ? 'border-blue-500 bg-blue-100 text-blue-800'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300'
+                      }`}
+                      data-testid="house-status-vacant"
+                    >
+                      <MapPin className={`w-5 h-5 ${houseStatus === 'vacant_plot' ? 'text-blue-600' : 'text-slate-400'}`} />
+                      <span className="text-xs font-medium">Vacant Plot</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Self Certification Section - Conditional based on property.self_certified */}
                 {property?.self_certified === true ? (
                   /* SELF-CERTIFIED PROPERTIES: Already done - show success */
