@@ -2499,8 +2499,9 @@ async def remove_employee_from_colony(
 
 @api_router.get("/admin/areas")
 async def list_areas(request: Request, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ADMIN_ROLES:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    # Allow ADMIN, SUPERVISOR, and MC_OFFICER to view areas
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin/Supervisor access required")
     
     town_db = await get_town_data_db(request)
     areas = await town_db.properties.distinct("ward")
