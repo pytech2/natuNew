@@ -906,11 +906,9 @@ export default function Submissions() {
                       {selectedSubmission.special_condition === 'house_locked' ? '🔒 House Locked' : 
                        selectedSubmission.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
                        selectedSubmission.special_condition === 'vacant_plot' ? '🏗️ Vacant Plot' :
+                       selectedSubmission.special_condition === 'wrong_location' ? '📍 Property ID Wrong Location' :
                        selectedSubmission.special_condition}
                     </span>
-                    {selectedSubmission.wrong_location && (
-                      <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">⚠️ Wrong Location</span>
-                    )}
                   </div>
                 )}
 
