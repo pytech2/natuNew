@@ -420,9 +420,14 @@ export default function Survey() {
         return;
       }
       
-      // Remarks required for all special conditions (House Locked, Owner Denied, Vacant Plot)
+      // Remarks required for all special conditions (House Locked, Owner Denied, Vacant Plot, Wrong Location)
       if (!formData.remarks?.trim()) {
-        toast.error(`Remarks are required for ${specialCondition === 'house_locked' ? 'House Locked' : specialCondition === 'owner_denied' ? 'Owner Denied' : 'Vacant Plot'}`);
+        toast.error(`Remarks are required for ${
+          specialCondition === 'house_locked' ? 'House Locked' : 
+          specialCondition === 'owner_denied' ? 'Owner Denied' : 
+          specialCondition === 'vacant_plot' ? 'Vacant Plot' : 
+          'Property ID Wrong Location'
+        }`);
         return;
       }
     } else {
