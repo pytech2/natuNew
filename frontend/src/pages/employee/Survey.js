@@ -867,7 +867,8 @@ export default function Survey() {
                   <div className="space-y-2 pt-2">
                     <Label className={`font-semibold ${
                       specialCondition === 'owner_denied' ? 'text-red-700' : 
-                      specialCondition === 'vacant_plot' ? 'text-blue-700' : 'text-amber-700'
+                      specialCondition === 'vacant_plot' ? 'text-blue-700' : 
+                      specialCondition === 'wrong_location' ? 'text-purple-700' : 'text-amber-700'
                     }`}>
                       Remarks *
                     </Label>
@@ -878,22 +879,29 @@ export default function Survey() {
                         specialCondition === 'owner_denied' ? "Required: Please explain why owner denied..." :
                         specialCondition === 'house_locked' ? "Required: Describe the situation (e.g., time, attempts made)..." :
                         specialCondition === 'vacant_plot' ? "Required: Describe the vacant plot condition..." :
+                        specialCondition === 'wrong_location' ? "Required: Explain why this property ID is at wrong location..." :
                         "Add remarks..."
                       }
                       rows={2}
                       className={`${
                         specialCondition === 'owner_denied' ? 'border-red-300' : 
-                        specialCondition === 'vacant_plot' ? 'border-blue-300' : 'border-amber-300'
+                        specialCondition === 'vacant_plot' ? 'border-blue-300' : 
+                        specialCondition === 'wrong_location' ? 'border-purple-300' : 'border-amber-300'
                       }`}
                       data-testid="special-remarks-input"
                     />
                     {!formData.remarks?.trim() && (
                       <p className={`text-xs ${
                         specialCondition === 'owner_denied' ? 'text-red-500' : 
-                        specialCondition === 'vacant_plot' ? 'text-blue-500' : 'text-amber-500'
+                        specialCondition === 'vacant_plot' ? 'text-blue-500' : 
+                        specialCondition === 'wrong_location' ? 'text-purple-500' : 'text-amber-500'
                       }`}>
-                        Remarks are required for {specialCondition === 'house_locked' ? 'House Locked' : 
-                        specialCondition === 'owner_denied' ? 'Owner Denied' : 'Vacant Plot'}
+                        Remarks are required for {
+                          specialCondition === 'house_locked' ? 'House Locked' : 
+                          specialCondition === 'owner_denied' ? 'Owner Denied' : 
+                          specialCondition === 'vacant_plot' ? 'Vacant Plot' : 
+                          'Property ID Wrong Location'
+                        }
                       </p>
                     )}
                   </div>
