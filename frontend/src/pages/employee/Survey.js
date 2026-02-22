@@ -228,9 +228,8 @@ export default function Survey() {
   const [selfCertMobile, setSelfCertMobile] = useState(''); // Mobile used for OTP
 
   // Special submission conditions - allows bypassing required fields
-  const [specialCondition, setSpecialCondition] = useState(''); // 'house_locked', 'owner_denied', or 'vacant_plot'
+  const [specialCondition, setSpecialCondition] = useState(''); // 'house_locked', 'owner_denied', 'vacant_plot', or 'wrong_location'
   const [houseStatus, setHouseStatus] = useState(''); // 'kachha', 'pakka', 'vacant_plot'
-  const [wrongLocation, setWrongLocation] = useState(false); // For vacant plot - property ID at wrong location
   
   // 50m radius check
   const [withinRange, setWithinRange] = useState(null);
@@ -245,7 +244,7 @@ export default function Survey() {
   const houseGalleryRef = useRef(null);
 
   // Check if special condition allows skipping required fields (but NOT photo)
-  const canSkipRequiredFields = specialCondition === 'house_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot';
+  const canSkipRequiredFields = specialCondition === 'house_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot' || specialCondition === 'wrong_location';
 
   useEffect(() => {
     fetchProperty();
