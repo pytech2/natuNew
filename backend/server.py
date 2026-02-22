@@ -2511,8 +2511,9 @@ async def list_areas(request: Request, current_user: dict = Depends(get_current_
 @api_router.get("/admin/towns")
 async def list_towns(request: Request, current_user: dict = Depends(get_current_user)):
     """Get list of unique towns from properties"""
-    if current_user["role"] not in ADMIN_ROLES:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    # Allow ADMIN, SUPERVISOR, and MC_OFFICER to view towns
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin/Supervisor access required")
     
     town_db = await get_town_data_db(request)
     towns = await town_db.properties.distinct("town")
