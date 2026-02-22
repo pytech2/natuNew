@@ -562,6 +562,12 @@ export default function Submissions() {
                           Vacant Plot
                         </span>
                       </SelectItem>
+                      <SelectItem value="wrong_location">
+                        <span className="flex items-center gap-2">
+                          <MapPin className="w-3 h-3 text-purple-600" />
+                          Wrong Location
+                        </span>
+                      </SelectItem>
                       <SelectItem value="normal">
                         <span className="flex items-center gap-2">
                           <CheckCircle className="w-3 h-3 text-green-600" />
