@@ -419,6 +419,12 @@ export default function Survey() {
         return;
       }
       
+      // House Status is mandatory for ALL submissions including special conditions
+      if (!houseStatus) {
+        toast.error('Please select House Status (Kachha/Pakka/Vacant Plot)');
+        return;
+      }
+      
       // Remarks required for all special conditions (House Locked, Owner Denied, Vacant Plot, Wrong Location)
       if (!formData.remarks?.trim()) {
         toast.error(`Remarks are required for ${
