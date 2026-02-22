@@ -2977,8 +2977,9 @@ async def export_submissions(
 
 @api_router.post("/admin/submissions/approve")
 async def approve_reject_submission(data: SubmissionApproval, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admin access required")
+    # Allow ADMIN, SUPERVISOR, and MC_OFFICER to approve/reject
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin/Supervisor/MC Officer access required")
     
     submission = await get_db().submissions.find_one({"id": data.submission_id}, {"_id": 0})
     if not submission:
