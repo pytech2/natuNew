@@ -787,10 +787,10 @@ export default function Survey() {
                 <p className="text-xs text-amber-700">
                   Select if you cannot complete normal survey due to one of these conditions:
                 </p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => { setSpecialCondition(specialCondition === 'house_locked' ? '' : 'house_locked'); setWrongLocation(false); }}
+                    onClick={() => setSpecialCondition(specialCondition === 'house_locked' ? '' : 'house_locked')}
                     className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
                       specialCondition === 'house_locked'
                         ? 'border-amber-500 bg-amber-100 text-amber-800'
@@ -806,7 +806,7 @@ export default function Survey() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setSpecialCondition(specialCondition === 'owner_denied' ? '' : 'owner_denied'); setWrongLocation(false); }}
+                    onClick={() => setSpecialCondition(specialCondition === 'owner_denied' ? '' : 'owner_denied')}
                     className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
                       specialCondition === 'owner_denied'
                         ? 'border-red-500 bg-red-100 text-red-800'
@@ -822,7 +822,7 @@ export default function Survey() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setSpecialCondition(specialCondition === 'vacant_plot' ? '' : 'vacant_plot'); setWrongLocation(false); }}
+                    onClick={() => setSpecialCondition(specialCondition === 'vacant_plot' ? '' : 'vacant_plot')}
                     className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
                       specialCondition === 'vacant_plot'
                         ? 'border-blue-500 bg-blue-100 text-blue-800'
@@ -836,27 +836,23 @@ export default function Survey() {
                       <CheckCircle className="w-3 h-3 text-blue-600" />
                     )}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setSpecialCondition(specialCondition === 'wrong_location' ? '' : 'wrong_location')}
+                    className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                      specialCondition === 'wrong_location'
+                        ? 'border-purple-500 bg-purple-100 text-purple-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-purple-300'
+                    }`}
+                    data-testid="wrong-location-btn"
+                  >
+                    <MapPin className={`w-5 h-5 ${specialCondition === 'wrong_location' ? 'text-purple-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium text-center">Property ID Wrong Location</span>
+                    {specialCondition === 'wrong_location' && (
+                      <CheckCircle className="w-3 h-3 text-purple-600" />
+                    )}
+                  </button>
                 </div>
-                
-                {/* Vacant Plot - Wrong Location Option */}
-                {specialCondition === 'vacant_plot' && (
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-300">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={wrongLocation}
-                        onChange={(e) => setWrongLocation(e.target.checked)}
-                        className="w-5 h-5 rounded border-blue-400 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm font-medium text-blue-800">
-                        Property ID at Wrong Location
-                      </span>
-                    </label>
-                    <p className="text-xs text-blue-600 mt-1 ml-8">
-                      Check if this property ID is marked at incorrect GPS location
-                    </p>
-                  </div>
-                )}
                 
                 {canSkipRequiredFields && (
                   <div className="p-3 bg-white rounded-lg border border-amber-300">
