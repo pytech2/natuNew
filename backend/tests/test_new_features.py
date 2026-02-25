@@ -13,7 +13,7 @@ import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://survey-management-3.preview.emergentagent.com"
+    BASE_URL = "https://multi-town-survey.preview.emergentagent.com"
 
 # Test town (Thanesar)
 TOWN_CODE = "THS"
