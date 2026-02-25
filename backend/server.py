@@ -3824,8 +3824,10 @@ async def submit_survey(
         "correct_colony_name": correct_colony_name,
         "remarks": remarks,
         "self_satisfied": self_satisfied or ("N/A" if is_special_condition else "yes"),
-        "special_condition": special_condition,  # house_locked, owner_denied, or vacant_plot
+        "special_condition": special_condition,  # property_locked, owner_denied, vacant_plot, wrong_location
         "house_status": house_status,  # kachha, pakka, or vacant_plot
+        "property_use": property_use,  # residential, commercial, mix_use, other
+        "property_use_remarks": property_use_remarks,  # remarks for 'other' property use
         "wrong_location": wrong_location == "true",  # boolean - property ID at wrong GPS location
         # Self Certification data
         "self_cert_status": self_cert_status,  # done, later, deny, already_certified
