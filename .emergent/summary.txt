@@ -3,47 +3,42 @@
 The application has been transformed into a multi-town (multi-tenant) platform where each town has its own separate database, managed by a Super Admin.
 
 **LATEST USER REQUESTS (from the last few messages):**
--   Allow bulk PDF file uploads instead of one by one.
--   Fix submissions so that Supervisors and MC Officers can see and use the Approve/Reject buttons.
--   Fix an issue where employees are not visible to users with the Supervisor role.
--   When a colony has no serial numbers, provide a button to generate them based on GPS coordinates. The generated numbers should appear on the map markers and in the generated PDFs. (Partially implemented, map marker part was the last fix).
--   Fix an issue where colonies with special characters like  in their names were not showing or deleting bills correctly. (Implemented).
+- Fix the Excel export to include full, clickable Photo URLs, not relative paths.
+- Ensure the Excel export is in the correct  format.
+- Add Latitude, Longitude, and Time to the submission Excel export.
+- Fix the Property ID in the Excel export to show the human-readable ID, not the internal UUID.
+- Fix the condition badges in the Submissions table to show Vacant Plot and Wrong Location.
+- Add a Property Current Use field to the survey form with options: Residential, Commercial, Mix Use, and Other (with remarks).
+- Rename House Locked to Property Locked and House Status to Property Status.
+- Implement bulk approval for submissions (up to 100 at a time).
+- Redesign the map's survey data pop-up to be more compact.
+- Fix Supervisor permissions for approving submissions and viewing assigned colonies/surveyors.
 
-**User's preferred language**: The user communicates in a mix of English and Hindi (e.g., vps update ke liye code de, map ke upar serial number nahi dikha hai ji). The next agent **MUST** understand and respond in this mixed language format.
+**User's preferred language**: The user communicates in a mix of English and Hindi (e.g., vps update ke liye code de, map ke upar serial number nahi dikha hai ji, excel download me problem). The next agent **MUST** understand and respond in this mixed language format (Hinglish).
 
 **what currently exists?**
 A multi-tenant full-stack application with a FastAPI backend and React frontend. The backend uses a monolithic  and a -based middleware to switch between town-specific MongoDB databases. The frontend uses an Axios interceptor to send the current town context with every API request.
 
-Recent work has focused on adding numerous features requested by the user, including a Generate Serial by GPS function, bulk colony assignment, old photo migration, and fixing several bugs related to data filtering and display. The application is functionally rich but suffers from a fragile deployment process on the user's VPS.
+The application is feature-rich, with recent additions including bulk submission approval, performance improvements by removing heavy map loads, and extensive survey form enhancements. However, it continues to face a significant, recurring challenge with the user's manual VPS deployment process.
 
 **Last working item**:
--   **Last item agent was working:** The agent had just received a new list of three urgent tasks from the user and was about to begin implementation.
-    -   1. Implement Bulk PDF Upload.
-    -   2. Fix Approve/Reject button visibility for Supervisor/MC Officer roles.
-    -   3. Fix employee list visibility for the Supervisor role.
--   **Status:** NOT STARTED
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
--   **User Testing Done:** N
+- **Last item agent was working:** The agent was fixing the Excel export functionality from the Submissions page. The user reported that photo URLs were relative () instead of absolute (), making them unusable directly from the Excel sheet. The agent updated the backend code to construct the full URL.
+- **Status:** IN PROGRESS (Code implemented but not yet verified by the user).
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** backend testing agent
+    - **Test Steps:**
+        1. Login as Admin.
+        2. Go to the Submissions page.
+        3. Export the data to Excel.
+        4. Open the downloaded Excel file and verify that the  column contains full, absolute URLs (e.g., ).
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Implement the three new features requested by the user (P0).
--   **Issue 2:** The user's VPS deployment process is unreliable and a recurring source of problems (P0 - RECURRING BLOCKER).
+-   **Issue 1:** The user's VPS deployment process is unreliable and a recurring source of problems (P0 - RECURRING BLOCKER).
 
 **Issues Detail:**
--   **Issue 1: New feature requests (Bulk PDF Upload, Role Permissions)**
-    -   **Attempted fixes:** None. The agent was just about to start.
-    -   **Next debug checklist:**
-        -   **Bulk PDF Upload**: Modify  to add the  attribute to the file input. Update the  function to loop through and upload multiple files.
-        -   **Approve/Reject Buttons**: In , review the conditional logic that shows/hides the approve/reject buttons. Ensure it correctly includes  and  roles.
-        -   **Supervisor Employee Visibility**: In , check the  endpoint. The logic likely filters users incorrectly for the supervisor role. It should return all users belonging to the same  as the supervisor.
-    -   **Why fix this issue and what will be achieved with the fix?** These are urgent requirements from the user to improve workflow efficiency and fix role-based access control.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
-
--   **Issue 2: User's VPS deployment is failing or out of sync**
-    -   **Attempted fixes:** The agent has repeatedly provided usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+-   **Issue 1: User's VPS deployment is failing or out of sync**
+    -   **Attempted fixes:** The agent has repeatedly provided a sequence of usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
            [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
@@ -87,16 +82,109 @@ collaborate (see also: git help workflows)
 'git help -a' and 'git help -g' list available subcommands and some
 concept guides. See 'git help <command>' or 'git help <concept>'
 to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system. and  commands to patch the user's server. The user prefers a specific command sequence: .
+See 'git help git' for an overview of the system. and  commands for the user to run. This is a temporary workaround, not a permanent solution.
     -   **Next debug checklist:**
-        1.  After the user pulls the code, they **MUST** run  to point to their production database for the Thanesar town.
-        2.  They must then rebuild the frontend: 
-removed 9 packages, changed 2 packages, and audited 1566 packages in 7s
+        1.  Instruct the user to run the specific deployment command sequence provided in Critical Info for New Agent.
+        2.  If it fails, ask the user for the exact error message or a screenshot from their terminal.
+        3.  The most common point of failure is forgetting to run the  command to switch the database name from  to .
+    -   **Why fix this issue and what will be achieved with the fix?** The user cannot test or use any new features without a successful deployment. This is the single biggest blocker to project progress.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** N/A (User DevOps)
+    -   **Blocked on other issue:** User successfully running the commands on their VPS.
+
+**In progress Task List**:
+- None.
+
+**Upcoming and Future Tasks**
+**Future Tasks:**
+-   Offline support for the surveyor's mobile interface.
+-   Add a feature to download all split-employee PDFs as a single ZIP file.
+-   Add a shortcut to open the survey form by clicking a map marker.
+
+**Completed work in this session**
+- **Excel Export Fixes:**
+    - Modified  to include **Latitude, Longitude, and Time**.
+    - Corrected the export to use the correct human-readable **Property ID** instead of the internal .
+    - **(Last fix)** Updated the endpoint to generate full, absolute **Photo URLs**.
+- **Survey Form Enhancements:**
+    - Added a new **Property Current Use** field (Residential, Commercial, Mix Use, Other).
+    - Added a new special condition button: **Property ID Wrong Location**.
+    - Added mandatory **Property Status** field (Kachha, Pakka, Vacant Plot), visible in all survey scenarios.
+    - Made the **Remarks** field mandatory when a special condition is selected.
+    - Renamed labels: House Locked → **Property Locked** and House Status → **Property Status**.
+    - Removed ग्राहक (Customer) from the relation dropdown.
+- **Submission Management Improvements:**
+    - Implemented **Bulk Approval** for up to 100 submissions at once on the  page.
+    - Increased the page limit to show **100 submissions** by default.
+    - Fixed condition badges in the submissions table to correctly display **Vacant Plot** and **Wrong Location**.
+- **Supervisor Role & Permission Fixes:**
+    - Granted Supervisors permission to **approve/reject** submissions.
+    - Fixed backend logic to ensure Supervisors can see **assigned colonies and surveyors** on the Properties page.
+- **UI/UX & Performance:**
+    - **Removed Show Full Town Map** feature to improve application speed, as it was loading up to 50,000 properties at once.
+    - Redesigned the **Survey Data dialog** on the  page to be more compact and visually organized.
+    - Added an **Upload Old Photos** button with a camera icon to each town card on the  page.
+- **Bulk PDF Upload:**
+    - Enabled multiple file selection for PDF uploads.
+    - Added a limit of **1-5 files** per upload with clear UI hints and validation.
+
+**Earlier issues found/mentioned but not fixed**
+- The fundamental VPS deployment workflow remains fragile. A robust CI/CD pipeline or a more stable update script is needed to replace the current error-prone manual commands.
+
+**Known issue recurrence from previous fork**
+- **Issue recurrence in previous fork:** User's VPS deployment is failing or out of sync.
+- **Recurrence count:** Very High (present in almost every fork).
+- **Status:** IN PROGRESS
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Multi-Tenancy with ContextVar:** Using Python's  for request-scoped DB connections.
+-   **Axios Interceptors:** Frontend interceptor adds  header to all API calls.
+-   **Dynamic Database Connections:**  function connects to the correct MongoDB instance.
+-   **Bulk Actions (React):** Using state () to track selected items and perform batch API calls.
+-   **Excel Generation (Backend):** Using  and  to create and serve  files from API endpoints.
+
+**key DB schema**
+-   ** ()**
+    -   ****: 
+    -   ****: 
+-   ** (e.g., )**
+    -   ****: 
+    -   ****: 
+    -   ****, , .
+
+**All files of reference**
+-    (Main backend logic, heavily modified for exports, permissions, and new survey fields)
+-    (Major changes for bulk approve, UI fixes, and new data display)
+-    (Major changes for new fields, labels, and conditional logic)
+-    (Dialog redesign, feature removal)
+-    (Added upload photo shortcut)
+-    (PDF upload limit implementation)
+
+**Areas that need refactoring**:
+-   The monolithic  is extremely long and difficult to maintain. It urgently needs to be broken down into smaller modules using FastAPI's .
+-   The VPS deployment process is the most critical issue. A stable, repeatable deployment script is desperately needed.
+
+**key api endpoints**
+-   : **Heavily Modified**. Added latitude, longitude, time, correct property ID, and full photo URLs.
+-   : **New**. Approves a list of submission IDs.
+-   : **Modified**. Now accepts , , , and .
+-   , : **Modified**. Permissions updated to allow Supervisors access.
+-   : **Modified**. Permissions updated to allow Supervisors.
+
+**Critical Info for New Agent**
+-   **Prioritize Verification:** Your first task is to guide the user to test the latest fix: the **full photo URLs in the Excel export**.
+-   **VPS DEPLOYMENT IS THE BIGGEST HURDLE:** The user will likely report that recent changes are not live. Be prepared to provide the exact deployment commands below. The  command is absolutely critical.
+    
+up to date, audited 1566 packages in 5s
 
 284 packages are looking for funding
   run `npm fund` for details
 
-20 vulnerabilities (4 low, 5 moderate, 11 high)
+22 vulnerabilities (4 low, 6 moderate, 12 high)
 
 To address issues that do not require attention, run:
   npm audit fix
@@ -113,211 +201,45 @@ Run `npm audit` for details.
 > craco build
 
 Creating an optimized production build...
-Compiled with warnings.
+Failed to compile.
 
-[eslint] 
-src/pages/SelectTown.js
-  Line 27:6:  React Hook useEffect has missing dependencies: 'fetchTownStats', 'navigate', and 'refreshTowns'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Attendance.js
-  Line 88:6:  React Hook useEffect has a missing dependency: 'fetchEmployees'. Either include it or remove the dependency array   react-hooks/exhaustive-deps
-  Line 92:6:  React Hook useEffect has a missing dependency: 'fetchAttendance'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Bills.js
-  Line 155:6:  React Hook useEffect has missing dependencies: 'fetchBatches', 'fetchColonies', 'fetchEmployees', 'fetchGeneratedPdfs', and 'fetchTowns'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  Line 159:6:  React Hook useEffect has a missing dependency: 'fetchBills'. Either include it or remove the dependency array                                                                                 react-hooks/exhaustive-deps
-
-src/pages/admin/BillsMap.js
-  Line 207:6:  React Hook useEffect has missing dependencies: 'fetchBatches' and 'fetchColonies'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  Line 211:6:  React Hook useEffect has a missing dependency: 'fetchBillsMapData'. Either include it or remove the dependency array                   react-hooks/exhaustive-deps
-
-src/pages/admin/Dashboard.js
-  Line 79:6:  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Employees.js
-  Line 128:6:  React Hook useEffect has a missing dependency: 'fetchEmployees'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Export.js
-  Line 54:6:  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Map.js
-  Line 259:6:  React Hook useEffect has missing dependencies: 'fetchColonies' and 'fetchEmployees'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  Line 265:6:  React Hook useEffect has a missing dependency: 'fetchPropertiesByColony'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
-  Line 269:6:  React Hook useEffect has a missing dependency: 'applyFilters'. Either include it or remove the dependency array                          react-hooks/exhaustive-deps
-
-src/pages/admin/Properties.js
-  Line 178:6:  React Hook useEffect has a missing dependency: 'fetchInitialData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-  Line 182:6:  React Hook useEffect has a missing dependency: 'fetchProperties'. Either include it or remove the dependency array   react-hooks/exhaustive-deps
-
-src/pages/admin/Submissions.js
-  Line 121:6:  React Hook useEffect has a missing dependency: 'fetchFilters'. Either include it or remove the dependency array      react-hooks/exhaustive-deps
-  Line 125:6:  React Hook useEffect has a missing dependency: 'fetchSubmissions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/admin/Towns.js
-  Line 38:6:  React Hook useEffect has a missing dependency: 'fetchTowns'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/employee/Attendance.js
-  Line 118:6:  React Hook useEffect has a missing dependency: 'checkTodayAttendance'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-  Line 125:6:  React Hook useEffect has a missing dependency: 'fetchProperties'. Either include it or remove the dependency array       react-hooks/exhaustive-deps
-
-src/pages/employee/Dashboard.js
-  Line 24:6:  React Hook useEffect has missing dependencies: 'checkTodayAttendance' and 'fetchProgress'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/employee/Properties.js
-  Line 183:6:  React Hook useEffect has missing dependencies: 'fetchProperties' and 'startCompass'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/employee/PropertyMap.js
-  Line 110:6:  React Hook useEffect has a missing dependency: 'fetchProperties'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/pages/employee/Survey.js
-  Line 250:6:  React Hook useEffect has missing dependencies: 'checkTodayAttendance' and 'fetchProperty'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-Search for the keywords to learn more about each warning.
-To ignore, add // eslint-disable-next-line to the line before.
-
-File sizes after gzip:
-
-  554.19 kB  build/static/js/main.ec422b90.js
-  267.44 kB  build/static/js/66.f9510d7f.chunk.js
-  43.27 kB   build/static/js/455.3bef4cb2.chunk.js
-  32.07 kB   build/static/css/main.1dc1404d.css
-  8.69 kB    build/static/js/977.240addac.chunk.js
-
-The bundle size is significantly larger than recommended.
-Consider reducing it with code splitting: https://goo.gl/9VhYWB
-You can also analyze the project dependencies: https://goo.gl/LeUzfb
-
-The project was built assuming it is hosted at /.
-You can control this with the homepage field in your package.json.
-
-The build folder is ready to be deployed.
-You may serve it with a static server:
-
-  yarn global add serve
-  serve -s build
-
-Find out more about deployment here:
-
-  https://cra.link/deployment
-        3.  Finally, restart services: .
-    -   **Why fix this issue and what will be achieved with the fix?** The user cannot test or use any new features without a successful deployment. This is the single biggest blocker to project progress.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** N/A (User DevOps)
-    -   **Blocked on other issue:** User successfully running the commands on their VPS.
-
-**In progress Task List**:
--   None.
-
-**Upcoming and Future Tasks**
-**Future Tasks:**
--   Offline support for the surveyor's mobile interface.
--   Add a feature to download all split-employee PDFs as a single ZIP file.
--   Add a shortcut to open the survey form by clicking a map marker.
-
-**Completed work in this session**
--   **GPS Serial Number Generation:**
-    -   Created a backend endpoint () to generate serial numbers for bills in a colony based on their GPS coordinates.
-    -   Updated the logic to also write these serial numbers to the  collection, allowing them to be displayed on map markers.
-    -   Modified the PDF generation endpoint to sort pages by the new GPS serial numbers.
-    -   Added a Generate Serial by GPS button to the  frontend page.
--   **Colony Name Regex Fix:**
-    -   Fixed a critical bug across multiple endpoints (, , , etc.) where colony names with special characters like  were causing queries to fail.
-    -   Systematically applied  to all colony name filters in .
--   **Bulk Colony Assignment:**
-    -   Created backend endpoints for bulk assigning and unassigning colonies to surveyors.
-    -   Added Bulk Assign Colonies and Bulk Unassign Colonies buttons and dialogs to the  page.
-    -   Renamed from Block to Bulk based on user feedback.
--   **Old Photo Migration:** Implemented an endpoint and UI on the  page to migrate old photos from an Excel file ().
--   **Surveyor Photo Display:** The  page now displays the property's photo if available.
--   **Excel Export Fix:** Fixed the Excel export to produce a valid  file and include the  column.
--   **Full Town Map:** Added a Show Full Town Map button to the  page to display all properties in the selected town.
--   **Relation Dropdown Fix:** Re-added Padosi to the relation options in  per user request.
-
-**Earlier issues found/mentioned but not fixed**
--   The fundamental VPS deployment workflow remains broken and relies on fragile manual patching. A robust CI/CD or a more stable update script is needed.
-
-**Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** User's VPS deployment is failing or out of sync.
--   **Recurrence count:** High (present in almost every interaction).
--   **Status:** IN PROGRESS
-
-**Code Architecture**
-
-
-**Key Technical Concepts**
--   **Multi-Tenancy with ContextVar:** Using Python's  in FastAPI middleware for request-scoped DB connections.
--   **Axios Interceptors:** Frontend interceptor automatically adds the  header to all API calls.
--   **Dynamic Database Connections:**  function dynamically connects to the correct MongoDB instance.
--   **Regex Escaping:** Using  to safely handle user-provided strings (like colony names with special characters) in MongoDB regex queries.
-
-**key DB schema**
--   ** ()**
-    -   ****: 
-    -   ****:  (Global user table).
--   ** (e.g.,  for Thanesar)**
-    -   ****, ****, ****, , .
-
-**All files of reference**
--    (Main backend logic, heavily modified)
--    (For GPS serial number generation UI)
--    (For bulk colony assignment UI)
--    (For full town map and map markers)
--    (For bulk PDF and old photo upload)
--    (Needs modification for role permissions)
--    (For photo display and relation dropdown)
-
-**Areas that need refactoring**:
--   The monolithic  is now extremely long and complex, making maintenance difficult. It urgently needs to be broken down into smaller modules using FastAPI's .
--   The VPS deployment process is the most critical issue. A stable, repeatable deployment script or workflow is desperately needed to replace the current error-prone manual commands.
-
-**key api endpoints**
--   : **New**. Generates serial numbers based on GPS and updates both  and  collections.
--   : **New**. Bulk assigns selected colonies to selected surveyors.
--   : **New**. Bulk unassigns colonies.
--   : **New**. For migrating photos from .
--   : Updated to handle fetching all properties for a full-town view.
--   Multiple endpoints like , ,  were fixed to use  for colony names.
-
-**Critical Info for New Agent**
--   **Prioritize User's New List:** The user's three latest requests (Bulk PDF Upload, Supervisor/MC Officer permissions, Supervisor employee visibility) are the top priority.
--   **VPS DEPLOYMENT IS THE BIGGEST HURDLE:** Be prepared for extensive, patient, step-by-step guidance on deployment. The user has a preferred command sequence. The  command to replace  with  is absolutely critical after every .
--   **Production DB Name:** The user's main town, Thanesar, uses the database named . This must be correctly set on their VPS.
--   The  file is massive. Tread carefully and use search to find relevant sections before editing.
+static/css/main.bf7ced44.css from Css Minimizer plugin
+Error: Cannot find module '/app/frontend/node_modules/postcss-value-parser/lib/index.js'. Please verify that the package.json has a valid "main" entry
+-   **User Communication:** Communicate in Hinglish. The user is providing direct, actionable feedback.
+-   **Monolithic Backend:**  is huge. Use search () to find endpoints and logic before editing.
 
 **documents and test reports created in this job**
 -    (updated)
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **PENDING:** User asked for 3 new features: bulk PDF upload, approve/reject options for Supervisor/MC Officer, and employee visibility for Supervisors.
-2.  **Completed:** User reported serial numbers were on the PDF but not on map markers. Agent fixed this by updating the  collection as well.
-3.  **Completed:** User confirmed serial numbers were now on the PDF but wanted them on map markers too.
-4.  **Completed:** User asked if the new GPS-generated serial numbers would also print on the PDF. Agent implemented this.
-5.  **Completed:** User requested a feature to generate serial numbers for colonies where they are 'NA', based on GPS. Agent implemented the backend endpoint and frontend button.
-6.  **Completed:** User reported that bills for colonies with special characters in the name (e.g., , ) were not showing or deleting. Agent fixed this by implementing  across all relevant backend queries.
-7.  **Completed:** User provided a screenshot showing 0 bills for a colony, which was the symptom of the regex issue.
-8.  **Completed:** User asked for the VPS update code again after the Padosi fix.
-9.  **Completed:** User requested to re-add Padosi to the relation dropdown, which had been removed earlier. Agent added it back.
-10. **Completed:** User asked for the VPS deployment command.
+1.  **Pending:** User specified export me only, clarifying the issue is with the Excel export, not a PDF download problem. Agent understood this to mean the photo URLs need to be fixed.
+2.  **Completed:** User sent a screenshot showing the exported Excel file and complained it downloads in a strange format (likely meaning the data inside, like URLs, is not usable).
+3.  **Completed:** User reported that Longitude, Latitude, and Time are missing from the Excel export and that Photo URLs should be clickable.
+4.  **Completed:** User reported the Property ID in the exported Excel was the internal UUID, not the correct one.
+5.  **Completed:** User reported that Vacant Plot and Wrong Location badges were not showing in the Submissions table's CONDITION column.
+6.  **Completed:** User requested to add a new field Property Current Use (Residential, Commercial, etc.) and rename House Status to Property Status.
+7.  **Completed:** User requested several changes to the submission view: show 100 items, allow bulk approval, and ensure all survey data (like location) is visible in the details.
+8.  **Completed:** User requested to redesign the survey data pop-up on the map to be more compact.
+9.  **Completed:** User reported that Supervisors could not approve submissions and could not see colonies/surveyors to assign.
+10. **Completed:** User requested that the House Status field should be visible even when a special condition (like Property Locked) is selected.
 
 **Project Health Check:**
 -   **Broken:**
-    -   The user's VPS deployment workflow is highly unreliable.
-    -   Permissions for Supervisor and MC Officer roles are incorrect (cannot see employees or approve/reject submissions).
+    -   The user's VPS deployment workflow is highly unreliable and a constant source of friction.
 -   **Mocked:** None
 
 **3rd Party Integrations**
 -   MapLibre GL & React-Map-GL
 -   PyMuPDF, reportlab
 -   pandas, openpyxl
--   wkhtmltopdf (via an external command)
+-   wkhtmltopdf
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, an extensive test run was completed successfully before the last set of user requests.
+-   **Testing agent used after significant changes:** YES, for the initial batch of fixes.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None
--   **Known regressions:** None from the latest batch of work.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
@@ -326,4 +248,4 @@ Find out more about deployment here:
 -   **MC Officer:**  / 
 
 **What agent forgot to execute**
--   The agent was about to start on the user's latest three requests but was interrupted. The next agent must pick up these tasks.</analysis>
+- The agent successfully implemented all the user's requests from this session. The main outstanding item is not a forgotten task but the strategic problem of the fragile VPS deployment process, which needs a more robust solution than providing manual commands.</analysis>
