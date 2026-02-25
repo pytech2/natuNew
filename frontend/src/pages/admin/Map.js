@@ -1370,7 +1370,7 @@ export default function PropertyMap() {
                 </div>
 
                 {/* House Status & Special Condition - Inline */}
-                {(surveyData.house_status || surveyData.special_condition) && (
+                {(surveyData.house_status || surveyData.special_condition || surveyData.property_use) && (
                   <div className="flex gap-2 flex-wrap">
                     {surveyData.house_status && (
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
@@ -1382,9 +1382,21 @@ export default function PropertyMap() {
                          surveyData.house_status === 'pakka' ? '🏢 Pakka' : '🏗️ Vacant'}
                       </span>
                     )}
+                    {surveyData.property_use && (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        surveyData.property_use === 'residential' ? 'bg-indigo-100 text-indigo-700' :
+                        surveyData.property_use === 'commercial' ? 'bg-purple-100 text-purple-700' :
+                        surveyData.property_use === 'mix_use' ? 'bg-teal-100 text-teal-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {surveyData.property_use === 'residential' ? '🏠 Residential' : 
+                         surveyData.property_use === 'commercial' ? '🏢 Commercial' : 
+                         surveyData.property_use === 'mix_use' ? '🏘️ Mix Use' : '📝 Other'}
+                      </span>
+                    )}
                     {surveyData.special_condition && (
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
-                        {surveyData.special_condition === 'house_locked' ? '🔒 House Locked' : 
+                        {surveyData.special_condition === 'property_locked' ? '🔒 Property Locked' : 
                          surveyData.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
                          surveyData.special_condition === 'vacant_plot' ? '🏗️ Vacant Plot' :
                          surveyData.special_condition === 'wrong_location' ? '📍 Wrong Location' :
