@@ -2895,8 +2895,10 @@ async def export_submissions(
     ws = wb.active
     ws.title = "Submissions"
     
-    # Get base URL for photos
-    base_url = os.environ.get("BASE_URL", "https://nstu.emergentagent.com")
+    # Get base URL for photos dynamically from request
+    forwarded_proto = request.headers.get("x-forwarded-proto", "https")
+    forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
+    base_url = os.environ.get("BASE_URL", f"{forwarded_proto}://{forwarded_host}")
     
     # Headers - Added Latitude, Longitude, Property Status, Property Use
     headers = [
