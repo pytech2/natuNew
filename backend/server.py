@@ -3105,7 +3105,8 @@ async def edit_submission(
         "correct_colony_name", "self_satisfied",
         "remarks", "latitude", "longitude",
         "new_owner_name", "new_mobile",
-        "special_condition"  # Added for admin edit
+        "special_condition", "house_status",
+        "property_use", "property_use_remarks"
     ]
     
     for field in allowed_fields:
