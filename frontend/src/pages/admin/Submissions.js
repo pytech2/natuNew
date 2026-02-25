@@ -836,13 +836,21 @@ export default function Submissions() {
                         <td className="px-3 py-3">{sub.receiver_name || '-'}</td>
                         <td className="px-3 py-3 text-xs">{sub.relation || '-'}</td>
                         <td className="px-3 py-3">
-                          {sub.special_condition === 'house_locked' ? (
+                          {sub.special_condition === 'property_locked' || sub.special_condition === 'house_locked' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-xs font-medium">
                               <Lock className="w-3 h-3" /> Locked
                             </span>
                           ) : sub.special_condition === 'owner_denied' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-medium">
                               <UserX className="w-3 h-3" /> Denied
+                            </span>
+                          ) : sub.special_condition === 'vacant_plot' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-medium">
+                              <MapPin className="w-3 h-3" /> Vacant
+                            </span>
+                          ) : sub.special_condition === 'wrong_location' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-xs font-medium">
+                              <Navigation className="w-3 h-3" /> Wrong Loc
                             </span>
                           ) : (
                             <span className="text-xs text-slate-400">-</span>
