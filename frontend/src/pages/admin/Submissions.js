@@ -973,6 +973,14 @@ export default function Submissions() {
                   </div>
                 </div>
 
+                {/* Property Address */}
+                {selectedSubmission.property_address && (
+                  <div className="bg-gray-50 rounded p-2 text-xs">
+                    <span className="text-gray-500">Address: </span>
+                    <span className="text-gray-800">{selectedSubmission.property_address}</span>
+                  </div>
+                )}
+
                 {/* Survey Details - Compact */}
                 <div className="border-t pt-2">
                   <div className="text-xs font-semibold text-gray-700 mb-2">Survey Details</div>
