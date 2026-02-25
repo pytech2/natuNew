@@ -910,7 +910,7 @@ export default function Survey() {
                       onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                       placeholder={
                         specialCondition === 'owner_denied' ? "Required: Please explain why owner denied..." :
-                        specialCondition === 'house_locked' ? "Required: Describe the situation (e.g., time, attempts made)..." :
+                        specialCondition === 'property_locked' ? "Required: Describe the situation (e.g., time, attempts made)..." :
                         specialCondition === 'vacant_plot' ? "Required: Describe the vacant plot condition..." :
                         specialCondition === 'wrong_location' ? "Required: Explain why this property ID is at wrong location..." :
                         "Add remarks..."
@@ -930,7 +930,7 @@ export default function Survey() {
                         specialCondition === 'wrong_location' ? 'text-purple-500' : 'text-amber-500'
                       }`}>
                         Remarks are required for {
-                          specialCondition === 'house_locked' ? 'House Locked' : 
+                          specialCondition === 'property_locked' ? 'Property Locked' : 
                           specialCondition === 'owner_denied' ? 'Owner Denied' : 
                           specialCondition === 'vacant_plot' ? 'Vacant Plot' : 
                           'Property ID Wrong Location'
@@ -942,12 +942,12 @@ export default function Survey() {
               </CardContent>
             </Card>
 
-            {/* House Status - Always show - Same design as Special Conditions */}
+            {/* Property Status - Always show - Same design as Special Conditions */}
             <Card className="border-2 border-slate-200 bg-slate-50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2 text-slate-700">
                   <Building className="w-4 h-4" />
-                  House Status *
+                  Property Status *
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
