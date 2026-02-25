@@ -28,7 +28,7 @@ import {
   Eye, Check, X, Edit, User, Phone, Home, Hash, CreditCard, 
   Building, Users, FileText, Pen, Image as ImageIcon, Save,
   ExternalLink, Trash2, Plus, AlertTriangle, Lock, UserX, CheckCircle, Navigation,
-  Download, Filter, ChevronDown, ChevronUp, Calendar, Search
+  Download, Filter, ChevronDown, ChevronUp, Calendar, Search, CheckSquare, Loader2
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
