@@ -355,7 +355,11 @@ export default function Submissions() {
       remarks: submission.remarks || '',
       self_satisfied: submission.self_satisfied || '',
       latitude: submission.latitude || '',
-      longitude: submission.longitude || ''
+      longitude: submission.longitude || '',
+      special_condition: submission.special_condition || '',
+      house_status: submission.house_status || '',
+      property_use: submission.property_use || '',
+      property_use_remarks: submission.property_use_remarks || ''
     });
     // Property data
     setEditPropertyData({
