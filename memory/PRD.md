@@ -41,6 +41,9 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Supervisor/MC Officer Approve/Reject** - These roles can now approve/reject pending submissions (Feb 2026)
 - [x] **Supervisor Employee Visibility** - Supervisor can now see employee list in dashboard (Feb 2026)
 - [x] **Performance Fix** - Removed "Show Full Town Map" feature that was loading 50k+ properties (Feb 2026)
+- [x] **Excel Export Full Photo URLs** - Photo URLs are now absolute clickable URLs, dynamically constructed from request host (Feb 2026)
+- [x] **Excel Export Lat/Long/Time** - Added Latitude, Longitude, and separate Date/Time columns (Feb 2026)
+- [x] **Excel Export Property ID Fix** - Shows human-readable Property ID instead of internal UUID (Feb 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
