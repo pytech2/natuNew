@@ -1439,15 +1439,12 @@ export default function PropertyMap() {
                     <p className="text-xs text-red-700">{surveyData.review_remarks}</p>
                   </div>
                 )}
-                    <p className="text-red-800">{surveyData.review_remarks}</p>
-                  </div>
-                )}
 
-                {/* Photos */}
+                {/* Photos - Compact grid */}
                 {surveyData.photos && surveyData.photos.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-2">Photos</p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="text-[10px] text-gray-400 uppercase mb-1">Photos ({surveyData.photos.length})</div>
+                    <div className="grid grid-cols-3 gap-1.5">
                       {surveyData.photos.filter((photo, index, self) => 
                         index === self.findIndex(p => p.file_url === photo.file_url)
                       ).map((photo, idx) => (
