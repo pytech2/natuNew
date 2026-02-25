@@ -1452,11 +1452,11 @@ export default function PropertyMap() {
                           <img
                             src={`${API_URL.replace('/api', '')}${photo.file_url}`}
                             alt={photo.photo_type}
-                            className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90"
+                            className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-90"
                             onClick={() => window.open(`${API_URL.replace('/api', '')}${photo.file_url}`, '_blank')}
                           />
-                          <span className="absolute top-1 left-1 px-2 py-0.5 bg-black/50 text-white text-xs rounded">
-                            {photo.photo_type === 'HOUSE' ? 'PROPERTY' : photo.photo_type}
+                          <span className="absolute top-0.5 left-0.5 px-1 py-0.5 bg-black/60 text-white text-[8px] rounded">
+                            {photo.photo_type === 'HOUSE' ? 'PROP' : photo.photo_type}
                           </span>
                         </div>
                       ))}
@@ -1464,22 +1464,24 @@ export default function PropertyMap() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                {/* Action Buttons - Compact */}
                 {(!surveyData.status || surveyData.status === 'Pending' || surveyData.status === 'Completed') && (
-                  <div className="flex gap-3 pt-4 border-t">
+                  <div className="flex gap-2 pt-2 border-t">
                     <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                      size="sm"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-8 text-xs"
                       onClick={handleApproveSurvey}
                     >
-                      <Check className="w-4 h-4 mr-2" />
+                      <Check className="w-3 h-3 mr-1" />
                       Approve
                     </Button>
                     <Button
+                      size="sm"
                       variant="destructive"
-                      className="flex-1"
+                      className="flex-1 h-8 text-xs"
                       onClick={() => setRejectDialog(true)}
                     >
-                      <X className="w-4 h-4 mr-2" />
+                      <X className="w-3 h-3 mr-1" />
                       Reject
                     </Button>
                   </div>
@@ -1487,9 +1489,9 @@ export default function PropertyMap() {
 
                 {/* Show rejection remarks if rejected */}
                 {surveyData.status === 'Rejected' && surveyData.review_remarks && (
-                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <p className="text-xs text-red-600 font-semibold mb-1">Rejection Reason:</p>
-                    <p className="text-red-700">{surveyData.review_remarks}</p>
+                  <div className="p-2 bg-red-50 rounded border border-red-200">
+                    <p className="text-[10px] text-red-500 uppercase mb-0.5">Rejection Reason</p>
+                    <p className="text-xs text-red-700">{surveyData.review_remarks}</p>
                   </div>
                 )}
               </div>
