@@ -413,7 +413,7 @@ export default function Survey() {
       return;
     }
 
-    // If special condition is selected (House Locked, Owner Denied, or Vacant Plot), skip other validations
+    // If special condition is selected (Property Locked, Owner Denied, Vacant Plot, Wrong Location), skip other validations
     if (canSkipRequiredFields) {
       // Only GPS location is required for special conditions
       if (!location.latitude || !location.longitude) {
@@ -421,16 +421,28 @@ export default function Survey() {
         return;
       }
       
-      // House Status is mandatory for ALL submissions including special conditions
+      // Property Status is mandatory for ALL submissions including special conditions
       if (!houseStatus) {
-        toast.error('Please select House Status (Kachha/Pakka/Vacant Plot)');
+        toast.error('Please select Property Status (Kachha/Pakka/Vacant Plot)');
         return;
       }
       
-      // Remarks required for all special conditions (House Locked, Owner Denied, Vacant Plot, Wrong Location)
+      // Property Current Use is mandatory
+      if (!propertyUse) {
+        toast.error('Please select Property Current Use');
+        return;
+      }
+      
+      // If Property Use is 'other', remarks are required
+      if (propertyUse === 'other' && !propertyUseRemarks.trim()) {
+        toast.error('Please enter remarks for Other property use');
+        return;
+      }
+      
+      // Remarks required for all special conditions (Property Locked, Owner Denied, Vacant Plot, Wrong Location)
       if (!formData.remarks?.trim()) {
         toast.error(`Remarks are required for ${
-          specialCondition === 'house_locked' ? 'House Locked' : 
+          specialCondition === 'property_locked' ? 'Property Locked' : 
           specialCondition === 'owner_denied' ? 'Owner Denied' : 
           specialCondition === 'vacant_plot' ? 'Vacant Plot' : 
           'Property ID Wrong Location'
