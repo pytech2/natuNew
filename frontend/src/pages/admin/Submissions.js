@@ -743,11 +743,64 @@ export default function Submissions() {
           </Card>
         ) : (
           <>
+            {/* Bulk Action Bar */}
+            {canApproveReject && (
+              <div className="mb-3 flex items-center gap-3 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllPending}
+                  className="h-8"
+                >
+                  <CheckSquare className="w-4 h-4 mr-1" />
+                  Select All Pending
+                </Button>
+                {selectedIds.length > 0 && (
+                  <>
+                    <span className="text-sm text-slate-600 font-medium">
+                      {selectedIds.length} selected
+                    </span>
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 h-8"
+                      onClick={handleBulkApprove}
+                      disabled={bulkApproving}
+                    >
+                      {bulkApproving ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                      )}
+                      Approve {selectedIds.length}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSelection}
+                      className="h-8 text-slate-500"
+                    >
+                      Clear
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
             <Card className="shadow-lg border-0">
               <CardContent className="p-0 overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
+                      {canApproveReject && (
+                        <th className="w-10 px-2 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.length > 0 && selectedIds.length === submissions.filter(s => s.status === 'Pending' || s.status === 'Completed' || !s.status).length}
+                            onChange={(e) => e.target.checked ? selectAllPending() : clearSelection()}
+                            className="w-4 h-4 rounded border-slate-300"
+                          />
+                        </th>
+                      )}
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Sr. No</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Property ID</th>
                       <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Owner</th>
@@ -763,7 +816,19 @@ export default function Submissions() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {submissions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50 transition-colors text-sm">
+                      <tr key={sub.id} className={`hover:bg-slate-50 transition-colors text-sm ${selectedIds.includes(sub.id) ? 'bg-emerald-50' : ''}`}>
+                        {canApproveReject && (
+                          <td className="px-2 py-3">
+                            {(sub.status === 'Pending' || sub.status === 'Completed' || !sub.status) && (
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.includes(sub.id)}
+                                onChange={() => toggleSelection(sub.id)}
+                                className="w-4 h-4 rounded border-slate-300"
+                              />
+                            )}
+                          </td>
+                        )}
                         <td className="px-3 py-3 font-bold text-red-600">{sub.bill_sr_no || sub.serial_number || '-'}</td>
                         <td className="px-3 py-3 font-mono font-medium text-blue-600">{sub.property_id}</td>
                         <td className="px-3 py-3">{sub.property_owner_name || '-'}</td>
