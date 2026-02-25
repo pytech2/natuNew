@@ -2922,7 +2922,13 @@ async def export_submissions(
     # Data rows
     for row_num, sub in enumerate(submissions, 2):
         special_cond = sub.get("special_condition", "")
-        special_cond_display = "House Locked" if special_cond == "house_locked" else "Owner Denied" if special_cond == "owner_denied" else "Normal"
+        special_cond_display = (
+            "Property Locked" if special_cond in ["property_locked", "house_locked"] else 
+            "Owner Denied" if special_cond == "owner_denied" else 
+            "Vacant Plot" if special_cond == "vacant_plot" else 
+            "Wrong Location" if special_cond == "wrong_location" else 
+            "Normal"
+        )
         
         photos = sub.get("photos", [])
         photos_count = len(photos) if photos else 0
