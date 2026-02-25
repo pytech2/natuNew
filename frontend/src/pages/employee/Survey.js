@@ -469,9 +469,21 @@ export default function Survey() {
         }
       }
       
-      // House Status is mandatory for normal submissions
+      // Property Status is mandatory for normal submissions
       if (!houseStatus) {
-        toast.error('Please select House Status (Kachha/Pakka/Vacant Plot)');
+        toast.error('Please select Property Status (Kachha/Pakka/Vacant Plot)');
+        return;
+      }
+      
+      // Property Current Use is mandatory
+      if (!propertyUse) {
+        toast.error('Please select Property Current Use');
+        return;
+      }
+      
+      // If Property Use is 'other', remarks are required
+      if (propertyUse === 'other' && !propertyUseRemarks.trim()) {
+        toast.error('Please enter remarks for Other property use');
         return;
       }
     }
@@ -486,12 +498,14 @@ export default function Survey() {
 
     try {
       const formDataObj = new FormData();
-      formDataObj.append('receiver_name', formData.receiver_name || (specialCondition === 'house_locked' ? 'House Locked' : specialCondition === 'owner_denied' ? 'Owner Denied' : specialCondition === 'vacant_plot' ? 'Vacant Plot' : specialCondition === 'wrong_location' ? 'Wrong Location' : ''));
+      formDataObj.append('receiver_name', formData.receiver_name || (specialCondition === 'property_locked' ? 'Property Locked' : specialCondition === 'owner_denied' ? 'Owner Denied' : specialCondition === 'vacant_plot' ? 'Vacant Plot' : specialCondition === 'wrong_location' ? 'Wrong Location' : ''));
       formDataObj.append('receiver_mobile', formData.receiver_mobile || '');
       formDataObj.append('relation', formData.relation || (canSkipRequiredFields ? 'N/A' : ''));
       formDataObj.append('remarks', formData.remarks || ''); // Only user-entered remarks, no auto text
       formDataObj.append('special_condition', specialCondition || '');
       formDataObj.append('house_status', houseStatus || '');
+      formDataObj.append('property_use', propertyUse || '');
+      formDataObj.append('property_use_remarks', propertyUseRemarks || '');
       formDataObj.append('wrong_location', specialCondition === 'wrong_location' ? 'true' : 'false');
       formDataObj.append('latitude', location.latitude);
       formDataObj.append('longitude', location.longitude);
