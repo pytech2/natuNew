@@ -283,6 +283,65 @@ export default function Submissions() {
     }
   };
 
+  // Bulk approve selected submissions
+  const handleBulkApprove = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('Please select submissions to approve');
+      return;
+    }
+    
+    setBulkApproving(true);
+    let successCount = 0;
+    let failCount = 0;
+    
+    try {
+      for (const id of selectedIds) {
+        try {
+          await axios.post(`${API_URL}/admin/submissions/approve`, {
+            submission_id: id,
+            action: 'APPROVE',
+            remarks: 'Bulk approved'
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (err) {
+          failCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`✅ Approved ${successCount} submissions${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      }
+      setSelectedIds([]);
+      fetchSubmissions();
+    } catch (error) {
+      toast.error('Bulk approve failed');
+    } finally {
+      setBulkApproving(false);
+    }
+  };
+
+  // Toggle single selection
+  const toggleSelection = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  // Select all pending submissions
+  const selectAllPending = () => {
+    const pendingIds = submissions
+      .filter(s => s.status === 'Pending' || s.status === 'Completed' || !s.status)
+      .map(s => s.id);
+    setSelectedIds(pendingIds);
+  };
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedIds([]);
+  };
+
   const openEditDialog = (submission) => {
     setSelectedSubmission(submission);
     // Submission data - matching Survey.js fields
