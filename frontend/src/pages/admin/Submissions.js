@@ -109,6 +109,10 @@ export default function Submissions() {
   const [newPhotoFile, setNewPhotoFile] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef(null);
+  
+  // Bulk selection states
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkApproving, setBulkApproving] = useState(false);
 
   // Check permissions based on role
   const canEdit = user?.role === 'ADMIN';
