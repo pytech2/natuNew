@@ -3715,9 +3715,11 @@ async def submit_survey(
     correct_colony_name: str = Form(None),
     remarks: str = Form(None),
     self_satisfied: str = Form(""),
-    special_condition: str = Form(None),  # 'house_locked', 'owner_denied', or 'vacant_plot'
+    special_condition: str = Form(None),  # 'property_locked', 'owner_denied', 'vacant_plot', or 'wrong_location'
     house_status: str = Form(None),  # 'kachha', 'pakka', or 'vacant_plot'
-    wrong_location: str = Form("false"),  # 'true' if property ID at wrong location (for vacant plot)
+    property_use: str = Form(None),  # 'residential', 'commercial', 'mix_use', or 'other'
+    property_use_remarks: str = Form(None),  # remarks for 'other' property use
+    wrong_location: str = Form("false"),  # 'true' if property ID at wrong location
     # Self Certification fields
     self_cert_status: str = Form(None),  # 'done', 'later', 'deny', 'already_certified'
     self_cert_mobile: str = Form(None),
