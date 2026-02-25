@@ -1321,19 +1321,33 @@ export default function Submissions() {
                           <div className="col-span-2">
                             <Label className="text-xs text-slate-500">Special Condition</Label>
                             <div className={`mt-1 px-3 py-2 rounded-lg flex items-center gap-2 ${
-                              selectedSubmission.special_condition === 'house_locked' 
+                              selectedSubmission.special_condition === 'property_locked' || selectedSubmission.special_condition === 'house_locked'
                                 ? 'bg-amber-100 text-amber-700' 
-                                : 'bg-red-100 text-red-700'
+                                : selectedSubmission.special_condition === 'owner_denied'
+                                ? 'bg-red-100 text-red-700'
+                                : selectedSubmission.special_condition === 'vacant_plot'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-purple-100 text-purple-700'
                             }`}>
-                              {selectedSubmission.special_condition === 'house_locked' ? (
+                              {selectedSubmission.special_condition === 'property_locked' || selectedSubmission.special_condition === 'house_locked' ? (
                                 <>
                                   <Lock className="w-4 h-4" />
-                                  <span className="font-semibold">House Locked</span>
+                                  <span className="font-semibold">Property Locked</span>
                                 </>
-                              ) : (
+                              ) : selectedSubmission.special_condition === 'owner_denied' ? (
                                 <>
                                   <UserX className="w-4 h-4" />
                                   <span className="font-semibold">Owner Denied</span>
+                                </>
+                              ) : selectedSubmission.special_condition === 'vacant_plot' ? (
+                                <>
+                                  <MapPin className="w-4 h-4" />
+                                  <span className="font-semibold">Vacant Plot</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Navigation className="w-4 h-4" />
+                                  <span className="font-semibold">Wrong Location</span>
                                 </>
                               )}
                             </div>
