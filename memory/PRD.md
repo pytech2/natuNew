@@ -44,6 +44,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Excel Export Full Photo URLs** - Photo URLs are now absolute clickable URLs, dynamically constructed from request host (Feb 2026)
 - [x] **Excel Export Lat/Long/Time** - Added Latitude, Longitude, and separate Date/Time columns (Feb 2026)
 - [x] **Excel Export Property ID Fix** - Shows human-readable Property ID instead of internal UUID (Feb 2026)
+- [x] **Excel Download Format Fix** - Fixed Blob MIME type in Bills.js and Submissions.js so Excel downloads as proper .xlsx (Feb 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
