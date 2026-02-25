@@ -1010,7 +1010,116 @@ export default function Survey() {
                     houseStatus === 'pakka' ? 'bg-green-100 text-green-700' :
                     'bg-blue-100 text-blue-700'
                   }`}>
-                    ✓ Selected: {houseStatus === 'kachha' ? 'Kachha House' : houseStatus === 'pakka' ? 'Pakka House' : 'Vacant Plot'}
+                    ✓ Selected: {houseStatus === 'kachha' ? 'Kachha' : houseStatus === 'pakka' ? 'Pakka' : 'Vacant Plot'}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Property Current Use - New Field */}
+            <Card className="border-2 border-indigo-200 bg-indigo-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-indigo-700">
+                  <Home className="w-4 h-4" />
+                  Property Current Use *
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-indigo-600">
+                  Select the current usage type of this property:
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setPropertyUse('residential'); setPropertyUseRemarks(''); }}
+                    className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                      propertyUse === 'residential'
+                        ? 'border-indigo-500 bg-indigo-100 text-indigo-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300'
+                    }`}
+                    data-testid="property-use-residential"
+                  >
+                    <Home className={`w-5 h-5 ${propertyUse === 'residential' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium">Residential</span>
+                    {propertyUse === 'residential' && (
+                      <CheckCircle className="w-3 h-3 text-indigo-600" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPropertyUse('commercial'); setPropertyUseRemarks(''); }}
+                    className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                      propertyUse === 'commercial'
+                        ? 'border-purple-500 bg-purple-100 text-purple-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-purple-300'
+                    }`}
+                    data-testid="property-use-commercial"
+                  >
+                    <Building className={`w-5 h-5 ${propertyUse === 'commercial' ? 'text-purple-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium">Commercial</span>
+                    {propertyUse === 'commercial' && (
+                      <CheckCircle className="w-3 h-3 text-purple-600" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPropertyUse('mix_use'); setPropertyUseRemarks(''); }}
+                    className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                      propertyUse === 'mix_use'
+                        ? 'border-teal-500 bg-teal-100 text-teal-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-teal-300'
+                    }`}
+                    data-testid="property-use-mix"
+                  >
+                    <Building className={`w-5 h-5 ${propertyUse === 'mix_use' ? 'text-teal-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium">Mix Use</span>
+                    {propertyUse === 'mix_use' && (
+                      <CheckCircle className="w-3 h-3 text-teal-600" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPropertyUse('other')}
+                    className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                      propertyUse === 'other'
+                        ? 'border-gray-500 bg-gray-100 text-gray-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-gray-300'
+                    }`}
+                    data-testid="property-use-other"
+                  >
+                    <AlertTriangle className={`w-5 h-5 ${propertyUse === 'other' ? 'text-gray-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium">Other</span>
+                    {propertyUse === 'other' && (
+                      <CheckCircle className="w-3 h-3 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* Other - Remarks input */}
+                {propertyUse === 'other' && (
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-gray-700 font-semibold">Other Use Remarks *</Label>
+                    <Textarea
+                      value={propertyUseRemarks}
+                      onChange={(e) => setPropertyUseRemarks(e.target.value)}
+                      placeholder="Please specify the property use type..."
+                      rows={2}
+                      className="border-gray-300"
+                      data-testid="property-use-remarks"
+                    />
+                    {!propertyUseRemarks.trim() && (
+                      <p className="text-xs text-gray-500">Remarks are required when selecting Other</p>
+                    )}
+                  </div>
+                )}
+                
+                {propertyUse && propertyUse !== 'other' && (
+                  <div className={`p-2 rounded-lg text-xs font-medium ${
+                    propertyUse === 'residential' ? 'bg-indigo-100 text-indigo-700' :
+                    propertyUse === 'commercial' ? 'bg-purple-100 text-purple-700' :
+                    'bg-teal-100 text-teal-700'
+                  }`}>
+                    ✓ Selected: {propertyUse === 'residential' ? 'Residential' : propertyUse === 'commercial' ? 'Commercial' : 'Mix Use'}
                   </div>
                 )}
               </CardContent>
