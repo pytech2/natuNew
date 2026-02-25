@@ -3807,7 +3807,7 @@ async def submit_survey(
     # Set receiver name based on special condition if empty
     final_receiver_name = receiver_name
     if is_special_condition and not receiver_name:
-        final_receiver_name = "House Locked" if special_condition == 'house_locked' else "Owner Denied"
+        final_receiver_name = "Property Locked" if special_condition == 'property_locked' else "Owner Denied" if special_condition == 'owner_denied' else "Vacant Plot" if special_condition == 'vacant_plot' else "Wrong Location"
     
     # Create submission with new fields
     submission_doc = {
