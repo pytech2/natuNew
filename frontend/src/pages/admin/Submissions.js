@@ -146,7 +146,7 @@ export default function Submissions() {
     try {
       const params = new URLSearchParams();
       params.append('page', pagination.page);
-      params.append('limit', 20);
+      params.append('limit', 100);
       if (statusFilter) params.append('status', statusFilter);
       if (employeeIdFilter || employeeFilter) params.append('employee_id', employeeIdFilter || employeeFilter);
       if (colonyFilter) params.append('colony', colonyFilter);
