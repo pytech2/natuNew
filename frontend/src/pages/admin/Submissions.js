@@ -74,8 +74,7 @@ const compressImage = (file, maxSize = 1200, quality = 0.7) => {
 };
 
 const RELATION_OPTIONS = [
-  'Self', 'Spouse', 'Son', 'Daughter', 'Father', 'Mother',
-  'Brother', 'Sister', 'Tenant', 'Caretaker', 'Other'
+  'Self', 'Family Member', 'Kirayedar', 'Padosi', 'Worker', 'Other'
 ];
 
 export default function Submissions() {
