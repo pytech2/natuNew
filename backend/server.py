@@ -2932,7 +2932,7 @@ async def export_submissions(
             row_num - 1,
             sub.get("serial_number", ""),
             sub.get("bill_sr_no", ""),
-            sub.get("property_record_id", ""),
+            sub.get("property_id", sub.get("property_record_id", "")),  # Use actual property_id, not internal record ID
             sub.get("property_owner_name", ""),
             sub.get("property_mobile", ""),
             sub.get("property_address", ""),
