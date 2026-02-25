@@ -696,9 +696,9 @@ export default function Submissions() {
                   <label className="text-xs font-medium text-slate-500">Quick Filters</label>
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      variant={specialConditionFilter === 'house_locked' ? 'default' : 'outline'}
+                      variant={specialConditionFilter === 'property_locked' || specialConditionFilter === 'house_locked' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'house_locked' ? '' : 'house_locked')}
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'property_locked' || specialConditionFilter === 'house_locked' ? '' : 'property_locked')}
                       className="text-xs"
                     >
                       <Lock className="w-3 h-3 mr-1" />
@@ -712,6 +712,24 @@ export default function Submissions() {
                     >
                       <UserX className="w-3 h-3 mr-1" />
                       Denied
+                    </Button>
+                    <Button
+                      variant={specialConditionFilter === 'vacant_plot' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'vacant_plot' ? '' : 'vacant_plot')}
+                      className="text-xs"
+                    >
+                      <MapPin className="w-3 h-3 mr-1" />
+                      Vacant
+                    </Button>
+                    <Button
+                      variant={specialConditionFilter === 'wrong_location' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'wrong_location' ? '' : 'wrong_location')}
+                      className="text-xs"
+                    >
+                      <Navigation className="w-3 h-3 mr-1" />
+                      Wrong Loc
                     </Button>
                     <Button
                       variant={statusFilter === 'Pending' ? 'default' : 'outline'}
