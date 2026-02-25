@@ -607,10 +607,10 @@ export default function Submissions() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value=" ">All Conditions</SelectItem>
-                      <SelectItem value="house_locked">
+                      <SelectItem value="property_locked">
                         <span className="flex items-center gap-2">
                           <Lock className="w-3 h-3 text-amber-600" />
-                          House Locked
+                          Property Locked
                         </span>
                       </SelectItem>
                       <SelectItem value="owner_denied">
