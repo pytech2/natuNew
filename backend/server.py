@@ -2762,6 +2762,7 @@ async def list_submissions(
 
 @api_router.get("/admin/submissions/export")
 async def export_submissions(
+    request: Request,
     employee_id: Optional[str] = None,
     status: Optional[str] = None,
     date_from: Optional[str] = None,
