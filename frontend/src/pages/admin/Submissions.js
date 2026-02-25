@@ -1039,7 +1039,7 @@ export default function Submissions() {
                   <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs flex items-center gap-2">
                     <span className="text-amber-600">Condition:</span>
                     <span className="font-semibold text-amber-800">
-                      {selectedSubmission.special_condition === 'house_locked' ? '🔒 House Locked' : 
+                      {selectedSubmission.special_condition === 'property_locked' ? '🔒 Property Locked' : 
                        selectedSubmission.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
                        selectedSubmission.special_condition === 'vacant_plot' ? '🏗️ Vacant Plot' :
                        selectedSubmission.special_condition === 'wrong_location' ? '📍 Property ID Wrong Location' :
@@ -1048,19 +1048,37 @@ export default function Submissions() {
                   </div>
                 )}
 
-                {/* House Status */}
+                {/* Property Status */}
                 {selectedSubmission.house_status && (
                   <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs flex items-center gap-2">
-                    <span className="text-slate-600">House Status:</span>
+                    <span className="text-slate-600">Property Status:</span>
                     <span className={`font-semibold px-2 py-0.5 rounded ${
                       selectedSubmission.house_status === 'kachha' ? 'bg-orange-100 text-orange-700' :
                       selectedSubmission.house_status === 'pakka' ? 'bg-green-100 text-green-700' :
                       'bg-blue-100 text-blue-700'
                     }`}>
-                      {selectedSubmission.house_status === 'kachha' ? '🏠 Kachha House' : 
-                       selectedSubmission.house_status === 'pakka' ? '🏢 Pakka House' : 
+                      {selectedSubmission.house_status === 'kachha' ? '🏠 Kachha' : 
+                       selectedSubmission.house_status === 'pakka' ? '🏢 Pakka' : 
                        selectedSubmission.house_status === 'vacant_plot' ? '🏗️ Vacant Plot' :
                        selectedSubmission.house_status}
+                    </span>
+                  </div>
+                )}
+
+                {/* Property Current Use */}
+                {selectedSubmission.property_use && (
+                  <div className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-xs flex items-center gap-2">
+                    <span className="text-indigo-600">Property Use:</span>
+                    <span className={`font-semibold px-2 py-0.5 rounded ${
+                      selectedSubmission.property_use === 'residential' ? 'bg-indigo-100 text-indigo-700' :
+                      selectedSubmission.property_use === 'commercial' ? 'bg-purple-100 text-purple-700' :
+                      selectedSubmission.property_use === 'mix_use' ? 'bg-teal-100 text-teal-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {selectedSubmission.property_use === 'residential' ? '🏠 Residential' : 
+                       selectedSubmission.property_use === 'commercial' ? '🏢 Commercial' : 
+                       selectedSubmission.property_use === 'mix_use' ? '🏘️ Mix Use' :
+                       `📝 Other: ${selectedSubmission.property_use_remarks || ''}`}
                     </span>
                   </div>
                 )}
