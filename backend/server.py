@@ -2894,12 +2894,15 @@ async def export_submissions(
     ws = wb.active
     ws.title = "Submissions"
     
-    # Headers
+    # Get base URL for photos
+    base_url = os.environ.get("BASE_URL", "https://nstu.emergentagent.com")
+    
+    # Headers - Added Latitude, Longitude, Property Status, Property Use
     headers = [
         "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Mobile",
         "Address", "Colony Name", "Employee Name", "Status", "Special Condition",
-        "Self Certified", "Receiver Name", "Relation", "Receiver Mobile No",
-        "Submitted At", "Photos Count", "Photo URLs", "Remarks"
+        "Property Status", "Property Use", "Self Certified", "Receiver Name", "Relation", "Receiver Mobile No",
+        "Latitude", "Longitude", "Submitted Date", "Submitted Time", "Photos Count", "Photo URLs", "Remarks"
     ]
     
     # Style headers
@@ -2930,15 +2933,57 @@ async def export_submissions(
             "Normal"
         )
         
+        # Property Status display
+        house_status = sub.get("house_status", "")
+        house_status_display = (
+            "Kachha" if house_status == "kachha" else
+            "Pakka" if house_status == "pakka" else
+            "Vacant Plot" if house_status == "vacant_plot" else
+            ""
+        )
+        
+        # Property Use display
+        property_use = sub.get("property_use", "")
+        property_use_display = (
+            "Residential" if property_use == "residential" else
+            "Commercial" if property_use == "commercial" else
+            "Mix Use" if property_use == "mix_use" else
+            f"Other: {sub.get('property_use_remarks', '')}" if property_use == "other" else
+            ""
+        )
+        
         photos = sub.get("photos", [])
         photos_count = len(photos) if photos else 0
-        photo_urls_list = [p.get("file_url", "") for p in (photos or []) if p.get("file_url")]
+        # Create full URLs for photos
+        photo_urls_list = []
+        for p in (photos or []):
+            if p.get("file_url"):
+                url = p.get("file_url")
+                if url.startswith("/"):
+                    url = f"{base_url}{url}"
+                photo_urls_list.append(url)
+        
+        # Parse submitted_at for date and time
+        submitted_at = sub.get("submitted_at", "")
+        submitted_date = ""
+        submitted_time = ""
+        if submitted_at:
+            try:
+                if "T" in submitted_at:
+                    parts = submitted_at.split("T")
+                    submitted_date = parts[0]
+                    time_part = parts[1].split(".")[0] if "." in parts[1] else parts[1].split("+")[0]
+                    submitted_time = time_part
+                else:
+                    submitted_date = submitted_at[:10]
+            except:
+                submitted_date = submitted_at[:10] if len(submitted_at) >= 10 else submitted_at
         
         row_data = [
             row_num - 1,
             sub.get("serial_number", ""),
             sub.get("bill_sr_no", ""),
-            sub.get("property_id", sub.get("property_record_id", "")),  # Use actual property_id, not internal record ID
+            sub.get("property_id", sub.get("property_record_id", "")),
             sub.get("property_owner_name", ""),
             sub.get("property_mobile", ""),
             sub.get("property_address", ""),
@@ -2946,11 +2991,16 @@ async def export_submissions(
             sub.get("employee_name", ""),
             sub.get("status", "Pending"),
             special_cond_display,
+            house_status_display,
+            property_use_display,
             sub.get("self_certified", "No"),
             sub.get("receiver_name", ""),
             sub.get("relation", ""),
             sub.get("receiver_mobile", sub.get("new_mobile", "")),
-            sub.get("submitted_at", "")[:10] if sub.get("submitted_at") else "",
+            sub.get("latitude", ""),
+            sub.get("longitude", ""),
+            submitted_date,
+            submitted_time,
             photos_count,
             "\n".join(photo_urls_list) if photo_urls_list else "",
             sub.get("remarks", sub.get("review_remarks", ""))
@@ -2960,14 +3010,14 @@ async def export_submissions(
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
-            # Make Photo URLs column clickable
-            if col == 18 and value and str(value).startswith(("http", "/")):
+            # Make Photo URLs column clickable (column 23 now)
+            if col == 23 and value and str(value).startswith("http"):
                 first_url = str(value).split("\n")[0]
                 cell.hyperlink = first_url
                 cell.font = Font(color="0563C1", underline="single")
     
     # Adjust column widths
-    column_widths = [8, 12, 12, 15, 25, 15, 35, 20, 20, 12, 15, 12, 20, 12, 15, 12, 12, 40, 30]
+    column_widths = [6, 10, 10, 12, 22, 12, 30, 18, 18, 10, 14, 12, 14, 10, 18, 12, 14, 12, 12, 12, 10, 8, 50, 30]
     for col, width in enumerate(column_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     
