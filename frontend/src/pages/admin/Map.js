@@ -1276,178 +1276,169 @@ export default function PropertyMap() {
             onInteractOutside={() => setSurveyDialog(false)}
           >
             <DialogHeader className="pb-2 border-b">
-              <DialogTitle className="text-lg font-semibold flex items-center justify-between pr-8">
+              <DialogTitle className="text-base font-semibold flex items-center justify-between pr-8">
                 <span>Survey Data</span>
                 {surveyData && getStatusBadge(surveyData.status)}
               </DialogTitle>
             </DialogHeader>
 
             {loadingSurvey ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             ) : surveyData ? (
-              <div className="space-y-4">
-                {/* Property Header - Property ID BIG, Serial Number small */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Property ID</div>
-                  <div className="text-2xl font-bold text-blue-700 mt-1">{selectedProperty?.property_id || '-'}</div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-gray-500">Sr. No:</span>
-                    <span className="font-bold text-red-600">{selectedProperty?.bill_sr_no || selectedProperty?.serial_number || '-'}</span>
+              <div className="space-y-2 text-sm">
+                {/* Property ID Header - Compact */}
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-2.5 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-blue-500 uppercase font-medium">Property ID</span>
+                    <div className="text-lg font-bold text-blue-700">{selectedProperty?.property_id || '-'}</div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-gray-500">Sr. No</span>
+                    <div className="font-bold text-red-600">{selectedProperty?.bill_sr_no || selectedProperty?.serial_number || '-'}</div>
                   </div>
                 </div>
 
-                {/* Status Badge */}
-                <div>
-                  {getStatusBadge(surveyData.status)}
-                </div>
-
-                {/* Property Details Grid - Same as Surveyor Map */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Owner</div>
-                    <div className="font-semibold text-gray-900">{selectedProperty?.owner_name || '-'}</div>
+                {/* Property Details - Compact 3-column grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Owner</div>
+                    <div className="font-medium text-gray-900 text-xs truncate">{selectedProperty?.owner_name || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Owner Mobile</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Mobile</div>
                     {selectedProperty?.mobile ? (
-                      <a href={`tel:${selectedProperty.mobile}`} className="font-semibold text-blue-600 underline">
-                        {selectedProperty.mobile}
-                      </a>
-                    ) : (
-                      <div className="text-gray-400">-</div>
-                    )}
+                      <a href={`tel:${selectedProperty.mobile}`} className="font-medium text-blue-600 text-xs">{selectedProperty.mobile}</a>
+                    ) : <span className="text-gray-400 text-xs">-</span>}
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Colony</div>
-                    <div className="font-medium text-gray-800">{selectedProperty?.colony || selectedProperty?.ward || '-'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Amount</div>
+                    <div className="font-bold text-red-600 text-xs">₹{selectedProperty?.amount || '0'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Total Area</div>
-                    <div className="font-medium text-gray-800">{selectedProperty?.total_area || '-'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Colony</div>
+                    <div className="font-medium text-gray-800 text-xs truncate">{selectedProperty?.colony || selectedProperty?.ward || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Category</div>
-                    <div className="font-medium text-gray-800">{selectedProperty?.category || 'Residential'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Area</div>
+                    <div className="font-medium text-gray-800 text-xs">{selectedProperty?.total_area || '-'}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Amount</div>
-                    <div className="font-bold text-red-600 text-lg">₹{selectedProperty?.amount || '0'}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Category</div>
+                    <div className="font-medium text-gray-800 text-xs">{selectedProperty?.category || 'Residential'}</div>
                   </div>
                 </div>
 
-                {/* Address */}
+                {/* Address - Compact */}
                 {selectedProperty?.address && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Address</div>
-                    <div className="text-sm text-gray-800">{selectedProperty.address}</div>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Address</div>
+                    <div className="text-xs text-gray-700">{selectedProperty.address}</div>
                   </div>
                 )}
 
-                {/* Survey Details */}
-                <div className="border-t pt-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Survey Details</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Receiver Name</div>
-                      <div className="font-medium">{surveyData.receiver_name || '-'}</div>
+                {/* Survey Details Section - Compact */}
+                <div className="border-t pt-2">
+                  <div className="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Survey Details</div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <div className="bg-emerald-50 rounded p-2">
+                      <div className="text-[10px] text-emerald-600 uppercase">Receiver</div>
+                      <div className="font-medium text-xs">{surveyData.receiver_name || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Receiver Mobile</div>
-                      <div className="font-mono">{surveyData.receiver_mobile || '-'}</div>
+                    <div className="bg-emerald-50 rounded p-2">
+                      <div className="text-[10px] text-emerald-600 uppercase">Mobile</div>
+                      <div className="font-mono text-xs">{surveyData.receiver_mobile || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Relation</div>
-                      <div className="font-medium">{surveyData.relation || '-'}</div>
+                    <div className="bg-emerald-50 rounded p-2">
+                      <div className="text-[10px] text-emerald-600 uppercase">Relation</div>
+                      <div className="font-medium text-xs">{surveyData.relation || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Self Certification</div>
-                      <div className="font-medium">{surveyData.self_cert_status || surveyData.self_satisfied || '-'}</div>
+                    <div className="bg-slate-50 rounded p-2">
+                      <div className="text-[10px] text-slate-500 uppercase">Self Cert</div>
+                      <div className="font-medium text-xs">{surveyData.self_cert_status || surveyData.self_satisfied || '-'}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Employee</div>
-                      <div className="font-medium">{surveyData.employee_name}</div>
+                    <div className="bg-slate-50 rounded p-2">
+                      <div className="text-[10px] text-slate-500 uppercase">Employee</div>
+                      <div className="font-medium text-xs truncate">{surveyData.employee_name}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs text-gray-500 mb-1">Submit Date</div>
-                      <div className="font-medium text-xs">{new Date(surveyData.submitted_at).toLocaleString('en-IN')}</div>
+                    <div className="bg-slate-50 rounded p-2">
+                      <div className="text-[10px] text-slate-500 uppercase">Date</div>
+                      <div className="font-medium text-[10px]">{new Date(surveyData.submitted_at).toLocaleString('en-IN', {day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'})}</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Special Condition */}
-                {surveyData.special_condition && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="text-xs text-amber-600 font-medium">Special Condition</div>
-                    <div className="font-semibold text-amber-800">
-                      {surveyData.special_condition === 'house_locked' ? 'House Locked' : 
-                       surveyData.special_condition === 'owner_denied' ? 'Owner Denied' : 
-                       surveyData.special_condition}
-                    </div>
-                  </div>
-                )}
-
-                {/* Combined GPS Coordinates - Original & Survey in ONE line with Distance */}
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                    {/* Original GPS */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                      <span className="text-slate-500">Original:</span>
-                      <span className="font-mono text-blue-700">
-                        {selectedProperty?.latitude?.toFixed(5) || 'N/A'}, {selectedProperty?.longitude?.toFixed(5) || 'N/A'}
+                {/* House Status & Special Condition - Inline */}
+                {(surveyData.house_status || surveyData.special_condition) && (
+                  <div className="flex gap-2 flex-wrap">
+                    {surveyData.house_status && (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        surveyData.house_status === 'kachha' ? 'bg-orange-100 text-orange-700' :
+                        surveyData.house_status === 'pakka' ? 'bg-green-100 text-green-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {surveyData.house_status === 'kachha' ? '🏠 Kachha' : 
+                         surveyData.house_status === 'pakka' ? '🏢 Pakka' : '🏗️ Vacant'}
                       </span>
-                    </div>
-                    
-                    {/* Arrow */}
-                    <span className="text-slate-400">→</span>
-                    
-                    {/* Survey GPS */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <span className="text-slate-500">Survey:</span>
-                      <span className="font-mono text-emerald-700">
-                        {surveyData.latitude?.toFixed(5) || 'N/A'}, {surveyData.longitude?.toFixed(5) || 'N/A'}
+                    )}
+                    {surveyData.special_condition && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
+                        {surveyData.special_condition === 'house_locked' ? '🔒 House Locked' : 
+                         surveyData.special_condition === 'owner_denied' ? '❌ Owner Denied' : 
+                         surveyData.special_condition === 'vacant_plot' ? '🏗️ Vacant Plot' :
+                         surveyData.special_condition === 'wrong_location' ? '📍 Wrong Location' :
+                         surveyData.special_condition}
                       </span>
-                    </div>
-                    
-                    {/* Distance Calculation */}
-                    {selectedProperty?.latitude && surveyData.latitude && (
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-100 rounded-full">
-                        <Navigation className="w-3 h-3 text-amber-600" />
-                        <span className="font-semibold text-amber-700">
-                          {(() => {
-                            const R = 6371000;
-                            const lat1 = selectedProperty.latitude * Math.PI / 180;
-                            const lat2 = surveyData.latitude * Math.PI / 180;
-                            const dLat = (surveyData.latitude - selectedProperty.latitude) * Math.PI / 180;
-                            const dLon = (surveyData.longitude - selectedProperty.longitude) * Math.PI / 180;
-                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                                      Math.cos(lat1) * Math.cos(lat2) *
-                                      Math.sin(dLon/2) * Math.sin(dLon/2);
-                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                            const distance = R * c;
-                            return distance < 1000 ? `${Math.round(distance)}m` : `${(distance/1000).toFixed(2)}km`;
-                          })()}
-                        </span>
-                      </div>
                     )}
                   </div>
+                )}
+
+                {/* GPS - Single compact line */}
+                <div className="bg-blue-50 rounded p-2 flex flex-wrap items-center gap-2 text-[10px]">
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    <span className="text-gray-500">Orig:</span>
+                    <span className="font-mono text-blue-700">{selectedProperty?.latitude?.toFixed(4)},{selectedProperty?.longitude?.toFixed(4)}</span>
+                  </div>
+                  <span className="text-gray-400">→</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span className="text-gray-500">Survey:</span>
+                    <span className="font-mono text-emerald-700">{surveyData.latitude?.toFixed(4)},{surveyData.longitude?.toFixed(4)}</span>
+                  </div>
+                  {selectedProperty?.latitude && surveyData.latitude && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 rounded font-semibold text-amber-700">
+                      {(() => {
+                        const R = 6371000;
+                        const lat1 = selectedProperty.latitude * Math.PI / 180;
+                        const lat2 = surveyData.latitude * Math.PI / 180;
+                        const dLat = (surveyData.latitude - selectedProperty.latitude) * Math.PI / 180;
+                        const dLon = (surveyData.longitude - selectedProperty.longitude) * Math.PI / 180;
+                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                        const distance = R * c;
+                        return distance < 1000 ? `${Math.round(distance)}m` : `${(distance/1000).toFixed(1)}km`;
+                      })()}
+                    </span>
+                  )}
                 </div>
 
-                {/* Remarks */}
+                {/* Remarks - Compact */}
                 {surveyData.remarks && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-1">Remarks</div>
-                    <p className="text-gray-800">{surveyData.remarks}</p>
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-[10px] text-gray-400 uppercase">Remarks</div>
+                    <p className="text-xs text-gray-700">{surveyData.remarks}</p>
                   </div>
                 )}
 
                 {/* Review Remarks */}
                 {surveyData.review_remarks && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="text-xs text-red-600 font-medium">Rejection Remarks</div>
+                  <div className="bg-red-50 border border-red-200 rounded p-2">
+                    <div className="text-[10px] text-red-500 uppercase">Rejection Reason</div>
+                    <p className="text-xs text-red-700">{surveyData.review_remarks}</p>
+                  </div>
+                )}
                     <p className="text-red-800">{surveyData.review_remarks}</p>
                   </div>
                 )}
