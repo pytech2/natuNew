@@ -1452,6 +1452,74 @@ export default function Submissions() {
                       </div>
                     </div>
                     
+                    {/* Special Condition, Property Status, Property Use */}
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Special Condition</Label>
+                        <Select
+                          value={editData.special_condition || 'none'}
+                          onValueChange={(value) => setEditData({ ...editData, special_condition: value === 'none' ? '' : value })}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select condition" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Normal (No Condition)</SelectItem>
+                            <SelectItem value="property_locked">Property Locked</SelectItem>
+                            <SelectItem value="owner_denied">Owner Denied</SelectItem>
+                            <SelectItem value="vacant_plot">Vacant Plot</SelectItem>
+                            <SelectItem value="wrong_location">Wrong Location</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Property Status</Label>
+                        <Select
+                          value={editData.house_status || 'none'}
+                          onValueChange={(value) => setEditData({ ...editData, house_status: value === 'none' ? '' : value })}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Not Set</SelectItem>
+                            <SelectItem value="kachha">Kachha</SelectItem>
+                            <SelectItem value="pakka">Pakka</SelectItem>
+                            <SelectItem value="vacant_plot">Vacant Plot</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Property Current Use</Label>
+                        <Select
+                          value={editData.property_use || 'none'}
+                          onValueChange={(value) => setEditData({ ...editData, property_use: value === 'none' ? '' : value })}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select use" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Not Set</SelectItem>
+                            <SelectItem value="residential">Residential</SelectItem>
+                            <SelectItem value="commercial">Commercial</SelectItem>
+                            <SelectItem value="mix_use">Mix Use</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {editData.property_use === 'other' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-600">Property Use Remarks</Label>
+                          <Input
+                            value={editData.property_use_remarks}
+                            onChange={(e) => setEditData({ ...editData, property_use_remarks: e.target.value })}
+                            placeholder="Specify property use..."
+                            className="bg-white"
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     {/* GPS Coordinates */}
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div className="space-y-2">
