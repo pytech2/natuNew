@@ -808,7 +808,7 @@ export default function Survey() {
 
         {!isCompleted && (
           <>
-            {/* Special Conditions - House Locked / Owner Denied / Vacant Plot */}
+            {/* Special Conditions - Property Locked / Owner Denied / Vacant Plot */}
             <Card className="border-2 border-amber-200 bg-amber-50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
@@ -823,17 +823,17 @@ export default function Survey() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setSpecialCondition(specialCondition === 'house_locked' ? '' : 'house_locked')}
+                    onClick={() => setSpecialCondition(specialCondition === 'property_locked' ? '' : 'property_locked')}
                     className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
-                      specialCondition === 'house_locked'
+                      specialCondition === 'property_locked'
                         ? 'border-amber-500 bg-amber-100 text-amber-800'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-amber-300'
                     }`}
-                    data-testid="house-locked-btn"
+                    data-testid="property-locked-btn"
                   >
-                    <Lock className={`w-5 h-5 ${specialCondition === 'house_locked' ? 'text-amber-600' : 'text-slate-400'}`} />
-                    <span className="text-xs font-medium">House Locked</span>
-                    {specialCondition === 'house_locked' && (
+                    <Lock className={`w-5 h-5 ${specialCondition === 'property_locked' ? 'text-amber-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium">Property Locked</span>
+                    {specialCondition === 'property_locked' && (
                       <CheckCircle className="w-3 h-3 text-amber-600" />
                     )}
                   </button>
