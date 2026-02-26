@@ -1462,6 +1462,14 @@ export default function Survey() {
       {/* Submit Button */}
       {!isCompleted && attendanceMarked && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg">
+          {submitting && uploadProgress > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+              <div 
+                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          )}
           <Button
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
             onClick={handleSubmit}
