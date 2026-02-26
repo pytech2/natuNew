@@ -51,8 +51,8 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // COMPRESS: Limit max dimension to 800px for much smaller file size
-        const MAX_SIZE = 800;
+        // COMPRESS: Limit max dimension to 600px for fast mobile upload
+        const MAX_SIZE = 600;
         let width = img.width;
         let height = img.height;
         
