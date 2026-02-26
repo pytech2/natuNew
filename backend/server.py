@@ -2310,27 +2310,39 @@ async def admin_dashboard(
     
     town_db = await get_town_data_db(request)
     
-    # Build date filter for submissions
-    date_filter = {}
     if date:
+        # Date-filtered view: use single aggregation for all counts
         date_start = f"{date}T00:00:00"
         date_end = f"{date}T23:59:59"
         date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
-    
-    if date:
-        # Date-filtered view: count submissions for that date
-        total = await town_db.submissions.count_documents(date_filter)
-        approved = await town_db.submissions.count_documents({**date_filter, "status": {"$in": ["Approved", "Completed"]}})
-        pending = await town_db.submissions.count_documents({**date_filter, "status": {"$in": ["Pending", "Completed"]}})
-        rejected = await town_db.submissions.count_documents({**date_filter, "status": "Rejected"})
+        pipeline = [
+            {"$match": date_filter},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
+                "pending": {"$sum": {"$cond": [{"$in": ["$status", ["Pending", "Completed"]]}, 1, 0]}},
+                "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}}
+            }}
+        ]
+        result = await town_db.submissions.aggregate(pipeline).to_list(1)
+        stats = result[0] if result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0}
+        total, approved, pending, rejected = stats["total"], stats["approved"], stats["pending"], stats["rejected"]
     else:
-        # All time view: count properties
-        total = await town_db.properties.count_documents({})
-        approved_count = await town_db.properties.count_documents({"status": "Approved"})
-        completed_count = await town_db.properties.count_documents({"status": "Completed"})
-        approved = approved_count + completed_count
-        pending = await town_db.properties.count_documents({"status": "Pending"})
-        rejected = await town_db.properties.count_documents({"status": "Rejected"})
+        # All time view: single aggregation for property counts
+        pipeline = [
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
+                "pending": {"$sum": {"$cond": [{"$eq": ["$status", "Pending"]}, 1, 0]}},
+                "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}},
+                "colonies": {"$addToSet": "$colony"}
+            }}
+        ]
+        result = await town_db.properties.aggregate(pipeline).to_list(1)
+        stats = result[0] if result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "colonies": []}
+        total, approved, pending, rejected = stats["total"], stats["approved"], stats["pending"], stats["rejected"]
     
     # Employee count: non-admin users assigned to current town
     town_code = request.headers.get("x-town-code")
