@@ -527,7 +527,12 @@ export default function Survey() {
       formDataObj.append('authorization', `Bearer ${token}`);
 
       await axios.post(`${API_URL}/employee/submit/${propertyId}`, formDataObj, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+        },
+        timeout: 120000 // 2 min timeout for slow networks
       });
 
       toast.success('Survey submitted successfully!');
