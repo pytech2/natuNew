@@ -3857,7 +3857,11 @@ async def submit_survey(
 ):
     current_user = await get_current_user(authorization)
     
-    prop = await get_db().properties.find_one({"id": property_id}, {"_id": 0})
+    prop = await get_db().properties.find_one({"id": property_id}, {
+        "_id": 0, "id": 1, "property_id": 1, "batch_id": 1, "owner_name": 1,
+        "mobile": 1, "locked": 1, "status": 1, "assigned_employee_id": 1,
+        "assigned_employee_ids": 1, "self_certified": 1
+    })
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
