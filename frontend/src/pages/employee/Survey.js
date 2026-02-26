@@ -200,6 +200,7 @@ export default function Survey() {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [processingPhoto, setProcessingPhoto] = useState(null);
 
   // GPS State
