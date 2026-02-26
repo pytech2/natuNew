@@ -3981,21 +3981,22 @@ async def submit_survey(
         "ward_number": ward_number
     }
     
-    # Check if submission already exists
-    existing = await get_db().submissions.find_one({"property_record_id": property_id})
+    # Check if submission already exists and update/insert + update property status in parallel
+    existing = await get_db().submissions.find_one({"property_record_id": property_id}, {"_id": 1})
     if existing:
-        await get_db().submissions.update_one(
+        sub_task = get_db().submissions.update_one(
             {"property_record_id": property_id},
             {"$set": submission_doc}
         )
     else:
-        await get_db().submissions.insert_one(submission_doc)
+        sub_task = get_db().submissions.insert_one(submission_doc)
     
-    # Update property status to In Progress (until approved)
-    await get_db().properties.update_one(
+    prop_task = get_db().properties.update_one(
         {"id": property_id},
         {"$set": {"status": "In Progress"}}
     )
+    
+    await asyncio.gather(sub_task, prop_task)
     
     # Clear map cache so other users see updated status
     await clear_map_cache()
