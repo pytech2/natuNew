@@ -2551,10 +2551,18 @@ async def list_areas(request: Request, current_user: dict = Depends(get_current_
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin/Supervisor access required")
     
+    town_code = get_current_town_code()
+    cache_key = f"areas_{town_code}"
+    cached = colonies_cache.get(cache_key)
+    if cached:
+        return cached
+    
     town_db = await get_town_data_db(request)
     areas = await town_db.properties.distinct("ward")
     areas = sorted([a for a in areas if a])
-    return {"areas": areas}
+    result = {"areas": areas}
+    colonies_cache.set(cache_key, result)
+    return result
 
 @api_router.get("/admin/towns")
 async def list_towns(request: Request, current_user: dict = Depends(get_current_user)):
