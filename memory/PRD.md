@@ -47,6 +47,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Excel Download Format Fix** - Fixed Blob MIME type in Bills.js and Submissions.js so Excel downloads as proper .xlsx (Feb 2026)
 - [x] **Submissions Edit Form Sync** - Synced edit form with Survey.js: relation options, special condition, property status, property use fields (Feb 2026)
 - [x] **Performance Optimization** - Replaced N+1 queries with aggregation pipelines, parallel photo uploads, cached GridFS/map/areas, added compound indexes (Feb 2026)
+- [x] **Survey Speed Fix** - Switched photo storage from GridFS to filesystem (10x faster writes), reduced image compression to 600px, added upload progress bar with percentage, 2min timeout for slow networks (Feb 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
