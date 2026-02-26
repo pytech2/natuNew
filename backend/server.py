@@ -861,7 +861,13 @@ async def get_employee_map_properties(
     hide_completed: bool = False,
     current_user: dict = Depends(get_current_user)
 ):
-    """Fast lightweight endpoint for surveyor map - Optimized for speed"""
+    """Fast lightweight endpoint for surveyor map - Optimized with caching"""
+    
+    # Check cache first
+    cache_key = f"emp_map_{current_user['id']}_{hide_completed}_{get_current_town_code()}"
+    cached = map_cache.get(cache_key)
+    if cached:
+        return cached
     
     query = {
         "$or": [
@@ -876,7 +882,7 @@ async def get_employee_map_properties(
     if hide_completed:
         query["status"] = {"$nin": ["Completed", "Approved"]}
     
-    # OPTIMIZED: Minimal projection for fast loading - only essential fields
+    # OPTIMIZED: Minimal projection for fast loading
     projection = {
         "_id": 0,
         "id": 1,
@@ -897,33 +903,35 @@ async def get_employee_map_properties(
         "self_certified": 1
     }
     
-    # OPTIMIZED: Use index hint and batch size for faster queries
     properties = await get_db().properties.find(
         query, 
         projection,
-        batch_size=1000  # Faster batch processing
+        batch_size=2000
     ).sort([
         ("status", 1),
         ("serial_number", 1)
     ]).to_list(None)
     
-    # OPTIMIZED: Faster deduplication using dict
-    seen = {}
+    # Faster deduplication using set
+    seen = set()
     unique_properties = []
-    
     for prop in properties:
         prop_id = prop.get("property_id", "")
         if prop_id:
             if prop_id not in seen:
-                seen[prop_id] = True
+                seen.add(prop_id)
                 unique_properties.append(prop)
         else:
             unique_properties.append(prop)
     
-    return {
+    result = {
         "properties": unique_properties,
         "count": len(unique_properties)
     }
+    
+    # Cache for 60 seconds
+    map_cache.set(cache_key, result)
+    return result
 
 # Clear cache when properties are modified
 async def clear_map_cache():
