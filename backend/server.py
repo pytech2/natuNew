@@ -2358,9 +2358,12 @@ async def admin_dashboard(
     else:
         employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
     
-    # Get unique colonies count
-    colonies = await town_db.properties.distinct("colony")
-    colonies_count = len([c for c in colonies if c])
+    # Get unique colonies count - use cached result from aggregation when available
+    if not date and result:
+        colonies_count = len([c for c in stats.get("colonies", []) if c])
+    else:
+        colonies = await town_db.properties.distinct("colony")
+        colonies_count = len([c for c in colonies if c])
     
     return {
         "total": total,
