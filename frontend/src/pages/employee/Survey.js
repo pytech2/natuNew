@@ -496,6 +496,7 @@ export default function Survey() {
     }
 
     setSubmitting(true);
+    setUploadProgress(0);
 
     try {
       const formDataObj = new FormData();
