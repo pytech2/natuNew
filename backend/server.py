@@ -322,7 +322,7 @@ async def town_context_middleware(request: Request, call_next):
     town_code = request.headers.get("x-town-code")
     if town_code:
         _current_town_db.set(get_town_db(town_code))
-        _current_town_fs.set(AsyncIOMotorGridFSBucket(get_town_db(town_code)))
+        _current_town_fs.set(get_town_gridfs_cached(town_code))
         _current_town_code.set(town_code)
     else:
         _current_town_db.set(db)
