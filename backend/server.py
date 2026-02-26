@@ -191,6 +191,10 @@ async def create_town_indexes(town_db):
         await town_db.properties.create_index([("ward", 1), ("status", 1)], background=True)
         await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1)], background=True)
         await town_db.properties.create_index([("assigned_employee_id", 1), ("status", 1), ("serial_number", 1)], background=True)
+        # Index for $or queries on assigned employee fields
+        await town_db.properties.create_index([("assigned_employee_ids", 1), ("status", 1)], background=True)
+        # Index for colony distinct queries
+        await town_db.properties.create_index("colony", background=True)
         
         # Submissions collection indexes (Town DB)
         await town_db.submissions.create_index("id", unique=True, background=True)
@@ -199,6 +203,7 @@ async def create_town_indexes(town_db):
         await town_db.submissions.create_index("status", background=True)
         await town_db.submissions.create_index("submitted_at", background=True)
         await town_db.submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        await town_db.submissions.create_index([("employee_id", 1), ("status", 1), ("submitted_at", -1)], background=True)
         
         # Bills collection indexes (Town DB)
         await town_db.bills.create_index("id", unique=True, background=True)
