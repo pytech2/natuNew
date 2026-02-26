@@ -2380,42 +2380,53 @@ async def get_employee_progress(
             emp_filter["assigned_town"] = town["id"]
     
     employees = await master_db.users.find(emp_filter, {"_id": 0}).to_list(100)
-    progress = []
     
+    # OPTIMIZED: Use aggregation pipeline instead of N+1 queries
+    emp_ids = [e["id"] for e in employees]
+    
+    # Batch: Get property counts per employee using aggregation
+    prop_pipeline = [
+        {"$match": {"assigned_employee_id": {"$in": emp_ids}}},
+        {"$group": {
+            "_id": "$assigned_employee_id",
+            "total": {"$sum": 1},
+            "completed": {"$sum": {"$cond": [{"$in": ["$status", ["Completed", "Approved"]]}, 1, 0]}},
+            "colonies": {"$addToSet": "$ward"}
+        }}
+    ]
+    prop_stats_cursor = await town_db.properties.aggregate(prop_pipeline).to_list(None)
+    prop_stats = {s["_id"]: s for s in prop_stats_cursor}
+    
+    # Batch: Get today's submissions per employee using aggregation
+    sub_match = {"employee_id": {"$in": emp_ids}, "status": {"$ne": "Rejected"}}
+    if date:
+        date_start = f"{date}T00:00:00"
+        date_end = f"{date}T23:59:59"
+        sub_match["submitted_at"] = {"$gte": date_start, "$lte": date_end}
+    else:
+        sub_match["submitted_at"] = {"$gte": today_start}
+    
+    sub_pipeline = [
+        {"$match": sub_match},
+        {"$group": {"_id": "$employee_id", "count": {"$sum": 1}}}
+    ]
+    sub_stats_cursor = await town_db.submissions.aggregate(sub_pipeline).to_list(None)
+    sub_stats = {s["_id"]: s["count"] for s in sub_stats_cursor}
+    
+    progress = []
     for emp in employees:
-        total = await town_db.properties.count_documents({"assigned_employee_id": emp["id"]})
-        
-        approved = await town_db.properties.count_documents({
-            "assigned_employee_id": emp["id"],
-            "status": {"$in": ["Completed", "Approved"]}
-        })
-        
-        today_completed = await town_db.submissions.count_documents({
-            "employee_id": emp["id"],
-            "submitted_at": {"$gte": today_start},
-            "status": {"$ne": "Rejected"}
-        })
-        
-        if date:
-            date_start = f"{date}T00:00:00"
-            date_end = f"{date}T23:59:59"
-            today_completed = await town_db.submissions.count_documents({
-                "employee_id": emp["id"],
-                "submitted_at": {"$gte": date_start, "$lte": date_end},
-                "status": {"$ne": "Rejected"}
-            })
-        
-        assigned_colonies = await town_db.properties.distinct("ward", {"assigned_employee_id": emp["id"]})
-        assigned_colonies = [c for c in assigned_colonies if c]
+        eid = emp["id"]
+        ps = prop_stats.get(eid, {"total": 0, "completed": 0, "colonies": []})
+        assigned_colonies = [c for c in ps.get("colonies", []) if c]
         
         progress.append({
-            "employee_id": emp["id"],
+            "employee_id": eid,
             "employee_name": emp["name"],
             "role": emp["role"],
-            "total_assigned": total,
-            "completed": approved,
-            "pending": total - approved,
-            "today_completed": today_completed,
+            "total_assigned": ps["total"],
+            "completed": ps["completed"],
+            "pending": ps["total"] - ps["completed"],
+            "today_completed": sub_stats.get(eid, 0),
             "assigned_colonies": assigned_colonies,
             "colony_count": len(assigned_colonies)
         })
