@@ -1469,10 +1469,10 @@ export default function Survey() {
             data-testid="submit-survey-btn"
           >
             {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Submitting...
-              </>
+              <div className="flex items-center gap-2 w-full justify-center">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Uploading... {uploadProgress}%</span>
+              </div>
             ) : (
               <>
                 <Send className="w-5 h-5 mr-2" />
