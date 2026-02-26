@@ -123,6 +123,15 @@ def get_town_gridfs(town_code: str):
     town_db = get_town_db(town_code)
     return AsyncIOMotorGridFSBucket(town_db)
 
+# GridFS cache per town to avoid recreation on every request
+_town_fs_cache: Dict[str, Any] = {}
+
+def get_town_gridfs_cached(town_code: str):
+    """Get cached GridFS bucket for town"""
+    if town_code not in _town_fs_cache:
+        _town_fs_cache[town_code] = AsyncIOMotorGridFSBucket(get_town_db(town_code))
+    return _town_fs_cache[town_code]
+
 # GridFS for file storage in database (legacy)
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
