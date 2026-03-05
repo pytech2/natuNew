@@ -131,6 +131,8 @@ export default function BillsPage() {
   const [excelFilter, setExcelFilter] = useState('all'); // 'all', 'self_certified', 'not_self_certified'
   const [downloadingExcel, setDownloadingExcel] = useState(false);
   const [downloadingProgress, setDownloadingProgress] = useState(false);
+  const [autoCompleting, setAutoCompleting] = useState(false);
+  const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
 
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
@@ -480,6 +482,30 @@ export default function BillsPage() {
       setDownloadingProgress(false);
     }
   };
+
+  const handleAutoComplete = async () => {
+    setAutoCompleting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.colony) params.append('colony', filters.colony);
+      
+      const response = await axios.post(
+        `${API_URL}/admin/auto-complete-surveys?${params.toString()}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const data = response.data;
+      toast.success(`${data.completed} surveys auto-completed! (${data.skipped} skipped)`);
+      setAutoCompleteDialog(false);
+      fetchBills();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to auto-complete surveys');
+    } finally {
+      setAutoCompleting(false);
+    }
+  };
+
 
 
   const handleArrangeByRoute = () => {
@@ -985,6 +1011,16 @@ export default function BillsPage() {
                   <FileSpreadsheet className="w-4 h-4 mr-2" />
                 )}
                 Colony Progress
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setAutoCompleteDialog(true)}
+                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                data-testid="auto-complete-btn"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Auto Complete Surveys
               </Button>
             </div>
 
@@ -1983,6 +2019,49 @@ export default function BillsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Auto Complete Surveys Dialog */}
+        <AlertDialog open={autoCompleteDialog} onOpenChange={setAutoCompleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Auto Complete Pending Surveys?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {filters.colony 
+                  ? `This will auto-complete all pending surveys for colony "${filters.colony}" using existing property data and old photos.`
+                  : 'This will auto-complete ALL pending surveys across ALL colonies using existing property data and old photos.'
+                }
+                <br /><br />
+                <strong>Details:</strong>
+                <ul className="list-disc pl-5 mt-1 text-sm">
+                  <li>Receiver Name = Owner Name</li>
+                  <li>Relation = Self</li>
+                  <li>Status = Completed</li>
+                  <li>Old photos will be attached if available</li>
+                </ul>
+                <br />
+                <span className="text-red-500 font-medium">This action cannot be undone!</span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={autoCompleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleAutoComplete}
+                disabled={autoCompleting}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {autoCompleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Yes, Auto Complete'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Self-Certification Upload Dialog */}
         <Dialog open={selfCertDialog} onOpenChange={setSelfCertDialog}>
           <DialogContent>

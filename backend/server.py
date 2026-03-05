@@ -4688,6 +4688,103 @@ async def export_bills_excel(
     )
 
 
+@api_router.post("/admin/auto-complete-surveys")
+async def auto_complete_surveys(
+    request: Request,
+    colony: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Auto-complete pending surveys using existing property data and old photos"""
+    if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town_db = get_db()
+    
+    # Find pending properties
+    query = {"status": {"$in": ["Pending", None]}}
+    if colony:
+        query["$or"] = [{"colony": colony}, {"ward": colony}]
+    
+    pending_props = await town_db.properties.find(query, {"_id": 0}).to_list(None)
+    
+    if not pending_props:
+        return {"message": "No pending properties found", "completed": 0}
+    
+    completed_count = 0
+    skipped_count = 0
+    timestamp = datetime.now(timezone.utc).isoformat()
+    
+    # Batch process in chunks for performance
+    bulk_submissions = []
+    bulk_prop_updates = []
+    
+    for prop in pending_props:
+        prop_id = prop.get("id", "")
+        if not prop_id:
+            skipped_count += 1
+            continue
+        
+        # Check if submission already exists
+        existing = await town_db.submissions.find_one({"property_record_id": prop_id}, {"_id": 1})
+        if existing:
+            skipped_count += 1
+            continue
+        
+        # Build photo list from old photo_url if available
+        photos = []
+        old_photo = prop.get("photo_url")
+        if old_photo and old_photo.strip():
+            photos.append({"photo_type": "HOUSE", "file_url": old_photo})
+        
+        submission = {
+            "id": str(uuid.uuid4()),
+            "property_record_id": prop_id,
+            "property_id": prop.get("property_id", ""),
+            "batch_id": prop.get("batch_id", ""),
+            "employee_id": prop.get("assigned_employee_id", "auto_complete"),
+            "employee_name": prop.get("assigned_employee_name", "Auto Complete"),
+            "receiver_name": prop.get("owner_name", ""),
+            "receiver_mobile": prop.get("mobile", ""),
+            "relation": "Self",
+            "self_satisfied": "yes",
+            "house_status": "pakka",
+            "property_use": "residential",
+            "photos": photos,
+            "latitude": prop.get("latitude"),
+            "longitude": prop.get("longitude"),
+            "remarks": "Auto-completed from old data",
+            "status": "Completed",
+            "submitted_at": timestamp,
+            "auto_completed": True
+        }
+        
+        bulk_submissions.append(submission)
+        bulk_prop_updates.append(prop_id)
+        completed_count += 1
+    
+    # Bulk insert submissions
+    if bulk_submissions:
+        # Insert in batches of 500 for performance
+        batch_size = 500
+        for i in range(0, len(bulk_submissions), batch_size):
+            batch = bulk_submissions[i:i+batch_size]
+            await town_db.submissions.insert_many(batch)
+        
+        # Bulk update property statuses
+        await town_db.properties.update_many(
+            {"id": {"$in": bulk_prop_updates}},
+            {"$set": {"status": "Completed"}}
+        )
+    
+    return {
+        "message": f"Auto-completed {completed_count} surveys",
+        "completed": completed_count,
+        "skipped": skipped_count,
+        "total_pending": len(pending_props)
+    }
+
+
+
 @api_router.get("/admin/colony-progress/export-excel")
 async def export_colony_progress_excel(
     current_user: dict = Depends(get_current_user)
