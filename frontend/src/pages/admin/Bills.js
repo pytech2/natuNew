@@ -130,6 +130,7 @@ export default function BillsPage() {
   const [excelDialog, setExcelDialog] = useState(false);
   const [excelFilter, setExcelFilter] = useState('all'); // 'all', 'self_certified', 'not_self_certified'
   const [downloadingExcel, setDownloadingExcel] = useState(false);
+  const [downloadingProgress, setDownloadingProgress] = useState(false);
 
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
@@ -453,6 +454,33 @@ export default function BillsPage() {
       setDownloadingExcel(false);
     }
   };
+
+  const downloadColonyProgress = async () => {
+    setDownloadingProgress(true);
+    try {
+      const response = await axios.get(`${API_URL}/admin/colony-progress/export-excel`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `colony_survey_progress_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Colony Progress Excel downloaded!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to download colony progress');
+    } finally {
+      setDownloadingProgress(false);
+    }
+  };
+
 
   const handleArrangeByRoute = () => {
     // Show confirmation dialog instead of immediately arranging
@@ -942,6 +970,21 @@ export default function BillsPage() {
               >
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
                 Download Excel
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={downloadColonyProgress}
+                disabled={downloadingProgress}
+                className="border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+                data-testid="colony-progress-btn"
+              >
+                {downloadingProgress ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                )}
+                Colony Progress
               </Button>
             </div>
 

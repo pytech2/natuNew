@@ -4687,6 +4687,152 @@ async def export_bills_excel(
         filename=filename
     )
 
+
+@api_router.get("/admin/colony-progress/export-excel")
+async def export_colony_progress_excel(
+    current_user: dict = Depends(get_current_user)
+):
+    """Export colony-wise survey progress for the entire town as Excel"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get all colonies with their property counts using aggregation
+    prop_pipeline = [
+        {"$match": {"ward": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$group": {
+            "_id": "$ward",
+            "total": {"$sum": 1},
+            "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
+            "in_progress": {"$sum": {"$cond": [{"$eq": ["$status", "In Progress"]}, 1, 0]}},
+            "pending": {"$sum": {"$cond": [{"$eq": ["$status", "Pending"]}, 1, 0]}},
+            "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}},
+            "with_gps": {"$sum": {"$cond": [{"$and": [
+                {"$ne": ["$latitude", None]},
+                {"$ne": ["$longitude", None]}
+            ]}, 1, 0]}},
+            "unique_owners": {"$addToSet": "$owner_name"},
+            "assigned_employees": {"$addToSet": "$assigned_employee_name"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    colony_stats = await get_db().properties.aggregate(prop_pipeline).to_list(None)
+    
+    if not colony_stats:
+        raise HTTPException(status_code=404, detail="No colony data found")
+    
+    # Build Excel
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Colony Survey Progress"
+    
+    headers = [
+        "Sr No", "Colony Name", "Total Properties", "Survey Done", 
+        "In Progress", "Pending", "Rejected", "Completion %",
+        "With GPS", "Unique Owners", "Assigned Surveyors", "Status"
+    ]
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+        cell.border = thin_border
+    
+    # Grand totals
+    grand_total = grand_done = grand_progress = grand_pending = grand_rejected = 0
+    
+    for row_num, stat in enumerate(colony_stats, 2):
+        total = stat["total"]
+        done = stat["approved"]
+        in_prog = stat["in_progress"]
+        pending = stat["pending"]
+        rejected = stat["rejected"]
+        completion = round((done / total * 100), 1) if total > 0 else 0
+        unique_owners = len([o for o in stat.get("unique_owners", []) if o and str(o).strip()])
+        surveyors = [s for s in stat.get("assigned_employees", []) if s and str(s).strip()]
+        
+        # Determine colony status
+        if done == total and total > 0:
+            status_text = "Complete"
+        elif done + in_prog > 0:
+            status_text = "In Progress"
+        else:
+            status_text = "Not Started"
+        
+        grand_total += total
+        grand_done += done
+        grand_progress += in_prog
+        grand_pending += pending
+        grand_rejected += rejected
+        
+        row_data = [
+            row_num - 1,
+            stat["_id"],
+            total,
+            done,
+            in_prog,
+            pending,
+            rejected,
+            f"{completion}%",
+            stat["with_gps"],
+            unique_owners,
+            ", ".join(surveyors[:5]) + (f" +{len(surveyors)-5}" if len(surveyors) > 5 else ""),
+            status_text
+        ]
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left')
+            # Color status column
+            if col == 12:
+                if value == "Complete":
+                    cell.font = Font(color="2E7D32", bold=True)
+                elif value == "In Progress":
+                    cell.font = Font(color="E65100", bold=True)
+                else:
+                    cell.font = Font(color="C62828", bold=True)
+            # Color completion %
+            if col == 8:
+                cell.alignment = Alignment(horizontal='center')
+    
+    # Add totals row
+    total_row = len(colony_stats) + 2
+    grand_completion = round((grand_done / grand_total * 100), 1) if grand_total > 0 else 0
+    totals = ["", "GRAND TOTAL", grand_total, grand_done, grand_progress, grand_pending, grand_rejected, f"{grand_completion}%", "", "", "", ""]
+    total_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
+    for col, value in enumerate(totals, 1):
+        cell = ws.cell(row=total_row, column=col, value=value)
+        cell.border = thin_border
+        cell.font = Font(bold=True)
+        cell.fill = total_fill
+    
+    # Column widths
+    widths = [6, 30, 14, 12, 12, 12, 10, 12, 10, 12, 35, 14]
+    for col, width in enumerate(widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
+    
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    filename = f"colony_survey_progress_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 @api_router.get("/admin/bills")
 async def list_bills(
     batch_id: Optional[str] = None,
