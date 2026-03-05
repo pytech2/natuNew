@@ -4819,6 +4819,10 @@ async def get_colony_stats(
     # Get bills with GPS
     with_gps = await get_db().bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
     
+    # Get unique owner names count
+    unique_owners = await get_db().bills.distinct("owner_name", {"colony": colony_name})
+    unique_owners_count = len([o for o in unique_owners if o and o.strip()])
+    
     # Get self-certified counts
     self_certified_count = await get_db().bills.count_documents({"colony": colony_name, "self_certified": True})
     not_self_certified_count = await get_db().bills.count_documents({
@@ -4874,6 +4878,7 @@ async def get_colony_stats(
         "na_serial_count": na_serial_count,
         "valid_serial_count": valid_serial_count,
         "with_gps": with_gps,
+        "unique_owners": unique_owners_count,
         "self_certified_count": self_certified_count,
         "not_self_certified_count": not_self_certified_count,
         "skip_stats": skip_stats,

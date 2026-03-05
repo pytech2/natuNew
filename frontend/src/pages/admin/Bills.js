@@ -1035,7 +1035,7 @@ export default function BillsPage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-2xl font-bold text-blue-600">{colonyStats.total_bills || 0}</p>
                   <p className="text-xs text-slate-500">Total Bills</p>
@@ -1051,6 +1051,10 @@ export default function BillsPage() {
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-2xl font-bold text-purple-600">{colonyStats.with_gps || 0}</p>
                   <p className="text-xs text-slate-500">With GPS</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-teal-600">{colonyStats.unique_owners || 0}</p>
+                  <p className="text-xs text-slate-500">Unique Owners</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-2xl font-bold text-red-600">{colonyStats.skip_stats?.skipped_na_empty || 0}</p>
