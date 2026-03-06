@@ -5066,6 +5066,20 @@ async def get_colony_stats(
     unique_owners = await get_db().bills.distinct("owner_name", {"colony": colony_name})
     unique_owners_count = len([o for o in unique_owners if o and o.strip()])
     
+    # Count owner names that are NA/empty
+    owner_na_count = await get_db().bills.count_documents({
+        "colony": colony_name,
+        "$or": [
+            {"owner_name": {"$exists": False}},
+            {"owner_name": None},
+            {"owner_name": ""},
+            {"owner_name": "NA"},
+            {"owner_name": "N/A"},
+            {"owner_name": "na"},
+            {"owner_name": "n/a"}
+        ]
+    })
+    
     # Get self-certified counts
     self_certified_count = await get_db().bills.count_documents({"colony": colony_name, "self_certified": True})
     not_self_certified_count = await get_db().bills.count_documents({
@@ -5122,6 +5136,7 @@ async def get_colony_stats(
         "valid_serial_count": valid_serial_count,
         "with_gps": with_gps,
         "unique_owners": unique_owners_count,
+        "owner_na_count": owner_na_count,
         "self_certified_count": self_certified_count,
         "not_self_certified_count": not_self_certified_count,
         "skip_stats": skip_stats,
