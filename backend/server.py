@@ -6769,6 +6769,7 @@ async def upload_old_photos(
     updated = 0
     not_found = 0
     skipped = 0
+    duplicates = 0
     
     for idx in range(2, len(df)):  # Skip header rows (0 and 1)
         prop_id = str(df.iloc[idx, 1] if pd.notna(df.iloc[idx, 1]) else "").strip()
@@ -6778,20 +6779,30 @@ async def upload_old_photos(
             skipped += 1
             continue
         
+        # Check if property already has the same photo URL (skip duplicate)
+        existing = await get_db().properties.find_one(
+            {"property_id": prop_id, "photo_url": photo_url},
+            {"_id": 1}
+        )
+        if existing:
+            duplicates += 1
+            continue
+        
         result = await get_db().properties.update_one(
             {"property_id": prop_id},
             {"$set": {"photo_url": photo_url}}
         )
-        if result.modified_count > 0:
+        if result.modified_count > 0 or result.matched_count > 0:
             updated += 1
         else:
             not_found += 1
     
     return {
-        "message": f"Updated {updated} properties with old photos. {not_found} not found in current town. {skipped} skipped (no data).",
+        "message": f"Updated {updated} properties. {duplicates} duplicates skipped. {not_found} not found. {skipped} invalid rows.",
         "updated": updated,
         "not_found": not_found,
-        "skipped": skipped
+        "skipped": skipped,
+        "duplicates": duplicates
     }
 
 @api_router.delete("/admin/clear-old-photos")

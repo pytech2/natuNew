@@ -52,7 +52,8 @@ import {
   Copy,
   RefreshCw,
   AlertTriangle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ImagePlus
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -134,6 +135,14 @@ export default function BillsPage() {
   const [autoCompleting, setAutoCompleting] = useState(false);
   const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
   const [deletingSelfCert, setDeletingSelfCert] = useState(false);
+
+  // Old Photos Upload state
+  const [oldPhotoDialog, setOldPhotoDialog] = useState(false);
+  const [oldPhotoFile, setOldPhotoFile] = useState(null);
+  const [uploadingOldPhoto, setUploadingOldPhoto] = useState(false);
+  const [oldPhotoStats, setOldPhotoStats] = useState(null);
+  const [oldPhotoResult, setOldPhotoResult] = useState(null);
+  const [deletingOldPhotos, setDeletingOldPhotos] = useState(false);
 
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
@@ -843,6 +852,55 @@ export default function BillsPage() {
     }
   };
 
+  // Old Photos functions
+  const fetchOldPhotoStats = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/admin/old-photos-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOldPhotoStats(res.data);
+    } catch (err) { setOldPhotoStats(null); }
+  };
+
+  const handleUploadOldPhoto = async () => {
+    if (!oldPhotoFile) return;
+    setUploadingOldPhoto(true);
+    setOldPhotoResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', oldPhotoFile);
+      const res = await axios.post(`${API_URL}/admin/upload-old-photos`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      setOldPhotoResult(res.data);
+      toast.success(res.data.message);
+      setOldPhotoFile(null);
+      fetchOldPhotoStats();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to upload old photos');
+    } finally {
+      setUploadingOldPhoto(false);
+    }
+  };
+
+  const handleDeleteOldPhotos = async () => {
+    if (!window.confirm('Are you sure? This will clear ALL old photo URLs from properties. This cannot be undone!')) return;
+    setDeletingOldPhotos(true);
+    try {
+      const res = await axios.delete(`${API_URL}/admin/clear-old-photos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setOldPhotoStats({ total_with_photos: 0 });
+      setOldPhotoResult(null);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete old photos');
+    } finally {
+      setDeletingOldPhotos(false);
+    }
+  };
+
+
 
   const handleEditBill = (bill) => {
     setEditingBill({ ...bill });
@@ -1078,6 +1136,20 @@ export default function BillsPage() {
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Self-Certification
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOldPhotoDialog(true);
+                  setOldPhotoFile(null);
+                  setOldPhotoResult(null);
+                  fetchOldPhotoStats();
+                }}
+                className="border-purple-500 text-purple-600 hover:bg-purple-50"
+              >
+                <ImagePlus className="w-4 h-4 mr-2" />
+                Upload Old Photos
               </Button>
 
               <Button
@@ -2202,6 +2274,134 @@ export default function BillsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+
+        {/* Upload Old Photos Dialog */}
+        <Dialog open={oldPhotoDialog} onOpenChange={setOldPhotoDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-purple-600 flex items-center gap-2">
+                <ImagePlus className="w-5 h-5" />
+                Upload Old Property Photos
+              </DialogTitle>
+              <DialogDescription>
+                Upload Excel file with Property IDs and Photo URLs. Duplicates will be skipped automatically.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Current Stats */}
+              {oldPhotoStats && (
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 flex items-center justify-between">
+                  <p className="text-sm text-purple-700">
+                    <strong>{oldPhotoStats.total_with_photos || 0}</strong> properties with old photos in database
+                  </p>
+                  {(oldPhotoStats.total_with_photos || 0) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteOldPhotos}
+                      disabled={deletingOldPhotos}
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                      data-testid="delete-old-photos-btn"
+                    >
+                      {deletingOldPhotos ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3 h-3 mr-1" />
+                      )}
+                      Delete All
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Download Sample */}
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <p className="text-sm text-slate-600 mb-2">Need the correct format?</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const sampleData = [
+                      ['', 'Property ID', '', '', '', '', '', 'Photo URL'],
+                      ['', '(Col B)', '', '', '', '', '', '(Col H)'],
+                      ['1', '3UYE8N55', '', '', '', '', '', 'https://example.com/photo1.jpg'],
+                      ['2', '3UUOCQ65', '', '', '', '', '', 'https://example.com/photo2.jpg'],
+                    ];
+                    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'old_photos_sample.csv';
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    toast.success('Sample file downloaded');
+                  }}
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Sample Excel
+                </Button>
+                <p className="text-xs text-slate-500 mt-2">
+                  Property ID in Column B, Photo URL in Column H
+                </p>
+              </div>
+
+              {/* File Upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Excel File (.xlsx or .csv)</label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={(e) => setOldPhotoFile(e.target.files[0])}
+                  className="w-full text-sm border rounded-md p-2 cursor-pointer"
+                />
+              </div>
+
+              {oldPhotoFile && (
+                <div className="p-2 bg-green-50 rounded-lg border border-green-200 text-sm text-green-700">
+                  Selected: {oldPhotoFile.name}
+                </div>
+              )}
+
+              {oldPhotoResult && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm">
+                  <p className="font-semibold text-purple-800">{oldPhotoResult.message}</p>
+                  <div className="flex flex-wrap gap-3 mt-1 text-purple-600">
+                    <span>Updated: {oldPhotoResult.updated}</span>
+                    <span>Duplicates: {oldPhotoResult.duplicates || 0}</span>
+                    <span>Not found: {oldPhotoResult.not_found}</span>
+                    <span>Skipped: {oldPhotoResult.skipped}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOldPhotoDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUploadOldPhoto}
+                disabled={uploadingOldPhoto || !oldPhotoFile}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {uploadingOldPhoto ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 
         {/* Excel Download Dialog */}
         <Dialog open={excelDialog} onOpenChange={setExcelDialog}>
