@@ -6794,6 +6794,35 @@ async def upload_old_photos(
         "skipped": skipped
     }
 
+@api_router.delete("/admin/clear-old-photos")
+async def clear_old_photos(current_user: dict = Depends(get_current_user)):
+    """Clear all old photo URLs from properties"""
+    if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await get_db().properties.update_many(
+        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"$unset": {"photo_url": ""}}
+    )
+    
+    return {
+        "message": f"Cleared photo URLs from {result.modified_count} properties"
+    }
+
+@api_router.get("/admin/old-photos-stats")
+async def get_old_photos_stats(current_user: dict = Depends(get_current_user)):
+    """Get count of properties with old photo URLs"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    total_with_photos = await get_db().properties.count_documents(
+        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}}
+    )
+    
+    return {"total_with_photos": total_with_photos}
+
+
+
 @api_router.get("/admin/colonies")
 async def get_all_colonies(current_user: dict = Depends(get_current_user)):
     """Get all distinct colony/ward names in the current town"""

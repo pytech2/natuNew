@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTown } from '../context/TownContext';
 import { useAuth } from '../context/AuthContext';
-import { Building2, MapPin, Users, ArrowRight, Loader2, LogOut, ImagePlus, Upload, CheckCircle } from 'lucide-react';
+import { Building2, MapPin, Users, ArrowRight, Loader2, LogOut, ImagePlus, Upload, CheckCircle, Download, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
@@ -25,6 +25,8 @@ export default function SelectTown() {
   const [photoFile, setPhotoFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
+  const [oldPhotoStats, setOldPhotoStats] = useState(null);
+  const [deletingPhotos, setDeletingPhotos] = useState(false);
   const photoInputRef = useRef(null);
 
   useEffect(() => {
@@ -77,7 +79,9 @@ export default function SelectTown() {
     setUploadTown(town);
     setPhotoFile(null);
     setUploadResult(null);
+    setOldPhotoStats(null);
     setUploadDialog(true);
+    fetchOldPhotoStats(town.code);
   };
 
   // Handle old photo upload
@@ -107,6 +111,52 @@ export default function SelectTown() {
       setUploading(false);
     }
   };
+
+  // Fetch old photo stats when dialog opens
+  const fetchOldPhotoStats = async (townCode) => {
+    try {
+      const res = await axios.get(`${API_URL}/admin/old-photos-stats`, {
+        headers: { Authorization: `Bearer ${token}`, 'X-Town-Code': townCode }
+      });
+      setOldPhotoStats(res.data);
+    } catch (err) { setOldPhotoStats(null); }
+  };
+
+  const handleDeleteOldPhotos = async () => {
+    if (!uploadTown) return;
+    if (!window.confirm('Are you sure? This will clear ALL old photo URLs from properties. This cannot be undone!')) return;
+    setDeletingPhotos(true);
+    try {
+      const res = await axios.delete(`${API_URL}/admin/clear-old-photos`, {
+        headers: { Authorization: `Bearer ${token}`, 'X-Town-Code': uploadTown.code }
+      });
+      toast.success(res.data.message);
+      setOldPhotoStats({ total_with_photos: 0 });
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete old photos');
+    } finally {
+      setDeletingPhotos(false);
+    }
+  };
+
+  const downloadOldPhotoSample = () => {
+    const sampleData = [
+      ['', 'Property ID', '', '', '', '', '', 'Photo URL'],
+      ['', '(Col B)', '', '', '', '', '', '(Col H)'],
+      ['1', '3UYE8N55', '', '', '', '', '', 'https://example.com/photo1.jpg'],
+      ['2', '3UUOCQ65', '', '', '', '', '', 'https://example.com/photo2.jpg'],
+    ];
+    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'old_photos_sample.csv';
+    link.click();
+    window.URL.revokeObjectURL(url);
+    toast.success('Sample file downloaded');
+  };
+
 
   // Filter towns based on user access
   const accessibleTowns = user?.role === 'ADMIN' 
@@ -278,6 +328,49 @@ export default function SelectTown() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {/* Current Stats */}
+            {oldPhotoStats && (
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 flex items-center justify-between">
+                <p className="text-sm text-purple-700">
+                  <strong>{oldPhotoStats.total_with_photos || 0}</strong> properties with old photos
+                </p>
+                {(oldPhotoStats.total_with_photos || 0) > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteOldPhotos}
+                    disabled={deletingPhotos}
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                    data-testid="delete-old-photos-btn"
+                  >
+                    {deletingPhotos ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3 h-3 mr-1" />
+                    )}
+                    Delete All
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Download Sample */}
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <p className="text-sm text-slate-600 mb-2">Need the correct format?</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadOldPhotoSample}
+                className="border-purple-300 text-purple-600 hover:bg-purple-50"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Sample Excel
+              </Button>
+              <p className="text-xs text-slate-500 mt-2">
+                Property ID in Column B, Photo URL in Column H
+              </p>
+            </div>
+
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                 photoFile ? 'border-purple-400 bg-purple-50' : 'border-gray-300 hover:border-purple-400'

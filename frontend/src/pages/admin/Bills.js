@@ -133,6 +133,7 @@ export default function BillsPage() {
   const [downloadingProgress, setDownloadingProgress] = useState(false);
   const [autoCompleting, setAutoCompleting] = useState(false);
   const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
+  const [deletingSelfCert, setDeletingSelfCert] = useState(false);
 
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
@@ -825,6 +826,23 @@ export default function BillsPage() {
       console.error('Failed to fetch self-cert stats');
     }
   };
+
+  const handleDeleteSelfCert = async () => {
+    if (!window.confirm('Are you sure? This will delete ALL self-certified PIDs from database. This cannot be undone!')) return;
+    setDeletingSelfCert(true);
+    try {
+      const response = await axios.delete(`${API_URL}/admin/clear-self-certification`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(response.data.message);
+      setSelfCertStats({ total_self_certified_pids: 0 });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete self-certification data');
+    } finally {
+      setDeletingSelfCert(false);
+    }
+  };
+
 
   const handleEditBill = (bill) => {
     setEditingBill({ ...bill });
@@ -2082,10 +2100,27 @@ export default function BillsPage() {
             <div className="space-y-4">
               {/* Current Stats */}
               {selfCertStats && (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
                   <p className="text-sm text-blue-700">
                     <strong>{selfCertStats.total_self_certified_pids || selfCertStats.total_in_database || 0}</strong> self-certified PIDs in database
                   </p>
+                  {(selfCertStats.total_self_certified_pids || selfCertStats.total_in_database || 0) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteSelfCert}
+                      disabled={deletingSelfCert}
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                      data-testid="delete-self-cert-btn"
+                    >
+                      {deletingSelfCert ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3 h-3 mr-1" />
+                      )}
+                      Delete All
+                    </Button>
+                  )}
                 </div>
               )}
 
