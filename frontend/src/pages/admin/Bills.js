@@ -144,6 +144,7 @@ export default function BillsPage() {
   const [oldPhotoStats, setOldPhotoStats] = useState(null);
   const [oldPhotoResult, setOldPhotoResult] = useState(null);
   const [deletingOldPhotos, setDeletingOldPhotos] = useState(false);
+  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
 
   // Self-Certification Upload state
   const [selfCertDialog, setSelfCertDialog] = useState(false);
@@ -908,6 +909,24 @@ export default function BillsPage() {
     }
   };
 
+  const handleCleanupDuplicates = async () => {
+    if (!window.confirm('This will remove duplicate properties and sync with PDF Bills data. Submissions will be protected. Continue?')) return;
+    setCleaningDuplicates(true);
+    try {
+      const response = await axios.post(`${API_URL}/admin/properties/cleanup-duplicates`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = response.data;
+      toast.success(`${d.message}`);
+      fetchBills();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Cleanup failed');
+    } finally {
+      setCleaningDuplicates(false);
+    }
+  };
+
+
 
 
   const handleEditBill = (bill) => {
@@ -1105,6 +1124,21 @@ export default function BillsPage() {
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Auto Complete Surveys
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleCleanupDuplicates}
+                disabled={cleaningDuplicates}
+                className="border-red-500 text-red-600 hover:bg-red-50"
+                data-testid="cleanup-duplicates-btn"
+              >
+                {cleaningDuplicates ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Cleanup Duplicates
               </Button>
             </div>
 

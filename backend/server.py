@@ -6061,17 +6061,18 @@ async def copy_bills_to_properties(
     if not bills:
         raise HTTPException(status_code=404, detail="No bills found to copy")
     
-    # ALWAYS get existing property_ids to prevent duplicates by property_id
-    existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "_id": 0}).to_list(None)
-    existing_property_ids = set(p.get("property_id", "") for p in existing_properties)
-    existing_keys = set()
+    # ALWAYS get existing property_ids to prevent duplicates
+    existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "colony": 1, "_id": 0}).to_list(None)
+    existing_property_ids = set(p.get("property_id", "") for p in existing_properties if p.get("property_id"))
     
-    if should_skip_duplicates:
-        for p in existing_properties:
-            owner = (p.get("owner_name") or "").strip().upper()
-            mobile = (p.get("mobile") or "").strip()
-            if owner and mobile:
-                existing_keys.add(f"{owner}_{mobile}")
+    # ALWAYS build owner+mobile+colony key set to catch duplicates without property_id
+    existing_keys = set()
+    for p in existing_properties:
+        owner = (p.get("owner_name") or "").strip().upper()
+        mobile = (p.get("mobile") or "").strip()
+        colony_name = (p.get("colony") or "").strip().upper()
+        if owner and mobile:
+            existing_keys.add(f"{owner}_{mobile}_{colony_name}")
     
     # Track GPS coordinates to skip duplicates
     seen_gps = set()
@@ -6151,16 +6152,16 @@ async def copy_bills_to_properties(
             skipped_duplicates += 1
             continue
         
-        # Check additional duplicates by name+mobile only if skip_duplicates option is enabled
-        if should_skip_duplicates:
-            owner = (bill.get("owner_name") or "").strip().upper()
-            mobile = (bill.get("mobile") or "").strip()
-            if owner and mobile:
-                key = f"{owner}_{mobile}"
-                if key in existing_keys:
-                    skipped_duplicates += 1
-                    continue
-                existing_keys.add(key)
+        # ALWAYS check duplicates by name+mobile+colony
+        owner = (bill.get("owner_name") or "").strip().upper()
+        mobile = (bill.get("mobile") or "").strip()
+        bill_colony = (bill.get("colony") or "").strip().upper()
+        if owner and mobile:
+            key = f"{owner}_{mobile}_{bill_colony}"
+            if key in existing_keys:
+                skipped_duplicates += 1
+                continue
+            existing_keys.add(key)
         
         # Use the actual BillSrNo from PDF, or mark as N/A
         bill_serial = bill.get("serial_number", 0)
@@ -6276,6 +6277,114 @@ async def copy_bills_to_properties(
         "skipped_vacant": skipped_vacant,
         "skipped_duplicate_gps": skipped_duplicate_gps
     }
+
+
+@api_router.post("/admin/properties/cleanup-duplicates")
+async def cleanup_duplicate_properties(
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove duplicate properties, keeping ones with submissions. Sync with bills."""
+    if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town_db = get_db()
+    
+    # Step 1: Get all submission property_record_ids (these must be protected)
+    submission_prop_ids = set()
+    subs = await town_db.submissions.find({}, {"_id": 0, "property_record_id": 1}).to_list(None)
+    for s in subs:
+        if s.get("property_record_id"):
+            submission_prop_ids.add(s["property_record_id"])
+    
+    # Step 2: Find all properties grouped by property_id
+    pipeline = [
+        {"$group": {
+            "_id": "$property_id",
+            "count": {"$sum": 1},
+            "ids": {"$push": "$id"},
+            "statuses": {"$push": "$status"}
+        }},
+        {"$match": {"count": {"$gt": 1}}}
+    ]
+    duplicates = await town_db.properties.aggregate(pipeline).to_list(None)
+    
+    total_removed = 0
+    protected = 0
+    
+    for dup in duplicates:
+        prop_ids = dup["ids"]
+        
+        # Decide which to keep: prefer the one with submission, then non-Pending, then first
+        keep_id = None
+        for pid in prop_ids:
+            if pid in submission_prop_ids:
+                keep_id = pid
+                break
+        
+        if not keep_id:
+            # Keep the one with best status (Approved > In Progress > Pending)
+            for pid, status in zip(prop_ids, dup["statuses"]):
+                if status in ["Approved", "Completed"]:
+                    keep_id = pid
+                    break
+            if not keep_id:
+                for pid, status in zip(prop_ids, dup["statuses"]):
+                    if status == "In Progress":
+                        keep_id = pid
+                        break
+            if not keep_id:
+                keep_id = prop_ids[0]
+        
+        # Delete all others
+        to_delete = [pid for pid in prop_ids if pid != keep_id]
+        
+        # Safety: don't delete any with submissions
+        safe_to_delete = [pid for pid in to_delete if pid not in submission_prop_ids]
+        protected += len(to_delete) - len(safe_to_delete)
+        
+        if safe_to_delete:
+            result = await town_db.properties.delete_many({"id": {"$in": safe_to_delete}})
+            total_removed += result.deleted_count
+    
+    # Step 3: Also remove properties that have NO matching bill (orphan properties)
+    # Get all bill property_ids
+    bill_pids = set()
+    bills = await town_db.bills.find({}, {"_id": 0, "property_id": 1}).to_list(None)
+    for b in bills:
+        if b.get("property_id"):
+            bill_pids.add(b["property_id"])
+    
+    # Find properties with property_ids NOT in bills (orphans) - but protect ones with submissions
+    orphan_count = 0
+    if bill_pids:
+        all_props = await town_db.properties.find({}, {"_id": 0, "id": 1, "property_id": 1}).to_list(None)
+        orphan_ids = []
+        for p in all_props:
+            pid = p.get("property_id", "")
+            if pid and pid not in bill_pids and p["id"] not in submission_prop_ids:
+                orphan_ids.append(p["id"])
+        
+        if orphan_ids:
+            # Delete in batches
+            for i in range(0, len(orphan_ids), 500):
+                batch = orphan_ids[i:i+500]
+                result = await town_db.properties.delete_many({"id": {"$in": batch}})
+                orphan_count += result.deleted_count
+    
+    # Final counts
+    final_props = await town_db.properties.count_documents({})
+    final_bills = await town_db.bills.count_documents({})
+    
+    return {
+        "message": f"Cleanup complete! Removed {total_removed} duplicates + {orphan_count} orphans. Protected {protected} with submissions.",
+        "duplicates_removed": total_removed,
+        "orphans_removed": orphan_count,
+        "protected_with_submissions": protected,
+        "final_properties_count": final_props,
+        "final_bills_count": final_bills,
+        "synced": final_props <= final_bills
+    }
+
 
 @api_router.post("/admin/bills/split-by-employees")
 async def split_bills_by_specific_employees(
