@@ -134,6 +134,7 @@ export default function BillsPage() {
   const [downloadingProgress, setDownloadingProgress] = useState(false);
   const [autoCompleting, setAutoCompleting] = useState(false);
   const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
+  const [autoCompleteEmployee, setAutoCompleteEmployee] = useState('');
   const [deletingSelfCert, setDeletingSelfCert] = useState(false);
 
   // Old Photos Upload state
@@ -499,15 +500,22 @@ export default function BillsPage() {
       const params = new URLSearchParams();
       if (filters.colony) params.append('colony', filters.colony);
       
+      // Find selected employee name
+      const selectedEmp = employees.find(e => e.id === autoCompleteEmployee);
+      
       const response = await axios.post(
         `${API_URL}/admin/auto-complete-surveys?${params.toString()}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          employee_id: autoCompleteEmployee || undefined,
+          employee_name: selectedEmp?.name || undefined
+        },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       
       const data = response.data;
       toast.success(`${data.completed} surveys auto-completed! (${data.skipped} skipped)`);
       setAutoCompleteDialog(false);
+      setAutoCompleteEmployee('');
       fetchBills();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to auto-complete surveys');
@@ -2116,24 +2124,45 @@ export default function BillsPage() {
 
         {/* Auto Complete Surveys Dialog */}
         <AlertDialog open={autoCompleteDialog} onOpenChange={setAutoCompleteDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-lg">
             <AlertDialogHeader>
               <AlertDialogTitle>Auto Complete Pending Surveys?</AlertDialogTitle>
-              <AlertDialogDescription>
-                {filters.colony 
-                  ? `This will auto-complete all pending surveys for colony "${filters.colony}" using existing property data and old photos.`
-                  : 'This will auto-complete ALL pending surveys across ALL colonies using existing property data and old photos.'
-                }
-                <br /><br />
-                <strong>Details:</strong>
-                <ul className="list-disc pl-5 mt-1 text-sm">
-                  <li>Receiver Name = Owner Name</li>
-                  <li>Relation = Self</li>
-                  <li>Status = Completed</li>
-                  <li>Old photos will be attached if available</li>
-                </ul>
-                <br />
-                <span className="text-red-500 font-medium">This action cannot be undone!</span>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>
+                    {filters.colony 
+                      ? `Auto-complete all pending surveys for colony "${filters.colony}".`
+                      : 'Auto-complete ALL pending surveys across ALL colonies.'
+                    }
+                  </p>
+                  
+                  {/* Employee Selector */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Select Employee (Surveyor)</label>
+                    <select
+                      value={autoCompleteEmployee}
+                      onChange={(e) => setAutoCompleteEmployee(e.target.value)}
+                      className="w-full border rounded-md p-2 text-sm"
+                    >
+                      <option value="">-- Use property's assigned employee --</option>
+                      {employees.filter(e => e.role !== 'ADMIN').map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Auto-fill Rules:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Owner Name available → Receiver = Owner Name, Relation = Self</li>
+                      <li>Owner Name NA/empty → Receiver = "Family Member", Relation = "Family Member"</li>
+                      <li>Status = <strong>Approved</strong></li>
+                      <li>Old photo attached if available</li>
+                    </ul>
+                  </div>
+                  
+                  <p className="text-red-500 font-medium text-sm">This action cannot be undone!</p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

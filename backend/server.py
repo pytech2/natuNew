@@ -4693,29 +4693,49 @@ async def export_bills_excel(
 async def auto_complete_surveys(
     request: Request,
     colony: Optional[str] = None,
+    employee_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """Auto-complete pending surveys using existing property data and old photos"""
     if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="Admin access required")
     
+    # Parse request body for additional options
+    body = {}
+    try:
+        body = await request.json()
+    except:
+        pass
+    
+    selected_employee_id = body.get("employee_id") or employee_id
+    selected_employee_name = body.get("employee_name", "")
+    
+    # Look up employee name if ID provided
+    if selected_employee_id and not selected_employee_name:
+        emp = await master_db.users.find_one({"id": selected_employee_id}, {"_id": 0, "name": 1})
+        if emp:
+            selected_employee_name = emp.get("name", "")
+    
     town_db = get_db()
     
     # Find pending properties
     query = {"status": {"$in": ["Pending", None]}}
     if colony:
-        query["$or"] = [{"colony": colony}, {"ward": colony}]
+        query["$or"] = [
+            {"colony": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}},
+            {"ward": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}}
+        ]
     
     pending_props = await town_db.properties.find(query, {"_id": 0}).to_list(None)
     
     if not pending_props:
-        return {"message": "No pending properties found", "completed": 0}
+        return {"message": "No pending properties found", "completed": 0, "skipped": 0, "total_pending": 0}
     
     completed_count = 0
     skipped_count = 0
     timestamp = datetime.now(timezone.utc).isoformat()
+    na_values = {"", "na", "n/a", "none", "unknown", "-", "nil"}
     
-    # Batch process in chunks for performance
     bulk_submissions = []
     bulk_prop_updates = []
     
@@ -4734,19 +4754,30 @@ async def auto_complete_surveys(
         # Build photo list from old photo_url if available
         photos = []
         old_photo = prop.get("photo_url")
-        if old_photo and old_photo.strip():
+        if old_photo and str(old_photo).strip():
             photos.append({"photo_type": "HOUSE", "file_url": old_photo})
+        
+        # Handle owner name - if NA/empty, set receiver as "Family Member"
+        owner_name = str(prop.get("owner_name", "")).strip()
+        is_owner_na = owner_name.lower() in na_values or not owner_name
+        
+        receiver_name = "Family Member" if is_owner_na else owner_name
+        relation = "Family Member" if is_owner_na else "Self"
+        
+        # Use selected employee or property's assigned employee
+        emp_id = selected_employee_id or prop.get("assigned_employee_id", "auto_complete")
+        emp_name = selected_employee_name or prop.get("assigned_employee_name", "Auto Complete")
         
         submission = {
             "id": str(uuid.uuid4()),
             "property_record_id": prop_id,
             "property_id": prop.get("property_id", ""),
             "batch_id": prop.get("batch_id", ""),
-            "employee_id": prop.get("assigned_employee_id", "auto_complete"),
-            "employee_name": prop.get("assigned_employee_name", "Auto Complete"),
-            "receiver_name": prop.get("owner_name", ""),
+            "employee_id": emp_id,
+            "employee_name": emp_name,
+            "receiver_name": receiver_name,
             "receiver_mobile": prop.get("mobile", ""),
-            "relation": "Self",
+            "relation": relation,
             "self_satisfied": "yes",
             "house_status": "pakka",
             "property_use": "residential",
@@ -4754,8 +4785,10 @@ async def auto_complete_surveys(
             "latitude": prop.get("latitude"),
             "longitude": prop.get("longitude"),
             "remarks": "Auto-completed from old data",
-            "status": "Completed",
+            "status": "Approved",
             "submitted_at": timestamp,
+            "approved_at": timestamp,
+            "approved_by": current_user["id"],
             "auto_completed": True
         }
         
@@ -4765,20 +4798,19 @@ async def auto_complete_surveys(
     
     # Bulk insert submissions
     if bulk_submissions:
-        # Insert in batches of 500 for performance
         batch_size = 500
         for i in range(0, len(bulk_submissions), batch_size):
             batch = bulk_submissions[i:i+batch_size]
             await town_db.submissions.insert_many(batch)
         
-        # Bulk update property statuses
+        # Bulk update property statuses to Approved
         await town_db.properties.update_many(
             {"id": {"$in": bulk_prop_updates}},
-            {"$set": {"status": "Completed"}}
+            {"$set": {"status": "Approved"}}
         )
     
     return {
-        "message": f"Auto-completed {completed_count} surveys",
+        "message": f"Auto-completed {completed_count} surveys (Status: Approved)",
         "completed": completed_count,
         "skipped": skipped_count,
         "total_pending": len(pending_props)
