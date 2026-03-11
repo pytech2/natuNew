@@ -114,7 +114,7 @@ export default function Submissions() {
   const [bulkApproving, setBulkApproving] = useState(false);
 
   // Check permissions based on role
-  const canEdit = user?.role === 'ADMIN';
+  const canEdit = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
   const canApproveReject = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
 
   const employeeIdFilter = searchParams.get('employee_id') || '';

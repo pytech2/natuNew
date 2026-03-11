@@ -1432,7 +1432,7 @@ EXPORT_ROLES = ["ADMIN", "MC_OFFICER"]
 # Roles that can upload data
 UPLOAD_ROLES = ["ADMIN", "SUPERVISOR"]
 # Roles that can edit submissions
-SUBMISSION_EDIT_ROLES = ["ADMIN"]
+SUBMISSION_EDIT_ROLES = ["ADMIN", "SUPERVISOR", "MC_OFFICER"]
 # Roles that can download employee performance
 PERFORMANCE_DOWNLOAD_ROLES = ["ADMIN"]
 
@@ -2303,8 +2303,8 @@ async def get_pdf_file(filename: str, current_user: dict = Depends(get_current_u
 
 @api_router.get("/admin/wards")
 async def list_wards(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admin access required")
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin/Supervisor access required")
     
     wards = await get_db().properties.distinct("ward")
     wards = [w for w in wards if w]
@@ -3162,7 +3162,8 @@ async def edit_submission(
         "remarks", "latitude", "longitude",
         "new_owner_name", "new_mobile",
         "special_condition", "house_status",
-        "property_use", "property_use_remarks"
+        "property_use", "property_use_remarks",
+        "status"
     ]
     
     for field in allowed_fields:
