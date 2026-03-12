@@ -209,6 +209,9 @@ async def create_town_indexes(town_db):
         await town_db.bills.create_index("id", unique=True, background=True)
         await town_db.bills.create_index("colony", background=True)
         await town_db.bills.create_index("bill_sr_no", background=True)
+        await town_db.bills.create_index("property_id", background=True)
+        await town_db.bills.create_index([("colony", 1), ("serial_na", 1)], background=True)
+        await town_db.bills.create_index([("colony", 1), ("self_certified", 1)], background=True)
         
         # Attendance collection indexes (Town DB)
         await town_db.attendance.create_index("employee_id", background=True)
@@ -979,11 +982,17 @@ async def list_towns_admin(current_user: dict = Depends(get_current_user)):
     
     towns = await master_db.towns.find({}, {"_id": 0}).sort("name", 1).to_list(None)
     
-    # Get stats for each town from their specific DB
-    for town in towns:
+    # Parallel stats fetch for all towns
+    async def get_town_stats(town):
         town_db = get_town_db(town["code"])
-        town["property_count"] = await town_db.properties.count_documents({})
-        town["user_count"] = await master_db.users.count_documents({"assigned_town": town["id"]})
+        prop_count, user_count = await asyncio.gather(
+            town_db.properties.estimated_document_count(),
+            master_db.users.count_documents({"assigned_town": town["id"]})
+        )
+        town["property_count"] = prop_count
+        town["user_count"] = user_count
+    
+    await asyncio.gather(*[get_town_stats(t) for t in towns])
     
     return {"towns": towns}
 
@@ -2621,10 +2630,16 @@ async def get_submission_stats(
         query["submitted_at"] = {"$gte": date_start, "$lte": date_end}
     
     total = await town_db.submissions.count_documents(query)
-    pending = await town_db.submissions.count_documents({**query, "status": "Pending"})
-    approved = await town_db.submissions.count_documents({**query, "status": "Approved"})
-    completed = await town_db.submissions.count_documents({**query, "status": "Completed"})
-    rejected = await town_db.submissions.count_documents({**query, "status": "Rejected"})
+    # Single aggregation for status counts instead of 4 separate count_documents
+    status_pipeline = [
+        {"$match": query},
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+    ]
+    status_counts = {s["_id"]: s["count"] for s in await town_db.submissions.aggregate(status_pipeline).to_list(None)}
+    pending = status_counts.get("Pending", 0)
+    approved = status_counts.get("Approved", 0)
+    completed = status_counts.get("Completed", 0)
+    rejected = status_counts.get("Rejected", 0)
     
     return {
         "total": total,
@@ -2787,27 +2802,34 @@ async def list_submissions(
     total = await get_db().submissions.count_documents(query)
     submissions = await get_db().submissions.find(query, {"_id": 0}).sort("submitted_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # Enrich with property details
+    # OPTIMIZED: Batch fetch property details instead of N+1 queries
+    prop_ids = [s["property_record_id"] for s in submissions if s.get("property_record_id")]
+    if prop_ids:
+        props_cursor = await get_db().properties.find(
+            {"id": {"$in": prop_ids}},
+            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1}
+        ).to_list(None)
+        props_map = {p["id"]: p for p in props_cursor}
+    else:
+        props_map = {}
+    
     for sub in submissions:
-        if sub.get("property_record_id"):
-            prop = await get_db().properties.find_one({"id": sub["property_record_id"]}, {"_id": 0})
-            if prop:
-                sub["property_owner_name"] = prop.get("owner_name", "")
-                sub["property_mobile"] = prop.get("mobile", "")
-                sub["property_address"] = prop.get("address", "")
-                sub["property_amount"] = prop.get("amount", "")
-                sub["property_ward"] = prop.get("ward", "")
-                sub["colony"] = prop.get("colony") or prop.get("ward", "")
-                sub["total_area"] = prop.get("total_area", "")
-                sub["category"] = prop.get("category", "")
-                # Add serial number info
-                sub["serial_number"] = prop.get("serial_number", 0)
-                sub["bill_sr_no"] = prop.get("bill_sr_no", "")
-                sub["property_serial_number"] = prop.get("serial_number", 0)
-                sub["property_serial_na"] = prop.get("serial_na", False)
-                sub["property_bill_sr_no"] = prop.get("bill_sr_no", "N/A")
-                # Add old photo URL from property
-                sub["property_photo_url"] = prop.get("photo_url", "")
+        prop = props_map.get(sub.get("property_record_id"))
+        if prop:
+            sub["property_owner_name"] = prop.get("owner_name", "")
+            sub["property_mobile"] = prop.get("mobile", "")
+            sub["property_address"] = prop.get("address", "")
+            sub["property_amount"] = prop.get("amount", "")
+            sub["property_ward"] = prop.get("ward", "")
+            sub["colony"] = prop.get("colony") or prop.get("ward", "")
+            sub["total_area"] = prop.get("total_area", "")
+            sub["category"] = prop.get("category", "")
+            sub["serial_number"] = prop.get("serial_number", 0)
+            sub["bill_sr_no"] = prop.get("bill_sr_no", "")
+            sub["property_serial_number"] = prop.get("serial_number", 0)
+            sub["property_serial_na"] = prop.get("serial_na", False)
+            sub["property_bill_sr_no"] = prop.get("bill_sr_no", "N/A")
+            sub["property_photo_url"] = prop.get("photo_url", "")
     
     return {
         "submissions": submissions,
@@ -4042,23 +4064,18 @@ async def get_employee_own_progress(current_user: dict = Depends(get_current_use
         ]
     }
     
-    total = await get_db().properties.count_documents(assign_query)
-    completed = await get_db().properties.count_documents({
-        **assign_query,
-        "status": "Completed"
-    })
-    pending = await get_db().properties.count_documents({
-        **assign_query,
-        "status": "Pending"
-    })
-    rejected = await get_db().properties.count_documents({
-        **assign_query,
-        "status": "Rejected"
-    })
-    in_progress = await get_db().properties.count_documents({
-        **assign_query,
-        "status": "In Progress"
-    })
+    # Single aggregation for all property status counts
+    stat_pipeline = [
+        {"$match": assign_query},
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+    ]
+    stat_counts = {s["_id"]: s["count"] for s in await get_db().properties.aggregate(stat_pipeline).to_list(None)}
+    total = sum(stat_counts.values())
+    completed = stat_counts.get("Completed", 0)
+    pending = stat_counts.get("Pending", 0)
+    rejected = stat_counts.get("Rejected", 0)
+    in_progress = stat_counts.get("In Progress", 0)
+    approved = stat_counts.get("Approved", 0)
     
     # Today's completed
     today_completed = await get_db().submissions.count_documents({
@@ -5083,42 +5100,43 @@ async def get_colony_stats(
     from urllib.parse import unquote
     colony_name = unquote(colony_name)
     
-    # Get total bills in colony
-    total_bills = await get_db().bills.count_documents({"colony": colony_name})
+    # OPTIMIZED: Single aggregation for all colony stats
+    na_owner_values = [None, "", "NA", "N/A", "na", "n/a"]
+    stats_pipeline = [
+        {"$match": {"colony": colony_name}},
+        {"$group": {
+            "_id": None,
+            "total_bills": {"$sum": 1},
+            "na_serial_count": {"$sum": {"$cond": [{"$eq": ["$serial_na", True]}, 1, 0]}},
+            "valid_serial_count": {"$sum": {"$cond": [
+                {"$and": [{"$ne": ["$serial_na", True]}, {"$gt": ["$serial_number", 0]}]}, 1, 0
+            ]}},
+            "with_gps": {"$sum": {"$cond": [
+                {"$and": [{"$ne": ["$latitude", None]}, {"$ifNull": ["$latitude", False]}]}, 1, 0
+            ]}},
+            "unique_owners": {"$addToSet": "$owner_name"},
+            "owner_na_count": {"$sum": {"$cond": [{"$in": ["$owner_name", na_owner_values]}, 1, 0]}},
+            "self_certified_count": {"$sum": {"$cond": [{"$eq": ["$self_certified", True]}, 1, 0]}},
+            "not_self_certified_count": {"$sum": {"$cond": [
+                {"$or": [{"$eq": ["$self_certified", False]}, {"$not": {"$ifNull": ["$self_certified", False]}}]}, 1, 0
+            ]}}
+        }}
+    ]
+    stats_result = await get_db().bills.aggregate(stats_pipeline).to_list(1)
+    stats = stats_result[0] if stats_result else {
+        "total_bills": 0, "na_serial_count": 0, "valid_serial_count": 0,
+        "with_gps": 0, "unique_owners": [], "owner_na_count": 0,
+        "self_certified_count": 0, "not_self_certified_count": 0
+    }
     
-    # Get NA serial count
-    na_serial_count = await get_db().bills.count_documents({"colony": colony_name, "serial_na": True})
-    
-    # Get valid serial count
-    valid_serial_count = await get_db().bills.count_documents({"colony": colony_name, "serial_na": {"$ne": True}, "serial_number": {"$gt": 0}})
-    
-    # Get bills with GPS
-    with_gps = await get_db().bills.count_documents({"colony": colony_name, "latitude": {"$exists": True, "$ne": None}})
-    
-    # Get unique owner names count
-    unique_owners = await get_db().bills.distinct("owner_name", {"colony": colony_name})
-    unique_owners_count = len([o for o in unique_owners if o and o.strip()])
-    
-    # Count owner names that are NA/empty
-    owner_na_count = await get_db().bills.count_documents({
-        "colony": colony_name,
-        "$or": [
-            {"owner_name": {"$exists": False}},
-            {"owner_name": None},
-            {"owner_name": ""},
-            {"owner_name": "NA"},
-            {"owner_name": "N/A"},
-            {"owner_name": "na"},
-            {"owner_name": "n/a"}
-        ]
-    })
-    
-    # Get self-certified counts
-    self_certified_count = await get_db().bills.count_documents({"colony": colony_name, "self_certified": True})
-    not_self_certified_count = await get_db().bills.count_documents({
-        "colony": colony_name, 
-        "$or": [{"self_certified": False}, {"self_certified": {"$exists": False}}]
-    })
+    total_bills = stats["total_bills"]
+    na_serial_count = stats["na_serial_count"]
+    valid_serial_count = stats["valid_serial_count"]
+    with_gps = stats["with_gps"]
+    unique_owners_count = len([o for o in stats.get("unique_owners", []) if o and str(o).strip()])
+    owner_na_count = stats["owner_na_count"]
+    self_certified_count = stats["self_certified_count"]
+    not_self_certified_count = stats["not_self_certified_count"]
     
     # Get category breakdown
     category_pipeline = [
