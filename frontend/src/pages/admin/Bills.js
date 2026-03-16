@@ -2403,6 +2403,40 @@ export default function BillsPage() {
                 </div>
               )}
 
+              {/* Download Missing Photos Report */}
+              <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-sm text-red-700 mb-2">Properties without old photo?</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-testid="download-missing-photos-btn"
+                  onClick={async () => {
+                    try {
+                      const response = await axios.get(`${API_URL}/admin/missing-photos-report`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        responseType: 'blob'
+                      });
+                      const url = window.URL.createObjectURL(new Blob([response.data]));
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'missing_photos_report.xlsx';
+                      link.click();
+                      window.URL.revokeObjectURL(url);
+                      toast.success('Missing photos report downloaded');
+                    } catch (error) {
+                      toast.error('Failed to download report');
+                    }
+                  }}
+                  className="border-red-300 text-red-600 hover:bg-red-100"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Missing Photos Report
+                </Button>
+                <p className="text-xs text-red-500 mt-2">
+                  Excel with all Property IDs that don't have old photo uploaded
+                </p>
+              </div>
+
               {/* Download Sample */}
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="text-sm text-slate-600 mb-2">Need the correct format?</p>

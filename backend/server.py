@@ -7132,6 +7132,90 @@ async def upload_old_photos(
         "duplicates": duplicates
     }
 
+@api_router.get("/admin/missing-photos-report")
+async def missing_photos_report(
+    current_user: dict = Depends(get_current_user)
+):
+    """Download Excel report of properties missing photo_url"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town_db = get_db()
+    
+    # Get properties WITHOUT photo_url
+    missing = await town_db.properties.find(
+        {"$or": [
+            {"photo_url": {"$exists": False}},
+            {"photo_url": None},
+            {"photo_url": ""}
+        ]},
+        {"_id": 0, "property_id": 1, "owner_name": 1, "colony": 1, "mobile": 1, "serial_number": 1, "category": 1, "status": 1}
+    ).to_list(None)
+    
+    # Get properties WITH photo_url
+    with_photo = await town_db.properties.count_documents(
+        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}}
+    )
+    total = await town_db.properties.count_documents({})
+    
+    # Create Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Missing Photos"
+    
+    # Summary sheet info
+    ws.append(["MISSING PHOTO REPORT"])
+    ws.append([f"Total Properties: {total}", f"With Photo: {with_photo}", f"Missing Photo: {len(missing)}"])
+    ws.append([])
+    
+    headers = ["Sr No", "Property ID", "Owner Name", "Colony", "Mobile", "Serial No", "Category", "Survey Status"]
+    ws.append(headers)
+    
+    from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+    header_fill = PatternFill(start_color="1565C0", end_color="1565C0", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    
+    for col in range(1, len(headers) + 1):
+        cell = ws.cell(row=4, column=col)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = thin_border
+    
+    for i, prop in enumerate(missing, 1):
+        row = [
+            i,
+            prop.get("property_id", ""),
+            prop.get("owner_name", ""),
+            prop.get("colony", ""),
+            prop.get("mobile", ""),
+            prop.get("serial_number", ""),
+            prop.get("category", ""),
+            prop.get("status", "Pending")
+        ]
+        ws.append(row)
+        for col in range(1, len(row) + 1):
+            ws.cell(row=i + 4, column=col).border = thin_border
+    
+    widths = [8, 15, 25, 25, 15, 10, 15, 15]
+    for col, w in enumerate(widths, 1):
+        ws.column_dimensions[ws.cell(row=4, column=col).column_letter].width = w
+    
+    excel_buffer = io.BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    return StreamingResponse(
+        excel_buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=missing_photos_report.xlsx"}
+    )
+
+
+
 @api_router.delete("/admin/clear-old-photos")
 async def clear_old_photos(current_user: dict = Depends(get_current_user)):
     """Clear all old photo URLs from properties"""
