@@ -3004,7 +3004,8 @@ async def export_submissions(
         "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Mobile",
         "Address", "Colony Name", "Employee Name", "Status", "Special Condition",
         "Property Status", "Property Use", "Self Certified", "Receiver Name", "Relation", "Receiver Mobile No",
-        "Latitude", "Longitude", "Submitted Date", "Submitted Time", "Photos Count", "Photo URLs", "Remarks"
+        "Latitude", "Longitude", "Submit Date", "Submit Time",
+        "Photo 1", "Photo 2", "Photo 3", "Photo 4", "Remarks"
     ]
     
     # Style headers
@@ -3065,21 +3066,39 @@ async def export_submissions(
                     url = f"{base_url}{url}"
                 photo_urls_list.append(url)
         
-        # Parse submitted_at for date and time
+        # Parse submitted_at for clear date and time
         submitted_at = sub.get("submitted_at", "")
         submitted_date = ""
         submitted_time = ""
         if submitted_at:
             try:
+                from datetime import datetime as dt_parse
                 if "T" in submitted_at:
-                    parts = submitted_at.split("T")
-                    submitted_date = parts[0]
-                    time_part = parts[1].split(".")[0] if "." in parts[1] else parts[1].split("+")[0]
-                    submitted_time = time_part
+                    dt_obj = dt_parse.fromisoformat(submitted_at.replace("Z", "+00:00"))
+                    # Convert to IST (UTC+5:30)
+                    from datetime import timedelta
+                    ist = dt_obj + timedelta(hours=5, minutes=30)
+                    submitted_date = ist.strftime("%d/%m/%Y")
+                    submitted_time = ist.strftime("%I:%M %p")
                 else:
                     submitted_date = submitted_at[:10]
-            except:
+            except Exception:
                 submitted_date = submitted_at[:10] if len(submitted_at) >= 10 else submitted_at
+        
+        # Get up to 4 photo URLs
+        photo_urls = []
+        for p in (photos or []):
+            url = ""
+            if isinstance(p, dict) and p.get("file_url"):
+                url = p.get("file_url")
+            elif isinstance(p, str):
+                url = p
+            if url:
+                if url.startswith("/"):
+                    url = f"{base_url}{url}"
+                photo_urls.append(url)
+        while len(photo_urls) < 4:
+            photo_urls.append("")
         
         row_data = [
             row_num - 1,
@@ -3103,8 +3122,10 @@ async def export_submissions(
             sub.get("longitude", ""),
             submitted_date,
             submitted_time,
-            photos_count,
-            "\n".join(photo_urls_list) if photo_urls_list else "",
+            photo_urls[0],
+            photo_urls[1],
+            photo_urls[2],
+            photo_urls[3],
             sub.get("remarks", sub.get("review_remarks", ""))
         ]
         
@@ -3112,14 +3133,14 @@ async def export_submissions(
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
-            # Make Photo URLs column clickable (column 23 now)
-            if col == 23 and value and str(value).startswith("http"):
-                first_url = str(value).split("\n")[0]
-                cell.hyperlink = first_url
+            # Make Photo columns clickable (columns 22-25)
+            if col >= 22 and col <= 25 and value and str(value).startswith("http"):
+                cell.hyperlink = str(value)
+                cell.value = "Click to View"
                 cell.font = Font(color="0563C1", underline="single")
     
     # Adjust column widths
-    column_widths = [6, 10, 10, 12, 22, 12, 30, 18, 18, 10, 14, 12, 14, 10, 18, 12, 14, 12, 12, 12, 10, 8, 50, 30]
+    column_widths = [6, 10, 10, 12, 22, 12, 30, 18, 18, 10, 14, 12, 14, 10, 18, 12, 14, 12, 12, 12, 12, 16, 16, 16, 16, 30]
     for col, width in enumerate(column_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     
