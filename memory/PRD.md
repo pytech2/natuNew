@@ -13,11 +13,20 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - **File Storage**: Filesystem `/app/uploads` for survey photos, GridFS for legacy
 
 ## What's Been Implemented
-- [x] All previous features (multi-tenant, town management, surveyor workflow, PDF generation, etc.)
-- [x] **FIX: Bills to Properties duplicate check** - Only uses property_id (Mar 2026)
-- [x] **FIX: Old photos not showing** - Added photo_url to property projections (Mar 2026)
-- [x] **FIX: Cleanup Duplicates improved** - Reassigns submissions before deleting (Mar 2026)
-- [x] **Colony Progress Excel** - Added Category breakdown (Residential, Commercial, Mix Use, Vacant Plot, Industrial, Institutional, Special) + Self Certified Yes/No columns (Mar 2026)
+- [x] All core features (multi-tenant, town management, surveyor workflow, PDF generation, etc.)
+- [x] Bills to Properties duplicate check
+- [x] Old photos display and upload
+- [x] Cleanup Duplicates with submission reassignment
+- [x] Colony Progress Excel with Category, Self Certified, Survey Done By columns
+- [x] Comprehensive 37-column export
+- [x] Same Mobile / Same Owner duplicate filters in submissions
+- [x] Edit submissions after approve/reject
+- [x] Original + Survey location display with distance
+- [x] Property Map filters, stats, edit, old photo display
+- [x] **FIX: Auto-complete system remarks cleaned** - Empty remarks for auto-completed surveys, old data cleaned up (Mar 2026)
+- [x] **FIX: Photo URL external handling** - Frontend detects external URLs (http) and renders directly without prepending backend URL (Mar 2026)
+- [x] **FIX: Original Lat/Lon for auto-submitted** - property_latitude/property_longitude displayed correctly (Mar 2026)
+- [x] **FIX: Employee un-assign from colony** - Handles both assigned_employee_id and assigned_employee_ids array (Mar 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
@@ -25,13 +34,12 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 
 ## Prioritized Backlog
 ### P0
-- VPS: Click "Cleanup Duplicates" after deploy to fix 19072→18547 mismatch
+- VPS deployment workflow (user-side GitHub auth fix needed)
 
 ### P1
-- Surveyor login auto-routing to assigned town
+- Offline support for surveyor mobile interface
 
 ### P2
-- Offline surveyor support
-- ZIP PDF download
+- ZIP download for split-employee PDFs
 - server.py refactoring into APIRouter modules
 - Map marker shortcut to survey form
