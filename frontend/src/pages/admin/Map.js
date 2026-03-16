@@ -29,7 +29,7 @@ import {
   Map as MapIcon, Search, Filter, Home, User, Phone, 
   MapPin, Layers, Navigation, Building, AreaChart,
   Download, Save, ArrowUpDown, Loader2, Eye, Edit, Check, X,
-  Camera, AlertTriangle, Lock, UserX, Users, UserMinus
+  Camera, AlertTriangle, Lock, UserX, Users, UserMinus, Pencil
 } from 'lucide-react';
 import { Textarea } from '../../components/ui/textarea';
 
@@ -1597,6 +1597,32 @@ export default function PropertyMap() {
                   </div>
                 )}
 
+                {/* Old Photo - from Excel upload */}
+                {selectedProperty?.photo_url && (
+                  <div className="border-2 border-amber-200 rounded-lg p-2 bg-amber-50">
+                    <div className="text-[10px] font-semibold text-amber-700 uppercase mb-1">Old Property Photo</div>
+                    <img
+                      src={selectedProperty.photo_url}
+                      alt="Old Property"
+                      className="w-full max-h-40 object-cover rounded cursor-pointer hover:opacity-90"
+                      onClick={() => window.open(selectedProperty.photo_url, '_blank')}
+                      onError={(e) => { 
+                        e.target.style.display = 'none'; 
+                        e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'block');
+                      }}
+                    />
+                    <a 
+                      href={selectedProperty.photo_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{display: 'none'}}
+                      className="block text-xs text-blue-600 underline break-all bg-blue-50 p-2 rounded"
+                    >
+                      View Old Photo (external link)
+                    </a>
+                  </div>
+                )}
+
                 {/* Survey Details Section - Compact */}
                 <div className="border-t pt-2">
                   <div className="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Survey Details</div>
@@ -1735,26 +1761,79 @@ export default function PropertyMap() {
                   </div>
                 )}
 
+                {/* Edit Form - when editMode is active */}
+                {editMode && (
+                  <div className="border-2 border-blue-200 rounded-lg p-3 bg-blue-50 space-y-2">
+                    <div className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Edit Survey Data</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-gray-500">Receiver Name</label>
+                        <Input className="h-7 text-xs" value={editData.receiver_name} onChange={e => setEditData({...editData, receiver_name: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-500">Receiver Mobile</label>
+                        <Input className="h-7 text-xs" value={editData.receiver_mobile} onChange={e => setEditData({...editData, receiver_mobile: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-500">Relation</label>
+                        <Input className="h-7 text-xs" value={editData.relation} onChange={e => setEditData({...editData, relation: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-500">Special Condition</label>
+                        <select className="w-full h-7 text-xs border rounded px-2" value={editData.special_condition} onChange={e => setEditData({...editData, special_condition: e.target.value})}>
+                          <option value="">None</option>
+                          <option value="property_locked">Property Locked</option>
+                          <option value="owner_denied">Owner Denied</option>
+                          <option value="vacant_plot">Vacant Plot</option>
+                          <option value="wrong_location">Wrong Location</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-[10px] text-gray-500">Remarks</label>
+                        <Input className="h-7 text-xs" value={editData.remarks} onChange={e => setEditData({...editData, remarks: e.target.value})} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 h-7 text-xs bg-blue-600 hover:bg-blue-700" onClick={handleSaveEdit} disabled={savingEdit}>
+                        {savingEdit ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={handleCancelEdit}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons - Compact */}
-                {(!surveyData.status || surveyData.status === 'Pending' || surveyData.status === 'Completed') && (
+                {!editMode && (
                   <div className="flex gap-2 pt-2 border-t">
                     <Button
                       size="sm"
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-8 text-xs"
-                      onClick={handleApproveSurvey}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 h-8 text-xs"
+                      onClick={handleStartEdit}
                     >
-                      <Check className="w-3 h-3 mr-1" />
-                      Approve
+                      <Pencil className="w-3 h-3 mr-1" />
+                      Edit
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="flex-1 h-8 text-xs"
-                      onClick={() => setRejectDialog(true)}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Reject
-                    </Button>
+                    {(!surveyData.status || surveyData.status === 'Pending' || surveyData.status === 'Completed') && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-8 text-xs"
+                          onClick={handleApproveSurvey}
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => setRejectDialog(true)}
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
                   </div>
                 )}
 
