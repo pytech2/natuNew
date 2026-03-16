@@ -169,6 +169,7 @@ export default function BillsPage() {
     fetchTowns();
     fetchEmployees();
     fetchGeneratedPdfs(); // Fetch previously generated PDFs
+    fetchColonyStats(''); // Fetch all colonies stats on load
   }, []);
 
   useEffect(() => {
@@ -215,15 +216,19 @@ export default function BillsPage() {
   };
 
   const fetchColonyStats = async (colonyName) => {
-    if (!colonyName || colonyName.trim() === '') {
-      setColonyStats(null);
-      return;
-    }
     try {
-      const response = await axios.get(`${API_URL}/admin/bills/colony-stats/${encodeURIComponent(colonyName.trim())}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setColonyStats(response.data);
+      if (!colonyName || colonyName.trim() === '') {
+        // Fetch all colonies stats
+        const response = await axios.get(`${API_URL}/admin/bills/all-stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setColonyStats(response.data);
+      } else {
+        const response = await axios.get(`${API_URL}/admin/bills/colony-stats/${encodeURIComponent(colonyName.trim())}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setColonyStats(response.data);
+      }
     } catch (error) {
       console.error('Failed to fetch colony stats:', error);
       setColonyStats(null);
@@ -1249,7 +1254,7 @@ export default function BillsPage() {
                 </div>
               )}
               
-              <div className="grid grid-cols-2 md:grid-cols-7 gap-4 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 text-center">
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-2xl font-bold text-blue-600">{colonyStats.total_bills || 0}</p>
                   <p className="text-xs text-slate-500">Total Bills</p>
@@ -1275,8 +1280,12 @@ export default function BillsPage() {
                   <p className="text-xs text-slate-500">Owner Name NA</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 shadow-sm">
-                  <p className="text-2xl font-bold text-red-600">{colonyStats.skip_stats?.skipped_na_empty || 0}</p>
-                  <p className="text-xs text-slate-500">Skipped (NA/Empty)</p>
+                  <p className="text-2xl font-bold text-green-600">{colonyStats.self_certified_count || 0}</p>
+                  <p className="text-xs text-slate-500">Self Certified</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <p className="text-2xl font-bold text-red-600">{colonyStats.not_self_certified_count || 0}</p>
+                  <p className="text-xs text-slate-500">Not Self Certified</p>
                 </div>
               </div>
               {colonyStats.category_breakdown && colonyStats.category_breakdown.length > 0 && (

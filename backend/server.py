@@ -5289,6 +5289,71 @@ async def get_colony_stats(
         ]
     }
 
+@api_router.get("/admin/bills/all-stats")
+async def get_all_bills_stats(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get statistics for ALL bills across all colonies"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    na_owner_values = [None, "", "NA", "N/A", "na", "n/a"]
+    stats_pipeline = [
+        {"$group": {
+            "_id": None,
+            "total_bills": {"$sum": 1},
+            "na_serial_count": {"$sum": {"$cond": [{"$eq": ["$serial_na", True]}, 1, 0]}},
+            "valid_serial_count": {"$sum": {"$cond": [
+                {"$and": [{"$ne": ["$serial_na", True]}, {"$gt": ["$serial_number", 0]}]}, 1, 0
+            ]}},
+            "with_gps": {"$sum": {"$cond": [
+                {"$and": [{"$ne": ["$latitude", None]}, {"$ifNull": ["$latitude", False]}]}, 1, 0
+            ]}},
+            "unique_owners": {"$addToSet": "$owner_name"},
+            "owner_na_count": {"$sum": {"$cond": [{"$in": ["$owner_name", na_owner_values]}, 1, 0]}},
+            "self_certified_count": {"$sum": {"$cond": [{"$eq": ["$self_certified", True]}, 1, 0]}},
+            "not_self_certified_count": {"$sum": {"$cond": [
+                {"$or": [{"$eq": ["$self_certified", False]}, {"$not": {"$ifNull": ["$self_certified", False]}}]}, 1, 0
+            ]}}
+        }}
+    ]
+    stats_result = await get_db().bills.aggregate(stats_pipeline).to_list(1)
+    stats = stats_result[0] if stats_result else {
+        "total_bills": 0, "na_serial_count": 0, "valid_serial_count": 0,
+        "with_gps": 0, "unique_owners": [], "owner_na_count": 0,
+        "self_certified_count": 0, "not_self_certified_count": 0
+    }
+    
+    unique_owners_count = len([o for o in stats.get("unique_owners", []) if o and str(o).strip()])
+    
+    # Category breakdown
+    category_pipeline = [
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    category_stats = await get_db().bills.aggregate(category_pipeline).to_list(None)
+    
+    return {
+        "colony": "All Colonies",
+        "total_bills": stats["total_bills"],
+        "na_serial_count": stats["na_serial_count"],
+        "valid_serial_count": stats["valid_serial_count"],
+        "with_gps": stats["with_gps"],
+        "unique_owners": unique_owners_count,
+        "owner_na_count": stats["owner_na_count"],
+        "self_certified_count": stats.get("self_certified_count", 0),
+        "not_self_certified_count": stats.get("not_self_certified_count", 0),
+        "skip_stats": {},
+        "upload_messages": [],
+        "add_to_properties_messages": [],
+        "category_breakdown": [
+            {"category": stat["_id"] or "Unknown", "count": stat["count"]}
+            for stat in category_stats
+        ]
+    }
+
+
+
 @api_router.put("/admin/bills/{bill_id}")
 async def update_bill(
     bill_id: str,
