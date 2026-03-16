@@ -2533,32 +2533,63 @@ async def remove_employee_from_colony(
     colony: str = Form(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove an employee from a specific colony"""
+    """Remove an employee from a specific colony - handles both single and multi-employee assignments"""
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    town_db = await get_town_data_db(request)
+    town_db = get_db()
     
     employee = await master_db.users.find_one({"id": employee_id}, {"_id": 0})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
-    count = await town_db.properties.count_documents({
-        "assigned_employee_id": employee_id,
-        "ward": colony
-    })
+    emp_name = employee.get("name", "Unknown")
     
-    if count == 0:
-        raise HTTPException(status_code=404, detail=f"No properties found for {employee['name']} in {colony}")
+    # Find ALL properties in this colony assigned to this employee (single or multi)
+    properties = await town_db.properties.find({
+        "ward": colony,
+        "$or": [
+            {"assigned_employee_id": employee_id},
+            {"assigned_employee_ids": employee_id}
+        ]
+    }, {"_id": 0, "id": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
     
-    result = await town_db.properties.update_many(
-        {"assigned_employee_id": employee_id, "ward": colony},
-        {"$set": {"assigned_employee_id": None, "assigned_employee_name": None, "assignment_date": None}}
-    )
+    if not properties:
+        raise HTTPException(status_code=404, detail=f"No properties found for {emp_name} in {colony}")
+    
+    updated_count = 0
+    for prop in properties:
+        existing_emp_ids = prop.get("assigned_employee_ids") or []
+        new_emp_ids = [eid for eid in existing_emp_ids if eid != employee_id]
+        
+        if new_emp_ids:
+            # Still has other employees assigned
+            all_employees = await master_db.users.find({"id": {"$in": new_emp_ids}}, {"_id": 0, "name": 1}).to_list(None)
+            combined_names = ", ".join([e["name"] for e in all_employees])
+            await town_db.properties.update_one(
+                {"id": prop["id"]},
+                {"$set": {
+                    "assigned_employee_ids": new_emp_ids,
+                    "assigned_employee_id": new_emp_ids[0],
+                    "assigned_employee_name": combined_names
+                }}
+            )
+        else:
+            # No employees left, clear all assignment fields
+            await town_db.properties.update_one(
+                {"id": prop["id"]},
+                {"$set": {
+                    "assigned_employee_ids": [],
+                    "assigned_employee_id": None,
+                    "assigned_employee_name": None,
+                    "assignment_date": None
+                }}
+            )
+        updated_count += 1
     
     return {
-        "message": f"Removed {employee['name']} from {colony}",
-        "properties_unassigned": result.modified_count
+        "message": f"Removed {emp_name} from {colony}",
+        "properties_unassigned": updated_count
     }
 
 # ============== SUBMISSIONS ROUTES ==============

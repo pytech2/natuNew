@@ -1161,8 +1161,8 @@ export default function Submissions() {
                   </div>
                 )}
 
-                {/* Remarks - Compact */}
-                {selectedSubmission.remarks && (
+                {/* Remarks - Compact (hide system-generated auto-complete remarks) */}
+                {selectedSubmission.remarks && !selectedSubmission.remarks.toLowerCase().includes('auto-complete') && !selectedSubmission.remarks.toLowerCase().includes('auto complete') && (
                   <div className="bg-gray-50 rounded p-2 text-xs">
                     <span className="text-gray-500">Remarks:</span>
                     <span className="text-gray-800 ml-1">{selectedSubmission.remarks}</span>
@@ -1205,27 +1205,31 @@ export default function Submissions() {
 
                 {/* Photos - Smaller thumbnails */}
                 <div>
-                  <div className="text-xs font-semibold text-emerald-700 mb-2">📸 NEW Survey Photos (Captured by Surveyor)</div>
+                  <div className="text-xs font-semibold text-emerald-700 mb-2">Survey Photos</div>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedSubmission.photos?.filter((photo, index, self) => 
                       index === self.findIndex(p => p.file_url === photo.file_url)
-                    ).map((photo, idx) => (
-                      <div key={idx} className="relative group">
-                        <img
-                          src={`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`}
-                          alt={photo.photo_type}
-                          className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90"
-                          onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
-                        />
-                        <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-semibold ${
-                          photo.photo_type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
-                          photo.photo_type === 'GATE' ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {photo.photo_type === 'HOUSE' ? 'PROP' : photo.photo_type}
-                        </span>
-                      </div>
-                    ))}
+                    ).map((photo, idx) => {
+                      const isExternal = photo.file_url?.startsWith('http');
+                      const photoSrc = isExternal ? photo.file_url : `${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`;
+                      return (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={photoSrc}
+                            alt={photo.photo_type}
+                            className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90"
+                            onClick={() => window.open(photoSrc, '_blank')}
+                          />
+                          <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-semibold ${
+                            photo.photo_type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
+                            photo.photo_type === 'GATE' ? 'bg-amber-100 text-amber-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {photo.photo_type === 'HOUSE' ? 'PROP' : photo.photo_type}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1654,13 +1658,16 @@ export default function Submissions() {
                   <CardContent>
                     {editPhotos?.length > 0 ? (
                       <div className="grid grid-cols-2 gap-4">
-                        {editPhotos.map((photo, idx) => (
+                        {editPhotos.map((photo, idx) => {
+                          const isExt = photo.file_url?.startsWith('http');
+                          const pSrc = isExt ? photo.file_url : `${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`;
+                          return (
                           <div key={idx} className="relative group">
                             <img
-                              src={`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`}
+                              src={pSrc}
                               alt={photo.photo_type}
                               className="w-full h-40 object-cover rounded-lg border-2 border-white shadow cursor-pointer"
-                              onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
+                              onClick={() => window.open(pSrc, '_blank')}
                             />
                             <span className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold shadow ${
                               photo.photo_type === 'HOUSE' ? 'bg-blue-500 text-white' :
@@ -1669,7 +1676,7 @@ export default function Submissions() {
                             }`}>
                               {photo.photo_type}
                             </span>
-                            {/* Delete Button - Always visible with red background */}
+                            {/* Delete Button */}
                             <Button
                               size="sm"
                               variant="destructive"
@@ -1688,12 +1695,13 @@ export default function Submissions() {
                               size="sm"
                               variant="secondary"
                               className="absolute bottom-2 right-2 h-7 text-xs bg-white/90 hover:bg-white shadow"
-                              onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`, '_blank')}
+                              onClick={() => window.open(pSrc, '_blank')}
                             >
                               <ExternalLink className="w-3 h-3 mr-1" /> View Full
                             </Button>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-slate-400">
