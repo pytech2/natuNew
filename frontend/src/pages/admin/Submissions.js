@@ -94,9 +94,10 @@ export default function Submissions() {
   const [dateFilter, setDateFilter] = useState('');
   const [dateToFilter, setDateToFilter] = useState('');  // Date range end
   const [searchFilter, setSearchFilter] = useState('');  // Search by serial, property ID, owner name
-  const [specialConditionFilter, setSpecialConditionFilter] = useState('');  // house_locked, owner_denied
-  const [selfCertifiedFilter, setSelfCertifiedFilter] = useState('');  // yes, no
-  const [photoStatusFilter, setPhotoStatusFilter] = useState('');  // with_photos, without_photos
+  const [specialConditionFilter, setSpecialConditionFilter] = useState('');
+  const [selfCertifiedFilter, setSelfCertifiedFilter] = useState('');
+  const [photoStatusFilter, setPhotoStatusFilter] = useState('');
+  const [duplicateFilter, setDuplicateFilter] = useState('');
   const [employees, setEmployees] = useState([]);
   const [colonies, setColonies] = useState([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -125,7 +126,7 @@ export default function Submissions() {
 
   useEffect(() => {
     fetchSubmissions();
-  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter, employeeIdFilter, searchFilter, specialConditionFilter, selfCertifiedFilter, photoStatusFilter]);
+  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter, employeeIdFilter, searchFilter, specialConditionFilter, selfCertifiedFilter, photoStatusFilter, duplicateFilter]);
 
   const fetchFilters = async () => {
     try {
@@ -155,6 +156,7 @@ export default function Submissions() {
       if (specialConditionFilter) params.append('special_condition', specialConditionFilter);
       if (selfCertifiedFilter) params.append('self_certified', selfCertifiedFilter);
       if (photoStatusFilter) params.append('photo_status', photoStatusFilter);
+      if (duplicateFilter) params.append('duplicate_filter', duplicateFilter);
 
       const response = await axios.get(`${API_URL}/admin/submissions?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -187,6 +189,7 @@ export default function Submissions() {
       if (specialConditionFilter) params.append('special_condition', specialConditionFilter);
       if (selfCertifiedFilter) params.append('self_certified', selfCertifiedFilter);
       if (photoStatusFilter) params.append('photo_status', photoStatusFilter);
+      if (duplicateFilter) params.append('duplicate_filter', duplicateFilter);
 
       const response = await axios.get(`${API_URL}/admin/submissions/export?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -745,6 +748,24 @@ export default function Submissions() {
                     >
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       Pending
+                    </Button>
+                    <Button
+                      variant={duplicateFilter === 'same_mobile' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDuplicateFilter(duplicateFilter === 'same_mobile' ? '' : 'same_mobile')}
+                      className="text-xs"
+                    >
+                      <Phone className="w-3 h-3 mr-1" />
+                      Same Mobile
+                    </Button>
+                    <Button
+                      variant={duplicateFilter === 'same_owner' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDuplicateFilter(duplicateFilter === 'same_owner' ? '' : 'same_owner')}
+                      className="text-xs"
+                    >
+                      <Users className="w-3 h-3 mr-1" />
+                      Same Owner
                     </Button>
                   </div>
                 </div>

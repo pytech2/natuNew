@@ -2669,6 +2669,7 @@ async def list_submissions(
     special_condition: Optional[str] = None,  # house_locked, owner_denied, normal
     self_certified: Optional[str] = None,  # yes, no
     photo_status: Optional[str] = None,  # with_photos, without_photos
+    duplicate_filter: Optional[str] = None,  # same_mobile, same_owner
     page: int = 1,
     limit: int = 50,
     current_user: dict = Depends(get_current_user)
@@ -2842,6 +2843,14 @@ async def list_submissions(
             sub["property_photo_url"] = prop.get("photo_url", "")
             sub["property_latitude"] = prop.get("latitude")
             sub["property_longitude"] = prop.get("longitude")
+    
+    # Duplicate filter - applied after property enrichment
+    if duplicate_filter and duplicate_filter.strip():
+        if duplicate_filter == "same_mobile":
+            submissions = [s for s in submissions if s.get("receiver_mobile") and s.get("property_mobile") and s["receiver_mobile"].strip() == s["property_mobile"].strip()]
+        elif duplicate_filter == "same_owner":
+            submissions = [s for s in submissions if s.get("receiver_name") and s.get("property_owner_name") and s["receiver_name"].strip().lower() == s["property_owner_name"].strip().lower()]
+        total = len(submissions)
     
     return {
         "submissions": submissions,
