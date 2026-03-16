@@ -4911,6 +4911,33 @@ async def export_colony_progress_excel(
     if not colony_stats:
         raise HTTPException(status_code=404, detail="No colony data found")
     
+    # Get actual surveyor names from submissions (who did the survey)
+    # First build colony map from properties: property internal id -> colony/ward
+    all_props = await get_db().properties.find(
+        {"ward": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"_id": 0, "id": 1, "ward": 1}
+    ).to_list(None)
+    prop_colony_map = {p["id"]: p["ward"] for p in all_props}
+    
+    # Get surveyor names from submissions grouped by colony
+    survey_names_pipeline = [
+        {"$match": {"employee_name": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$group": {
+            "_id": "$property_record_id",
+            "employee_name": {"$first": "$employee_name"}
+        }}
+    ]
+    sub_results = await get_db().submissions.aggregate(survey_names_pipeline).to_list(None)
+    
+    # Build colony -> set of surveyor names
+    colony_surveyors = {}
+    for s in sub_results:
+        colony = prop_colony_map.get(s["_id"])
+        if colony and s.get("employee_name"):
+            if colony not in colony_surveyors:
+                colony_surveyors[colony] = set()
+            colony_surveyors[colony].add(s["employee_name"])
+    
     # Build Excel
     from openpyxl import Workbook
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
