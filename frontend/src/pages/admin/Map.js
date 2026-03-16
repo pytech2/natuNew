@@ -383,7 +383,22 @@ export default function PropertyMap() {
         withGPS,
         residential: props.filter(p => p.category === 'Residential').length,
         commercial: props.filter(p => p.category === 'Commercial').length,
-        vacant: props.filter(p => p.category === 'Vacant Plot').length
+        vacant: props.filter(p => p.category === 'Vacant Plot').length,
+        mixUse: props.filter(p => p.category === 'Mix Use').length,
+        // Survey status
+        pending: props.filter(p => p.status === 'Pending').length,
+        completed: props.filter(p => p.status === 'Completed').length,
+        approved: props.filter(p => p.status === 'Approved').length,
+        rejected: props.filter(p => p.status === 'Rejected').length,
+        // Submission based
+        surveyDone: props.filter(p => p.has_submission).length,
+        surveyNotDone: props.filter(p => !p.has_submission).length,
+        houseOpen: props.filter(p => p.sub_house_status === 'Open').length,
+        houseLock: props.filter(p => p.sub_house_status === 'Lock').length,
+        houseVacant: props.filter(p => p.sub_house_status === 'Vacant Plot').length,
+        selfSatisfiedYes: props.filter(p => p.sub_self_satisfied === true).length,
+        selfSatisfiedNo: props.filter(p => p.sub_self_satisfied === false).length,
+        hasOldPhoto: props.filter(p => p.photo_url && p.photo_url.trim() !== '').length,
       });
       
     } catch (error) {
@@ -802,52 +817,105 @@ export default function PropertyMap() {
 
             {/* Stats Cards - Show only when colony selected */}
             {filters.colony && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 opacity-80" />
-                      <span className="text-sm opacity-80">Total</span>
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{stats.total}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Navigation className="w-5 h-5 opacity-80" />
-                      <span className="text-sm opacity-80">With GPS</span>
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{stats.withGPS}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-blue-400 to-blue-500 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Home className="w-5 h-5 opacity-80" />
-                      <span className="text-sm opacity-80">Residential</span>
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{stats.residential}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-5 h-5 opacity-80" />
-                      <span className="text-sm opacity-80">Commercial</span>
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{stats.commercial}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <AreaChart className="w-5 h-5 opacity-80" />
-                      <span className="text-sm opacity-80">Vacant</span>
-                    </div>
-                    <p className="text-2xl font-bold mt-1">{stats.vacant}</p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-2">
+                {/* Row 1: Overview */}
+                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-2">
+                  <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Total</span>
+                      <p className="text-xl font-bold">{stats.total}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">With GPS</span>
+                      <p className="text-xl font-bold">{stats.withGPS}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-red-400 to-red-500 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Pending</span>
+                      <p className="text-xl font-bold">{stats.pending}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Completed</span>
+                      <p className="text-xl font-bold">{stats.completed}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Approved</span>
+                      <p className="text-xl font-bold">{stats.approved}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-orange-400 to-orange-500 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Rejected</span>
+                      <p className="text-xl font-bold">{stats.rejected}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-blue-400 to-blue-500 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Residential</span>
+                      <p className="text-xl font-bold">{stats.residential}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Commercial</span>
+                      <p className="text-xl font-bold">{stats.commercial}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Vacant Plot</span>
+                      <p className="text-xl font-bold">{stats.vacant}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Mix Use</span>
+                      <p className="text-xl font-bold">{stats.mixUse}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+                {/* Row 2: Submission based stats */}
+                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-2">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-green-700">{stats.surveyDone}</p>
+                    <p className="text-xs text-green-600">Survey Done</p>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-red-700">{stats.surveyNotDone}</p>
+                    <p className="text-xs text-red-600">Not Done</p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-blue-700">{stats.houseOpen}</p>
+                    <p className="text-xs text-blue-600">House Open</p>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-slate-700">{stats.houseLock}</p>
+                    <p className="text-xs text-slate-600">House Lock</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-amber-700">{stats.houseVacant}</p>
+                    <p className="text-xs text-amber-600">Vacant Plot</p>
+                  </div>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-emerald-700">{stats.selfSatisfiedYes}</p>
+                    <p className="text-xs text-emerald-600">Self Satisfied</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-orange-700">{stats.selfSatisfiedNo}</p>
+                    <p className="text-xs text-orange-600">Not Satisfied</p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 text-center">
+                    <p className="text-lg font-bold text-purple-700">{stats.hasOldPhoto}</p>
+                    <p className="text-xs text-purple-600">Old Photo</p>
+                  </div>
+                </div>
               </div>
             )}
 
