@@ -2816,7 +2816,7 @@ async def list_submissions(
     if prop_ids:
         props_cursor = await get_db().properties.find(
             {"id": {"$in": prop_ids}},
-            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "photo_url": 1, "total_area": 1, "category": 1, "serial_na": 1}
+            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "photo_url": 1, "total_area": 1, "category": 1, "serial_na": 1, "latitude": 1, "longitude": 1}
         ).to_list(None)
         props_map = {p["id"]: p for p in props_cursor}
     else:
@@ -2839,6 +2839,8 @@ async def list_submissions(
             sub["property_serial_na"] = prop.get("serial_na", False)
             sub["property_bill_sr_no"] = prop.get("bill_sr_no", "N/A")
             sub["property_photo_url"] = prop.get("photo_url", "")
+            sub["property_latitude"] = prop.get("latitude")
+            sub["property_longitude"] = prop.get("longitude")
     
     return {
         "submissions": submissions,

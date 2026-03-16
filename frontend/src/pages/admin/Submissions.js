@@ -1044,25 +1044,50 @@ export default function Submissions() {
                   </div>
                 </div>
 
-                {/* GPS Location - Compact with map link */}
+                {/* GPS Location - Original + Survey with distance */}
                 {(selectedSubmission.latitude || selectedSubmission.survey_latitude) && (
-                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs text-emerald-700">
-                        {(selectedSubmission.latitude || selectedSubmission.survey_latitude)?.toFixed(6)}, 
-                        {(selectedSubmission.longitude || selectedSubmission.survey_longitude)?.toFixed(6)}
-                      </span>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span className="text-gray-500">Orig:</span>
+                        <span className="font-mono text-blue-700">
+                          {selectedSubmission.property_latitude?.toFixed(4) || '-'},{selectedSubmission.property_longitude?.toFixed(4) || '-'}
+                        </span>
+                      </div>
+                      <span className="text-gray-400">&rarr;</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="text-gray-500">Survey:</span>
+                        <span className="font-mono text-emerald-700">
+                          {(selectedSubmission.latitude || selectedSubmission.survey_latitude)?.toFixed(4)},{(selectedSubmission.longitude || selectedSubmission.survey_longitude)?.toFixed(4)}
+                        </span>
+                      </div>
+                      {selectedSubmission.property_latitude && selectedSubmission.latitude && (
+                        <span className="px-1.5 py-0.5 bg-amber-100 rounded text-xs font-semibold text-amber-700">
+                          {(() => {
+                            const R = 6371000;
+                            const lat1 = (selectedSubmission.property_latitude) * Math.PI / 180;
+                            const lat2 = (selectedSubmission.latitude || selectedSubmission.survey_latitude) * Math.PI / 180;
+                            const dLat = ((selectedSubmission.latitude || selectedSubmission.survey_latitude) - selectedSubmission.property_latitude) * Math.PI / 180;
+                            const dLon = ((selectedSubmission.longitude || selectedSubmission.survey_longitude) - selectedSubmission.property_longitude) * Math.PI / 180;
+                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                            const d = R * c;
+                            return d < 1000 ? `${Math.round(d)}m` : `${(d/1000).toFixed(1)}km`;
+                          })()}
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] border-blue-300 text-blue-700 ml-auto"
+                        onClick={() => window.open(`https://www.google.com/maps?q=${selectedSubmission.latitude || selectedSubmission.survey_latitude},${selectedSubmission.longitude || selectedSubmission.survey_longitude}`, '_blank')}
+                      >
+                        <Navigation className="w-3 h-3 mr-1" />
+                        Map
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs border-emerald-300 text-emerald-700"
-                      onClick={() => window.open(`https://www.google.com/maps?q=${selectedSubmission.latitude || selectedSubmission.survey_latitude},${selectedSubmission.longitude || selectedSubmission.survey_longitude}`, '_blank')}
-                    >
-                      <Navigation className="w-3 h-3 mr-1" />
-                      Open Map
-                    </Button>
                   </div>
                 )}
 
