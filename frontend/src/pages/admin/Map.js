@@ -916,6 +916,17 @@ export default function PropertyMap() {
                     <p className="text-xs text-purple-600">Old Photo</p>
                   </div>
                 </div>
+                {/* Surveyor Names */}
+                {employeeStats && Object.keys(employeeStats).length > 0 && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-indigo-700">Surveyors:</span>
+                    {Object.values(employeeStats).map(emp => (
+                      <span key={emp.id} className="bg-white border border-indigo-200 rounded-full px-3 py-0.5 text-xs font-medium text-indigo-700">
+                        {emp.name} ({emp.completed}/{emp.total})
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
