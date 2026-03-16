@@ -3001,11 +3001,16 @@ async def export_submissions(
     
     # Headers - Added Latitude, Longitude, Property Status, Property Use
     headers = [
-        "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Mobile",
-        "Address", "Colony Name", "Employee Name", "Status", "Special Condition",
-        "Property Status", "Property Use", "Self Certified", "Receiver Name", "Relation", "Receiver Mobile No",
-        "Latitude", "Longitude", "Submit Date", "Submit Time",
-        "Photo 1", "Photo 2", "Photo 3", "Photo 4", "Remarks"
+        "Sr No", "Serial Number", "Bill Sr No", "Property ID", "Owner Name", "Owner Mobile",
+        "Address", "Colony Name", "Category",
+        "Receiver Name", "Receiver Mobile", "Relation",
+        "House Status", "Property Use", "Special Condition",
+        "Self Satisfied", "Self Certified",
+        "Employee Name", "Survey Status",
+        "Remarks", "Aadhar Number", "Family ID",
+        "Original Lat", "Original Lon", "Survey Lat", "Survey Lon",
+        "Submit Date", "Submit Time",
+        "Photo 1", "Photo 2", "Photo 3", "Photo 4"
     ]
     
     # Style headers
@@ -3033,59 +3038,28 @@ async def export_submissions(
             "Owner Denied" if special_cond == "owner_denied" else 
             "Vacant Plot" if special_cond == "vacant_plot" else 
             "Wrong Location" if special_cond == "wrong_location" else 
-            "Normal"
+            special_cond.replace("_", " ").title() if special_cond else ""
         )
         
-        # Property Status display
         house_status = sub.get("house_status", "")
-        house_status_display = (
-            "Kachha" if house_status == "kachha" else
-            "Pakka" if house_status == "pakka" else
-            "Vacant Plot" if house_status == "vacant_plot" else
-            ""
-        )
+        house_status_display = house_status.replace("_", " ").title() if house_status else ""
         
-        # Property Use display
         property_use = sub.get("property_use", "")
         property_use_display = (
-            "Residential" if property_use == "residential" else
-            "Commercial" if property_use == "commercial" else
-            "Mix Use" if property_use == "mix_use" else
             f"Other: {sub.get('property_use_remarks', '')}" if property_use == "other" else
-            ""
+            property_use.replace("_", " ").title() if property_use else ""
         )
         
+        self_satisfied = sub.get("self_satisfied")
+        self_satisfied_display = "Yes" if self_satisfied is True else ("No" if self_satisfied is False else "")
+        
+        self_cert = sub.get("self_cert_verified") or sub.get("self_certified")
+        self_cert_display = "Yes" if self_cert is True else ("No" if self_cert is False else "")
+        
+        receiver_name = sub.get("receiver_name") or sub.get("respondent_name", "")
+        receiver_mobile = sub.get("receiver_mobile") or sub.get("new_mobile") or sub.get("respondent_phone", "")
+        
         photos = sub.get("photos", [])
-        photos_count = len(photos) if photos else 0
-        # Create full URLs for photos
-        photo_urls_list = []
-        for p in (photos or []):
-            if p.get("file_url"):
-                url = p.get("file_url")
-                if url.startswith("/"):
-                    url = f"{base_url}{url}"
-                photo_urls_list.append(url)
-        
-        # Parse submitted_at for clear date and time
-        submitted_at = sub.get("submitted_at", "")
-        submitted_date = ""
-        submitted_time = ""
-        if submitted_at:
-            try:
-                from datetime import datetime as dt_parse
-                if "T" in submitted_at:
-                    dt_obj = dt_parse.fromisoformat(submitted_at.replace("Z", "+00:00"))
-                    # Convert to IST (UTC+5:30)
-                    from datetime import timedelta
-                    ist = dt_obj + timedelta(hours=5, minutes=30)
-                    submitted_date = ist.strftime("%d/%m/%Y")
-                    submitted_time = ist.strftime("%I:%M %p")
-                else:
-                    submitted_date = submitted_at[:10]
-            except Exception:
-                submitted_date = submitted_at[:10] if len(submitted_at) >= 10 else submitted_at
-        
-        # Get up to 4 photo URLs
         photo_urls = []
         for p in (photos or []):
             url = ""
@@ -3100,6 +3074,26 @@ async def export_submissions(
         while len(photo_urls) < 4:
             photo_urls.append("")
         
+        submitted_at = sub.get("submitted_at", "")
+        submitted_date = ""
+        submitted_time = ""
+        if submitted_at:
+            try:
+                from datetime import datetime as dt_parse
+                from datetime import timedelta
+                if "T" in str(submitted_at):
+                    dt_obj = dt_parse.fromisoformat(str(submitted_at).replace("Z", "+00:00"))
+                    ist = dt_obj + timedelta(hours=5, minutes=30)
+                    submitted_date = ist.strftime("%d/%m/%Y")
+                    submitted_time = ist.strftime("%I:%M %p")
+                else:
+                    submitted_date = str(submitted_at)[:10]
+            except Exception:
+                submitted_date = str(submitted_at)[:10] if len(str(submitted_at)) >= 10 else str(submitted_at)
+        
+        prop_lat = sub.get("property_latitude", "")
+        prop_lon = sub.get("property_longitude", "")
+        
         row_data = [
             row_num - 1,
             sub.get("serial_number", ""),
@@ -3109,15 +3103,22 @@ async def export_submissions(
             sub.get("property_mobile", ""),
             sub.get("property_address", ""),
             sub.get("colony", sub.get("property_ward", "")),
-            sub.get("employee_name", ""),
-            sub.get("status", "Pending"),
-            special_cond_display,
+            sub.get("category", ""),
+            receiver_name,
+            receiver_mobile,
+            sub.get("relation", ""),
             house_status_display,
             property_use_display,
-            sub.get("self_certified", "No"),
-            sub.get("receiver_name", ""),
-            sub.get("relation", ""),
-            sub.get("receiver_mobile", sub.get("new_mobile", "")),
+            special_cond_display,
+            self_satisfied_display,
+            self_cert_display,
+            sub.get("employee_name", ""),
+            sub.get("status", "Pending"),
+            sub.get("remarks", sub.get("review_remarks", "")),
+            sub.get("aadhar_number", ""),
+            sub.get("family_id", ""),
+            prop_lat,
+            prop_lon,
             sub.get("latitude", ""),
             sub.get("longitude", ""),
             submitted_date,
@@ -3126,21 +3127,18 @@ async def export_submissions(
             photo_urls[1],
             photo_urls[2],
             photo_urls[3],
-            sub.get("remarks", sub.get("review_remarks", ""))
         ]
         
         for col, value in enumerate(row_data, 1):
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
-            # Make Photo columns clickable (columns 22-25)
-            if col >= 22 and col <= 25 and value and str(value).startswith("http"):
+            if col >= 29 and col <= 32 and value and str(value).startswith("http"):
                 cell.hyperlink = str(value)
                 cell.value = "Click to View"
                 cell.font = Font(color="0563C1", underline="single")
     
-    # Adjust column widths
-    column_widths = [6, 10, 10, 12, 22, 12, 30, 18, 18, 10, 14, 12, 14, 10, 18, 12, 14, 12, 12, 12, 12, 16, 16, 16, 16, 30]
+    column_widths = [6, 10, 10, 12, 22, 14, 30, 18, 14, 20, 14, 12, 12, 14, 16, 10, 10, 16, 10, 25, 14, 12, 12, 12, 12, 12, 12, 12, 16, 16, 16, 16]
     for col, width in enumerate(column_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     
