@@ -4893,7 +4893,16 @@ async def export_colony_progress_excel(
             "na_serial": {"$sum": {"$cond": [{"$eq": ["$serial_na", True]}, 1, 0]}},
             "owner_na": {"$sum": {"$cond": [{"$in": ["$owner_name", na_owner_list]}, 1, 0]}},
             "unique_owners": {"$addToSet": "$owner_name"},
-            "assigned_employees": {"$addToSet": "$assigned_employee_name"}
+            "assigned_employees": {"$addToSet": "$assigned_employee_name"},
+            "cat_residential": {"$sum": {"$cond": [{"$eq": ["$category", "Residential"]}, 1, 0]}},
+            "cat_commercial": {"$sum": {"$cond": [{"$eq": ["$category", "Commercial"]}, 1, 0]}},
+            "cat_mix_use": {"$sum": {"$cond": [{"$eq": ["$category", "Mix Use"]}, 1, 0]}},
+            "cat_vacant_plot": {"$sum": {"$cond": [{"$eq": ["$category", "Vacant Plot"]}, 1, 0]}},
+            "cat_industrial": {"$sum": {"$cond": [{"$eq": ["$category", "Industrial"]}, 1, 0]}},
+            "cat_institutional": {"$sum": {"$cond": [{"$eq": ["$category", "Institutional"]}, 1, 0]}},
+            "cat_special": {"$sum": {"$cond": [{"$eq": ["$category", "Special Category"]}, 1, 0]}},
+            "self_cert_yes": {"$sum": {"$cond": [{"$eq": ["$self_certified", True]}, 1, 0]}},
+            "self_cert_no": {"$sum": {"$cond": [{"$ne": ["$self_certified", True]}, 1, 0]}}
         }},
         {"$sort": {"_id": 1}}
     ]
@@ -4913,6 +4922,9 @@ async def export_colony_progress_excel(
     headers = [
         "Sr No", "Colony Name", "Total Properties", "Survey Done", 
         "In Progress", "Pending", "Rejected", "Completion %",
+        "Residential", "Commercial", "Mix Use", "Vacant Plot",
+        "Industrial", "Institutional", "Special Category",
+        "Self Cert Yes", "Self Cert No",
         "Valid Serial", "NA Serial", "With GPS", "Unique Owners",
         "Owner NA", "Assigned Surveyors", "Status"
     ]
@@ -4934,6 +4946,8 @@ async def export_colony_progress_excel(
     # Grand totals
     grand_total = grand_done = grand_progress = grand_pending = grand_rejected = 0
     grand_valid = grand_na = grand_owner_na = 0
+    grand_res = grand_com = grand_mix = grand_vacant = grand_ind = grand_inst = grand_spec = 0
+    grand_sc_yes = grand_sc_no = 0
     
     for row_num, stat in enumerate(colony_stats, 2):
         total = stat["total"]
@@ -4944,6 +4958,15 @@ async def export_colony_progress_excel(
         valid_serial = stat.get("valid_serial", 0)
         na_serial = stat.get("na_serial", 0)
         owner_na = stat.get("owner_na", 0)
+        cat_res = stat.get("cat_residential", 0)
+        cat_com = stat.get("cat_commercial", 0)
+        cat_mix = stat.get("cat_mix_use", 0)
+        cat_vac = stat.get("cat_vacant_plot", 0)
+        cat_ind = stat.get("cat_industrial", 0)
+        cat_inst = stat.get("cat_institutional", 0)
+        cat_spec = stat.get("cat_special", 0)
+        sc_yes = stat.get("self_cert_yes", 0)
+        sc_no = stat.get("self_cert_no", 0)
         completion = round((done / total * 100), 1) if total > 0 else 0
         unique_owners = len([o for o in stat.get("unique_owners", []) if o and str(o).strip()])
         surveyors = [s for s in stat.get("assigned_employees", []) if s and str(s).strip()]
@@ -4964,6 +4987,15 @@ async def export_colony_progress_excel(
         grand_valid += valid_serial
         grand_na += na_serial
         grand_owner_na += owner_na
+        grand_res += cat_res
+        grand_com += cat_com
+        grand_mix += cat_mix
+        grand_vacant += cat_vac
+        grand_ind += cat_ind
+        grand_inst += cat_inst
+        grand_spec += cat_spec
+        grand_sc_yes += sc_yes
+        grand_sc_no += sc_no
         
         row_data = [
             row_num - 1,
@@ -4974,6 +5006,15 @@ async def export_colony_progress_excel(
             pending,
             rejected,
             f"{completion}%",
+            cat_res,
+            cat_com,
+            cat_mix,
+            cat_vac,
+            cat_ind,
+            cat_inst,
+            cat_spec,
+            sc_yes,
+            sc_no,
             valid_serial,
             na_serial,
             stat["with_gps"],
@@ -4987,7 +5028,7 @@ async def export_colony_progress_excel(
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
-            if col == 15:  # Status column
+            if col == 24:  # Status column
                 if value == "Complete":
                     cell.font = Font(color="2E7D32", bold=True)
                 elif value == "In Progress":
@@ -5000,7 +5041,12 @@ async def export_colony_progress_excel(
     # Add totals row
     total_row = len(colony_stats) + 2
     grand_completion = round((grand_done / grand_total * 100), 1) if grand_total > 0 else 0
-    totals = ["", "GRAND TOTAL", grand_total, grand_done, grand_progress, grand_pending, grand_rejected, f"{grand_completion}%", grand_valid, grand_na, "", "", grand_owner_na, "", ""]
+    totals = [
+        "", "GRAND TOTAL", grand_total, grand_done, grand_progress, grand_pending, grand_rejected, f"{grand_completion}%",
+        grand_res, grand_com, grand_mix, grand_vacant, grand_ind, grand_inst, grand_spec,
+        grand_sc_yes, grand_sc_no,
+        grand_valid, grand_na, "", "", grand_owner_na, "", ""
+    ]
     total_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
     for col, value in enumerate(totals, 1):
         cell = ws.cell(row=total_row, column=col, value=value)
@@ -5009,7 +5055,7 @@ async def export_colony_progress_excel(
         cell.fill = total_fill
     
     # Column widths
-    widths = [6, 30, 14, 12, 12, 12, 10, 12, 12, 10, 10, 12, 10, 35, 14]
+    widths = [6, 30, 14, 12, 12, 12, 10, 12, 12, 12, 10, 12, 12, 14, 16, 14, 12, 12, 10, 10, 12, 10, 35, 14]
     for col, width in enumerate(widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     

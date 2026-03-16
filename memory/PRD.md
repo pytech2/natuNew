@@ -15,32 +15,23 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 ## What's Been Implemented
 - [x] All previous features (multi-tenant, town management, surveyor workflow, PDF generation, etc.)
 - [x] **FIX: Bills to Properties duplicate check** - Only uses property_id (Mar 2026)
-- [x] **FIX: Old photos not showing** - Added photo_url to property projections in submissions & employee properties endpoints (Mar 2026)
-- [x] **FIX: Cleanup Duplicates improved** - Now reassigns submissions before deleting duplicates instead of just protecting them. Also removes orphan properties (Mar 2026)
-- [x] **IMPROVE: Old photo fallback** - Shows clickable link when external image fails to load (Mar 2026)
+- [x] **FIX: Old photos not showing** - Added photo_url to property projections (Mar 2026)
+- [x] **FIX: Cleanup Duplicates improved** - Reassigns submissions before deleting (Mar 2026)
+- [x] **Colony Progress Excel** - Added Category breakdown (Residential, Commercial, Mix Use, Vacant Plot, Industrial, Institutional, Special) + Self Certified Yes/No columns (Mar 2026)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
 - Surveyor: surveyor1 / test123
-- Supervisor: a / test123
-- MC Officer: 1234567890 / test123
 
 ## Prioritized Backlog
 ### P0
-- VPS: User must click "Cleanup Duplicates" button on Bills page after deploying to fix 19072→18547 mismatch
+- VPS: Click "Cleanup Duplicates" after deploy to fix 19072→18547 mismatch
 
 ### P1
 - Surveyor login auto-routing to assigned town
-- Colony Progress Excel: Add "Valid Serial", "NA Serial", "Owner Name NA" columns
 
 ### P2
 - Offline surveyor support
 - ZIP PDF download
 - server.py refactoring into APIRouter modules
 - Map marker shortcut to survey form
-
-## Key API Endpoints
-- `POST /api/admin/properties/cleanup-duplicates` - **IMPROVED**: Reassigns submissions, removes duplicates + orphans
-- `POST /api/admin/bills/copy-to-properties` - Duplicate check by property_id only
-- `GET /api/admin/submissions` - Now includes photo_url in property projection
-- `GET /api/employee/properties` - Now includes photo_url in projection
