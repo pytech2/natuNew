@@ -2809,7 +2809,7 @@ async def list_submissions(
     if prop_ids:
         props_cursor = await get_db().properties.find(
             {"id": {"$in": prop_ids}},
-            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1}
+            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "photo_url": 1, "total_area": 1, "category": 1, "serial_na": 1}
         ).to_list(None)
         props_map = {p["id"]: p for p in props_cursor}
     else:
@@ -3806,7 +3806,8 @@ async def get_employee_properties(
         "bill_sr_no": 1,
         "amount": 1,
         "category": 1,
-        "total_area": 1
+        "total_area": 1,
+        "photo_url": 1
     }
     
     skip = (page - 1) * limit

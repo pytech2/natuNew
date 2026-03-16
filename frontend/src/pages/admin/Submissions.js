@@ -1134,14 +1134,26 @@ export default function Submissions() {
                 {/* Old Property Photo - From Excel Upload */}
                 {selectedSubmission.property_photo_url && (
                   <div className="border-2 border-amber-200 rounded-lg p-2 bg-amber-50">
-                    <div className="text-xs font-semibold text-amber-700 mb-2">📷 OLD Property Photo (Reference)</div>
+                    <div className="text-xs font-semibold text-amber-700 mb-2">OLD Property Photo (Reference)</div>
                     <img
                       src={selectedSubmission.property_photo_url}
                       alt="Old Property"
                       className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-90"
                       onClick={() => window.open(selectedSubmission.property_photo_url, '_blank')}
-                      onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+                      onError={(e) => { 
+                        e.target.style.display = 'none'; 
+                        e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'block');
+                      }}
                     />
+                    <a 
+                      href={selectedSubmission.property_photo_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{display: 'none'}}
+                      className="block text-xs text-blue-600 underline break-all bg-blue-50 p-2 rounded"
+                    >
+                      View Old Photo (external link)
+                    </a>
                   </div>
                 )}
 
