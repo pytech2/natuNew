@@ -1696,7 +1696,7 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    query = {"ward": data.area}
+    query = {"$or": [{"ward": data.area}, {"colony": data.area}]}
     
     # If specific employee, only unassign that employee
     if data.employee_id:
@@ -1705,10 +1705,12 @@ async def bulk_unassign_by_ward(data: BulkUnassignRequest, current_user: dict = 
         
         # Find properties assigned to this employee in this area
         properties = await get_db().properties.find({
-            "ward": data.area,
-            "$or": [
-                {"assigned_employee_id": data.employee_id},
-                {"assigned_employee_ids": data.employee_id}
+            "$and": [
+                {"$or": [{"ward": data.area}, {"colony": data.area}]},
+                {"$or": [
+                    {"assigned_employee_id": data.employee_id},
+                    {"assigned_employee_ids": data.employee_id}
+                ]}
             ]
         }, {"_id": 0, "id": 1, "assigned_employee_ids": 1, "assigned_employee_id": 1}).to_list(None)
         
@@ -4726,6 +4728,7 @@ async def auto_complete_surveys(
     
     selected_employee_id = body.get("employee_id") or employee_id
     selected_employee_name = body.get("employee_name", "")
+    selected_date = body.get("date", "")  # Custom date for submitted_at
     
     # Look up employee name if ID provided
     if selected_employee_id and not selected_employee_name:
@@ -4750,7 +4753,13 @@ async def auto_complete_surveys(
     
     completed_count = 0
     skipped_count = 0
-    timestamp = datetime.now(timezone.utc).isoformat()
+    
+    # Use selected date or current timestamp
+    if selected_date:
+        timestamp = f"{selected_date}T12:00:00+00:00"
+    else:
+        timestamp = datetime.now(timezone.utc).isoformat()
+    
     na_values = {"", "na", "n/a", "none", "unknown", "-", "nil"}
     
     bulk_submissions = []
@@ -4774,12 +4783,32 @@ async def auto_complete_surveys(
         if old_photo and str(old_photo).strip():
             photos.append({"photo_type": "HOUSE", "file_url": old_photo})
         
-        # Handle owner name - if NA/empty, set receiver as "Family Member"
+        # Handle owner name logic
         owner_name = str(prop.get("owner_name", "")).strip()
         is_owner_na = owner_name.lower() in na_values or not owner_name
         
-        receiver_name = "Family Member" if is_owner_na else owner_name
-        relation = "Family Member" if is_owner_na else "Self"
+        # Check if property is a vacant plot (from category or other field)
+        is_vacant = False
+        category = str(prop.get("category", "")).strip().lower()
+        if "vacant" in category or "plot" in category:
+            is_vacant = True
+        
+        # Set receiver name, relation, special condition based on owner status
+        if is_owner_na and is_vacant:
+            receiver_name = "Vacant Plot"
+            relation = "Other"
+            special_condition = "vacant_plot"
+            house_status = "vacant_plot"
+        elif is_owner_na:
+            receiver_name = "Property Locked"
+            relation = "Other"
+            special_condition = "property_locked"
+            house_status = "pakka"
+        else:
+            receiver_name = owner_name
+            relation = "Self"
+            special_condition = ""
+            house_status = "pakka"
         
         # Use selected employee or property's assigned employee
         emp_id = selected_employee_id or prop.get("assigned_employee_id", "auto_complete")
@@ -4796,12 +4825,13 @@ async def auto_complete_surveys(
             "receiver_mobile": prop.get("mobile", ""),
             "relation": relation,
             "self_satisfied": "yes",
-            "house_status": "pakka",
+            "house_status": house_status,
             "property_use": "residential",
+            "special_condition": special_condition,
             "photos": photos,
             "latitude": prop.get("latitude"),
             "longitude": prop.get("longitude"),
-            "remarks": "Auto-completed from old data",
+            "remarks": "",
             "status": "Approved",
             "submitted_at": timestamp,
             "approved_at": timestamp,
@@ -4844,6 +4874,7 @@ async def export_colony_progress_excel(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Get all colonies with their property counts using aggregation
+    na_owner_list = [None, "", "NA", "N/A", "na", "n/a", "UNKNOWN", "unknown"]
     prop_pipeline = [
         {"$match": {"ward": {"$exists": True, "$ne": None, "$ne": ""}}},
         {"$group": {
@@ -4857,6 +4888,9 @@ async def export_colony_progress_excel(
                 {"$ne": ["$latitude", None]},
                 {"$ne": ["$longitude", None]}
             ]}, 1, 0]}},
+            "valid_serial": {"$sum": {"$cond": [{"$and": [{"$ne": ["$serial_na", True]}, {"$gt": ["$serial_number", 0]}]}, 1, 0]}},
+            "na_serial": {"$sum": {"$cond": [{"$eq": ["$serial_na", True]}, 1, 0]}},
+            "owner_na": {"$sum": {"$cond": [{"$in": ["$owner_name", na_owner_list]}, 1, 0]}},
             "unique_owners": {"$addToSet": "$owner_name"},
             "assigned_employees": {"$addToSet": "$assigned_employee_name"}
         }},
@@ -4878,7 +4912,8 @@ async def export_colony_progress_excel(
     headers = [
         "Sr No", "Colony Name", "Total Properties", "Survey Done", 
         "In Progress", "Pending", "Rejected", "Completion %",
-        "With GPS", "Unique Owners", "Assigned Surveyors", "Status"
+        "Valid Serial", "NA Serial", "With GPS", "Unique Owners",
+        "Owner NA", "Assigned Surveyors", "Status"
     ]
     
     header_font = Font(bold=True, color="FFFFFF")
@@ -4897,6 +4932,7 @@ async def export_colony_progress_excel(
     
     # Grand totals
     grand_total = grand_done = grand_progress = grand_pending = grand_rejected = 0
+    grand_valid = grand_na = grand_owner_na = 0
     
     for row_num, stat in enumerate(colony_stats, 2):
         total = stat["total"]
@@ -4904,6 +4940,9 @@ async def export_colony_progress_excel(
         in_prog = stat["in_progress"]
         pending = stat["pending"]
         rejected = stat["rejected"]
+        valid_serial = stat.get("valid_serial", 0)
+        na_serial = stat.get("na_serial", 0)
+        owner_na = stat.get("owner_na", 0)
         completion = round((done / total * 100), 1) if total > 0 else 0
         unique_owners = len([o for o in stat.get("unique_owners", []) if o and str(o).strip()])
         surveyors = [s for s in stat.get("assigned_employees", []) if s and str(s).strip()]
@@ -4921,6 +4960,9 @@ async def export_colony_progress_excel(
         grand_progress += in_prog
         grand_pending += pending
         grand_rejected += rejected
+        grand_valid += valid_serial
+        grand_na += na_serial
+        grand_owner_na += owner_na
         
         row_data = [
             row_num - 1,
@@ -4931,8 +4973,11 @@ async def export_colony_progress_excel(
             pending,
             rejected,
             f"{completion}%",
+            valid_serial,
+            na_serial,
             stat["with_gps"],
             unique_owners,
+            owner_na,
             ", ".join(surveyors[:5]) + (f" +{len(surveyors)-5}" if len(surveyors) > 5 else ""),
             status_text
         ]
@@ -4941,22 +4986,20 @@ async def export_colony_progress_excel(
             cell = ws.cell(row=row_num, column=col, value=value)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left')
-            # Color status column
-            if col == 12:
+            if col == 15:  # Status column
                 if value == "Complete":
                     cell.font = Font(color="2E7D32", bold=True)
                 elif value == "In Progress":
                     cell.font = Font(color="E65100", bold=True)
                 else:
                     cell.font = Font(color="C62828", bold=True)
-            # Color completion %
             if col == 8:
                 cell.alignment = Alignment(horizontal='center')
     
     # Add totals row
     total_row = len(colony_stats) + 2
     grand_completion = round((grand_done / grand_total * 100), 1) if grand_total > 0 else 0
-    totals = ["", "GRAND TOTAL", grand_total, grand_done, grand_progress, grand_pending, grand_rejected, f"{grand_completion}%", "", "", "", ""]
+    totals = ["", "GRAND TOTAL", grand_total, grand_done, grand_progress, grand_pending, grand_rejected, f"{grand_completion}%", grand_valid, grand_na, "", "", grand_owner_na, "", ""]
     total_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
     for col, value in enumerate(totals, 1):
         cell = ws.cell(row=total_row, column=col, value=value)
@@ -4965,7 +5008,7 @@ async def export_colony_progress_excel(
         cell.fill = total_fill
     
     # Column widths
-    widths = [6, 30, 14, 12, 12, 12, 10, 12, 10, 12, 35, 14]
+    widths = [6, 30, 14, 12, 12, 12, 10, 12, 12, 10, 10, 12, 10, 35, 14]
     for col, width in enumerate(widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
     

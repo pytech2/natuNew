@@ -135,6 +135,7 @@ export default function BillsPage() {
   const [autoCompleting, setAutoCompleting] = useState(false);
   const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
   const [autoCompleteEmployee, setAutoCompleteEmployee] = useState('');
+  const [autoCompleteDate, setAutoCompleteDate] = useState('');
   const [deletingSelfCert, setDeletingSelfCert] = useState(false);
 
   // Old Photos Upload state
@@ -508,7 +509,8 @@ export default function BillsPage() {
         `${API_URL}/admin/auto-complete-surveys?${params.toString()}`,
         {
           employee_id: autoCompleteEmployee || undefined,
-          employee_name: selectedEmp?.name || undefined
+          employee_name: selectedEmp?.name || undefined,
+          date: autoCompleteDate || undefined
         },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
@@ -517,6 +519,7 @@ export default function BillsPage() {
       toast.success(`${data.completed} surveys auto-completed! (${data.skipped} skipped)`);
       setAutoCompleteDialog(false);
       setAutoCompleteEmployee('');
+      setAutoCompleteDate('');
       fetchBills();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to auto-complete surveys');
@@ -2185,11 +2188,24 @@ export default function BillsPage() {
                     </select>
                   </div>
 
+                  {/* Date Selector */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Survey Date</label>
+                    <input
+                      type="date"
+                      value={autoCompleteDate}
+                      onChange={(e) => setAutoCompleteDate(e.target.value)}
+                      className="w-full border rounded-md p-2 text-sm"
+                    />
+                    <p className="text-xs text-slate-500">Leave empty for today's date</p>
+                  </div>
+
                   <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
                     <p className="font-semibold mb-1">Auto-fill Rules:</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Owner Name available → Receiver = Owner Name, Relation = Self</li>
-                      <li>Owner Name NA/empty → Receiver = "Family Member", Relation = "Family Member"</li>
+                      <li>Owner Name NA → <strong>Property Locked</strong> (special condition)</li>
+                      <li>Owner NA + Vacant Plot → Receiver = "Vacant Plot"</li>
                       <li>Status = <strong>Approved</strong></li>
                       <li>Old photo attached if available</li>
                     </ul>
