@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://multi-town-survey.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://surveyor-mobile-sys.preview.emergentagent.com').rstrip('/')
 
 # Admin credentials
 ADMIN_USERNAME = "admin"
