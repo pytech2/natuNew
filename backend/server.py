@@ -3178,6 +3178,8 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
     
     if data.remarks:
         update_data["review_remarks"] = data.remarks
+    elif data.action == "APPROVE":
+        update_data["review_remarks"] = ""
     
     await get_db().submissions.update_one(
         {"id": data.submission_id},

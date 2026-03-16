@@ -305,7 +305,7 @@ export default function Submissions() {
           await axios.post(`${API_URL}/admin/submissions/approve`, {
             submission_id: id,
             action: 'APPROVE',
-            remarks: 'Bulk approved'
+            remarks: ''
           }, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -1169,8 +1169,8 @@ export default function Submissions() {
                   </div>
                 )}
 
-                {/* Review Remarks */}
-                {selectedSubmission.review_remarks && (
+                {/* Review Remarks - only show for Rejected status with actual rejection remarks */}
+                {selectedSubmission.review_remarks && selectedSubmission.status === 'Rejected' && (
                   <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs">
                     <span className="text-red-600">Rejection Remarks:</span>
                     <span className="text-red-800 ml-1">{selectedSubmission.review_remarks}</span>
