@@ -2735,6 +2735,7 @@ async def list_submissions(
         search_query = {
             "$or": [
                 {"id": {"$regex": search_term, "$options": "i"}},
+                {"property_id": {"$regex": search_term, "$options": "i"}},
                 {"owner_name": {"$regex": search_term, "$options": "i"}},
                 {"mobile": {"$regex": search_term, "$options": "i"}},
                 {"bill_sr_no": {"$regex": search_term, "$options": "i"}}
