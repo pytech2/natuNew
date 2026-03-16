@@ -6123,17 +6123,8 @@ async def copy_bills_to_properties(
         raise HTTPException(status_code=404, detail="No bills found to copy")
     
     # ALWAYS get existing property_ids to prevent duplicates
-    existing_properties = await get_db().properties.find({}, {"property_id": 1, "owner_name": 1, "mobile": 1, "colony": 1, "_id": 0}).to_list(None)
+    existing_properties = await get_db().properties.find({}, {"property_id": 1, "_id": 0}).to_list(None)
     existing_property_ids = set(p.get("property_id", "") for p in existing_properties if p.get("property_id"))
-    
-    # ALWAYS build owner+mobile+colony key set to catch duplicates without property_id
-    existing_keys = set()
-    for p in existing_properties:
-        owner = (p.get("owner_name") or "").strip().upper()
-        mobile = (p.get("mobile") or "").strip()
-        colony_name = (p.get("colony") or "").strip().upper()
-        if owner and mobile:
-            existing_keys.add(f"{owner}_{mobile}_{colony_name}")
     
     # Track GPS coordinates to skip duplicates
     seen_gps = set()
@@ -6208,21 +6199,10 @@ async def copy_bills_to_properties(
                     continue
                 seen_gps.add(gps_key)
         
-        # ALWAYS check for duplicate by property_id (prevents re-adding same property)
+        # Check for duplicate by property_id only (same person can own multiple properties)
         if bill_prop_id and bill_prop_id in existing_property_ids:
             skipped_duplicates += 1
             continue
-        
-        # ALWAYS check duplicates by name+mobile+colony
-        owner = (bill.get("owner_name") or "").strip().upper()
-        mobile = (bill.get("mobile") or "").strip()
-        bill_colony = (bill.get("colony") or "").strip().upper()
-        if owner and mobile:
-            key = f"{owner}_{mobile}_{bill_colony}"
-            if key in existing_keys:
-                skipped_duplicates += 1
-                continue
-            existing_keys.add(key)
         
         # Use the actual BillSrNo from PDF, or mark as N/A
         bill_serial = bill.get("serial_number", 0)
