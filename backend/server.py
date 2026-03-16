@@ -6325,20 +6325,20 @@ async def copy_bills_to_properties(
 async def cleanup_duplicate_properties(
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove duplicate properties, keeping ones with submissions. Sync with bills."""
+    """Remove duplicate properties and orphans. Reassign submissions before deleting."""
     if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="Admin access required")
     
     town_db = get_db()
     
-    # Step 1: Get all submission property_record_ids (these must be protected)
+    # Step 1: Build submission map - property internal id -> has submission
     submission_prop_ids = set()
     subs = await town_db.submissions.find({}, {"_id": 0, "property_record_id": 1}).to_list(None)
     for s in subs:
         if s.get("property_record_id"):
             submission_prop_ids.add(s["property_record_id"])
     
-    # Step 2: Find all properties grouped by property_id
+    # Step 2: Find all properties grouped by property_id (the human-readable ID from bill)
     pipeline = [
         {"$group": {
             "_id": "$property_id",
@@ -6351,63 +6351,66 @@ async def cleanup_duplicate_properties(
     duplicates = await town_db.properties.aggregate(pipeline).to_list(None)
     
     total_removed = 0
-    protected = 0
+    reassigned_submissions = 0
     
     for dup in duplicates:
         prop_ids = dup["ids"]
         
-        # Decide which to keep: prefer the one with submission, then non-Pending, then first
+        # Decide which to keep: prefer one with submission, then best status, then first
         keep_id = None
+        # First pass: find one with submission
         for pid in prop_ids:
             if pid in submission_prop_ids:
                 keep_id = pid
                 break
         
         if not keep_id:
-            # Keep the one with best status (Approved > In Progress > Pending)
+            # Keep the one with best status
             for pid, status in zip(prop_ids, dup["statuses"]):
-                if status in ["Approved", "Completed"]:
+                if status in ["Approved", "Completed", "Submitted"]:
                     keep_id = pid
                     break
             if not keep_id:
-                for pid, status in zip(prop_ids, dup["statuses"]):
-                    if status == "In Progress":
-                        keep_id = pid
-                        break
-            if not keep_id:
                 keep_id = prop_ids[0]
         
-        # Delete all others
+        # All others will be deleted
         to_delete = [pid for pid in prop_ids if pid != keep_id]
         
-        # Safety: don't delete any with submissions
-        safe_to_delete = [pid for pid in to_delete if pid not in submission_prop_ids]
-        protected += len(to_delete) - len(safe_to_delete)
+        # Reassign any submissions from to_delete properties to the kept property
+        for del_pid in to_delete:
+            if del_pid in submission_prop_ids:
+                update_result = await town_db.submissions.update_many(
+                    {"property_record_id": del_pid},
+                    {"$set": {"property_record_id": keep_id}}
+                )
+                reassigned_submissions += update_result.modified_count
         
-        if safe_to_delete:
-            result = await town_db.properties.delete_many({"id": {"$in": safe_to_delete}})
+        # Now safe to delete all duplicates
+        if to_delete:
+            result = await town_db.properties.delete_many({"id": {"$in": to_delete}})
             total_removed += result.deleted_count
     
-    # Step 3: Also remove properties that have NO matching bill (orphan properties)
-    # Get all bill property_ids
+    # Step 3: Remove orphan properties (property_id NOT in any bill)
     bill_pids = set()
     bills = await town_db.bills.find({}, {"_id": 0, "property_id": 1}).to_list(None)
     for b in bills:
         if b.get("property_id"):
             bill_pids.add(b["property_id"])
     
-    # Find properties with property_ids NOT in bills (orphans) - but protect ones with submissions
     orphan_count = 0
     if bill_pids:
+        # Refresh submission_prop_ids after reassignment
+        subs_fresh = await town_db.submissions.find({}, {"_id": 0, "property_record_id": 1}).to_list(None)
+        fresh_sub_pids = set(s["property_record_id"] for s in subs_fresh if s.get("property_record_id"))
+        
         all_props = await town_db.properties.find({}, {"_id": 0, "id": 1, "property_id": 1}).to_list(None)
         orphan_ids = []
         for p in all_props:
             pid = p.get("property_id", "")
-            if pid and pid not in bill_pids and p["id"] not in submission_prop_ids:
+            if pid and pid not in bill_pids and p["id"] not in fresh_sub_pids:
                 orphan_ids.append(p["id"])
         
         if orphan_ids:
-            # Delete in batches
             for i in range(0, len(orphan_ids), 500):
                 batch = orphan_ids[i:i+500]
                 result = await town_db.properties.delete_many({"id": {"$in": batch}})
@@ -6418,10 +6421,10 @@ async def cleanup_duplicate_properties(
     final_bills = await town_db.bills.count_documents({})
     
     return {
-        "message": f"Cleanup complete! Removed {total_removed} duplicates + {orphan_count} orphans. Protected {protected} with submissions.",
+        "message": f"Cleanup complete! Removed {total_removed} duplicates + {orphan_count} orphans. Reassigned {reassigned_submissions} submissions.",
         "duplicates_removed": total_removed,
         "orphans_removed": orphan_count,
-        "protected_with_submissions": protected,
+        "reassigned_submissions": reassigned_submissions,
         "final_properties_count": final_props,
         "final_bills_count": final_bills,
         "synced": final_props <= final_bills

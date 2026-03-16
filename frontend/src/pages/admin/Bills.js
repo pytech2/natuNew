@@ -913,14 +913,14 @@ export default function BillsPage() {
   };
 
   const handleCleanupDuplicates = async () => {
-    if (!window.confirm('This will remove duplicate properties and sync with PDF Bills data. Submissions will be protected. Continue?')) return;
+    if (!window.confirm('This will:\n1. Remove duplicate properties (same Property ID)\n2. Remove orphan properties (not in PDF Bills)\n3. Reassign submissions to kept properties\n\nProperties count will match Bills count after this. Continue?')) return;
     setCleaningDuplicates(true);
     try {
       const response = await axios.post(`${API_URL}/admin/properties/cleanup-duplicates`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const d = response.data;
-      toast.success(`${d.message}`);
+      toast.success(`${d.message}\nProperties: ${d.final_properties_count} | Bills: ${d.final_bills_count}`);
       fetchBills();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Cleanup failed');
