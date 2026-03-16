@@ -190,9 +190,15 @@ export default function PropertyMap() {
   const [filters, setFilters] = useState({
     colony: '',
     category: '',
-    status: '', // Status filter (Pending, Completed, Rejected)
-    employee: '', // Employee filter
-    search: ''
+    status: '',
+    employee: '',
+    search: '',
+    houseStatus: '',
+    propertyUse: '',
+    specialCondition: '',
+    selfSatisfied: '',
+    hasSubmission: '',
+    hasOldPhoto: ''
   });
 
   // Filtered colonies based on search
@@ -390,20 +396,46 @@ export default function PropertyMap() {
   const applyFilters = () => {
     let filtered = [...properties];
     
-    // Colony filter already applied in fetchPropertiesByColony
-    
     if (filters.category) {
       filtered = filtered.filter(p => p.category === filters.category);
     }
     
-    // NEW: Status filter for Pending, Completed, Rejected, etc.
     if (filters.status) {
       filtered = filtered.filter(p => p.status === filters.status);
     }
     
-    // NEW: Employee filter
     if (filters.employee) {
       filtered = filtered.filter(p => p.assigned_employee_id === filters.employee);
+    }
+    
+    if (filters.houseStatus) {
+      filtered = filtered.filter(p => p.sub_house_status === filters.houseStatus);
+    }
+    
+    if (filters.propertyUse) {
+      filtered = filtered.filter(p => p.sub_property_use === filters.propertyUse);
+    }
+    
+    if (filters.specialCondition) {
+      filtered = filtered.filter(p => p.sub_special_condition === filters.specialCondition);
+    }
+    
+    if (filters.selfSatisfied === 'yes') {
+      filtered = filtered.filter(p => p.sub_self_satisfied === true);
+    } else if (filters.selfSatisfied === 'no') {
+      filtered = filtered.filter(p => p.sub_self_satisfied === false);
+    }
+    
+    if (filters.hasSubmission === 'yes') {
+      filtered = filtered.filter(p => p.has_submission === true);
+    } else if (filters.hasSubmission === 'no') {
+      filtered = filtered.filter(p => p.has_submission !== true);
+    }
+    
+    if (filters.hasOldPhoto === 'yes') {
+      filtered = filtered.filter(p => p.photo_url && p.photo_url.trim() !== '');
+    } else if (filters.hasOldPhoto === 'no') {
+      filtered = filtered.filter(p => !p.photo_url || p.photo_url.trim() === '');
     }
     
     if (filters.search) {
@@ -414,7 +446,6 @@ export default function PropertyMap() {
         p.owner_name?.toLowerCase().includes(searchLower) ||
         p.address?.toLowerCase().includes(searchLower) ||
         p.mobile?.includes(filters.search) ||
-        // Search by serial number
         String(p.serial_number || '').includes(searchNum) ||
         p.bill_sr_no?.toLowerCase().includes(searchLower)
       );
@@ -430,8 +461,7 @@ export default function PropertyMap() {
   };
 
   const clearFilters = () => {
-    setFilters({ colony: '', category: '', status: '', employee: '', search: '' });
-    // Keep map visible, just clear properties
+    setFilters({ colony: '', category: '', status: '', employee: '', search: '', houseStatus: '', propertyUse: '', specialCondition: '', selfSatisfied: '', hasSubmission: '', hasOldPhoto: '' });
     setProperties([]);
     setFilteredProperties([]);
     setEmployeeStats(null);
@@ -815,8 +845,8 @@ export default function PropertyMap() {
             {filters.colony && (
             <Card>
               <CardContent className="py-4">
-                <div className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Colony/Area</Label>
                     <Select 
                       value={filters.colony} 
@@ -833,8 +863,7 @@ export default function PropertyMap() {
                     </Select>
                   </div>
               
-                  {/* Employee/Surveyor Filter */}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Surveyor</Label>
                     <Select 
                       value={filters.employee} 
@@ -854,7 +883,7 @@ export default function PropertyMap() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Category</Label>
                     <Select 
                       value={filters.category} 
@@ -872,8 +901,7 @@ export default function PropertyMap() {
                     </Select>
                   </div>
                   
-                  {/* Status Filter */}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Survey Status</Label>
                     <Select 
                       value={filters.status} 
@@ -884,15 +912,132 @@ export default function PropertyMap() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value=" ">All Status</SelectItem>
-                        <SelectItem value="Pending">🔴 Pending</SelectItem>
-                        <SelectItem value="Completed">🟡 Completed</SelectItem>
-                        <SelectItem value="Approved">🟢 Approved</SelectItem>
-                        <SelectItem value="Rejected">🟠 Rejected</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="In Progress">In Progress</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="Approved">Approved</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-              
-                  <div className="space-y-2">
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">House Status</Label>
+                    <Select 
+                      value={filters.houseStatus} 
+                      onValueChange={(v) => setFilters({ ...filters, houseStatus: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="Open">Open</SelectItem>
+                        <SelectItem value="Lock">Lock</SelectItem>
+                        <SelectItem value="Vacant Plot">Vacant Plot</SelectItem>
+                        <SelectItem value="Under Construction">Under Construction</SelectItem>
+                        <SelectItem value="Demolished">Demolished</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Property Use</Label>
+                    <Select 
+                      value={filters.propertyUse} 
+                      onValueChange={(v) => setFilters({ ...filters, propertyUse: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="Residential">Residential</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                        <SelectItem value="Mix Use">Mix Use</SelectItem>
+                        <SelectItem value="Industrial">Industrial</SelectItem>
+                        <SelectItem value="Institutional">Institutional</SelectItem>
+                        <SelectItem value="Agriculture">Agriculture</SelectItem>
+                        <SelectItem value="Vacant Plot">Vacant Plot</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Special Condition</Label>
+                    <Select 
+                      value={filters.specialCondition} 
+                      onValueChange={(v) => setFilters({ ...filters, specialCondition: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                        <SelectItem value="Dispute">Dispute</SelectItem>
+                        <SelectItem value="Court Case">Court Case</SelectItem>
+                        <SelectItem value="Government Property">Govt Property</SelectItem>
+                        <SelectItem value="Religious Place">Religious</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Row 2: More filters */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end mt-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Self Satisfied</Label>
+                    <Select 
+                      value={filters.selfSatisfied} 
+                      onValueChange={(v) => setFilters({ ...filters, selfSatisfied: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Survey Done</Label>
+                    <Select 
+                      value={filters.hasSubmission} 
+                      onValueChange={(v) => setFilters({ ...filters, hasSubmission: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="yes">Done</SelectItem>
+                        <SelectItem value="no">Not Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Old Photo</Label>
+                    <Select 
+                      value={filters.hasOldPhoto} 
+                      onValueChange={(v) => setFilters({ ...filters, hasOldPhoto: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">All</SelectItem>
+                        <SelectItem value="yes">Has Photo</SelectItem>
+                        <SelectItem value="no">No Photo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Search</Label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -905,7 +1050,7 @@ export default function PropertyMap() {
                     </div>
                   </div>
               
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Map Type</Label>
                     <Select value={mapType} onValueChange={setMapType}>
                       <SelectTrigger>
@@ -918,9 +1063,9 @@ export default function PropertyMap() {
                     </Select>
                   </div>
               
-                  <Button variant="outline" onClick={clearFilters} size="sm">
+                  <Button variant="outline" onClick={clearFilters} size="sm" className="mt-auto">
                     <Filter className="w-4 h-4 mr-2" />
-                    Clear
+                    Clear All
                   </Button>
                 </div>
             

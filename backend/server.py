@@ -774,10 +774,10 @@ async def get_map_properties(
     colony: Optional[str] = None,
     status: Optional[str] = None,
     hide_completed: bool = False,
-    limit: int = 5000,  # Increased from 500 to handle larger colonies
+    limit: int = 5000,
     current_user: dict = Depends(get_current_user)
 ):
-    """Fast lightweight endpoint for map markers - NO DUPLICATES, shows submission status"""
+    """Fast endpoint for map markers with submission data for filtering"""
     
     query = {"latitude": {"$ne": None}, "longitude": {"$ne": None}}
     
@@ -787,16 +787,13 @@ async def get_map_properties(
             {"ward": {"$regex": f"^{re.escape(colony)}$", "$options": "i"}}
         ]
     
-    # Filter by status if provided
     if status and status.strip():
         query["status"] = status
     
-    # Hide completed/approved if requested
     if hide_completed:
         if "status" not in query:
             query["status"] = {"$nin": ["Completed", "Approved", "In Progress"]}
     
-    # For non-admin users, filter by assigned properties
     if current_user["role"] not in ["ADMIN", "SUPERVISOR", "MC_OFFICER"]:
         if "$or" in query:
             query["$and"] = [
@@ -812,46 +809,56 @@ async def get_map_properties(
                 {"assigned_employee_ids": current_user["id"]}
             ]
     
-    # Ultra-minimal projection for maximum speed
     projection = {
-        "_id": 0,
-        "id": 1,
-        "latitude": 1,
-        "longitude": 1,
-        "status": 1,
-        "serial_number": 1,
-        "bill_sr_no": 1,
-        "property_id": 1,
-        "owner_name": 1,
-        "colony": 1,
-        "ward": 1,
-        "mobile": 1,
-        "assigned_employee_id": 1,
-        "assigned_employee_name": 1,
-        "assigned_employee_ids": 1,
-        "category": 1,
-        "total_area": 1,
-        "amount": 1,
-        "address": 1
+        "_id": 0, "id": 1, "latitude": 1, "longitude": 1, "status": 1,
+        "serial_number": 1, "bill_sr_no": 1, "property_id": 1,
+        "owner_name": 1, "colony": 1, "ward": 1, "mobile": 1,
+        "assigned_employee_id": 1, "assigned_employee_name": 1,
+        "assigned_employee_ids": 1, "category": 1, "total_area": 1,
+        "amount": 1, "address": 1, "photo_url": 1, "self_certified": 1
     }
     
     properties = await get_db().properties.find(query, projection).limit(limit).to_list(limit)
     
-    # Remove duplicates - keep unique by property_id ONLY
+    # Remove duplicates
     seen_property_ids = set()
     unique_properties = []
-    
     for prop in properties:
         prop_id = prop.get("property_id", "")
-        
-        # Skip if duplicate property_id
         if prop_id and prop_id in seen_property_ids:
             continue
-        
         if prop_id:
             seen_property_ids.add(prop_id)
-        
         unique_properties.append(prop)
+    
+    # Enrich with submission data
+    prop_ids = [p["id"] for p in unique_properties]
+    if prop_ids:
+        subs = await get_db().submissions.find(
+            {"property_record_id": {"$in": prop_ids}},
+            {"_id": 0, "property_record_id": 1, "house_status": 1, 
+             "property_use": 1, "special_condition": 1, "self_satisfied": 1,
+             "receiver_name": 1, "remarks": 1, "employee_name": 1,
+             "property_status": 1, "submitted_at": 1, "status": 1}
+        ).to_list(None)
+        sub_map = {s["property_record_id"]: s for s in subs}
+        
+        for prop in unique_properties:
+            sub = sub_map.get(prop["id"])
+            if sub:
+                prop["sub_house_status"] = sub.get("house_status", "")
+                prop["sub_property_use"] = sub.get("property_use", "")
+                prop["sub_special_condition"] = sub.get("special_condition", "")
+                prop["sub_self_satisfied"] = sub.get("self_satisfied", True)
+                prop["sub_receiver_name"] = sub.get("receiver_name", "")
+                prop["sub_remarks"] = sub.get("remarks", "")
+                prop["sub_employee_name"] = sub.get("employee_name", "")
+                prop["sub_property_status"] = sub.get("property_status", "")
+                prop["sub_submitted_at"] = sub.get("submitted_at", "")
+                prop["sub_status"] = sub.get("status", "")
+                prop["has_submission"] = True
+            else:
+                prop["has_submission"] = False
     
     return {
         "properties": unique_properties,
