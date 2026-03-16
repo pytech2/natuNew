@@ -208,6 +208,7 @@ export default function PropertyMap() {
 
   // Employee stats for selected colony
   const [employeeStats, setEmployeeStats] = useState(null);
+  const [surveySurveyors, setSurveySurveyors] = useState([]);
 
   // Stats
   const [stats, setStats] = useState({
@@ -400,6 +401,19 @@ export default function PropertyMap() {
         selfSatisfiedNo: props.filter(p => p.sub_self_satisfied === false).length,
         hasOldPhoto: props.filter(p => p.photo_url && p.photo_url.trim() !== '').length,
       });
+
+      // Get actual surveyors who DID the survey (from submissions)
+      const surveyorMap = {};
+      props.forEach(p => {
+        if (p.sub_employee_name && p.has_submission) {
+          const name = p.sub_employee_name;
+          if (!surveyorMap[name]) {
+            surveyorMap[name] = { name, count: 0 };
+          }
+          surveyorMap[name].count++;
+        }
+      });
+      setSurveySurveyors(Object.values(surveyorMap).sort((a, b) => b.count - a.count));
       
     } catch (error) {
       toast.error('Failed to load properties');
@@ -916,12 +930,23 @@ export default function PropertyMap() {
                     <p className="text-xs text-purple-600">Old Photo</p>
                   </div>
                 </div>
-                {/* Surveyor Names */}
-                {employeeStats && Object.keys(employeeStats).length > 0 && (
+                {/* Surveyor Names - Who actually did the survey */}
+                {surveySurveyors.length > 0 && (
                   <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2 flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-indigo-700">Surveyors:</span>
+                    <span className="text-xs font-semibold text-indigo-700">Survey Done By:</span>
+                    {surveySurveyors.map(s => (
+                      <span key={s.name} className="bg-white border border-indigo-200 rounded-full px-3 py-0.5 text-xs font-medium text-indigo-700">
+                        {s.name} ({s.count})
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* Assigned Surveyors */}
+                {employeeStats && Object.keys(employeeStats).length > 0 && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-600">Assigned:</span>
                     {Object.values(employeeStats).map(emp => (
-                      <span key={emp.id} className="bg-white border border-indigo-200 rounded-full px-3 py-0.5 text-xs font-medium text-indigo-700">
+                      <span key={emp.id} className="bg-white border border-slate-200 rounded-full px-3 py-0.5 text-xs font-medium text-slate-600">
                         {emp.name} ({emp.completed}/{emp.total})
                       </span>
                     ))}
