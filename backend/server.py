@@ -7081,7 +7081,9 @@ async def upload_old_photos(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Upload old-photo Excel file to update property photo_url for the current town"""
+    """Upload old-photo Excel file to update property photo_url for the current town.
+    Expected format: Column A = Property ID, Column B = Photo URL, Row 1 = Header
+    """
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -7096,9 +7098,9 @@ async def upload_old_photos(
     skipped = 0
     duplicates = 0
     
-    for idx in range(2, len(df)):  # Skip header rows (0 and 1)
-        prop_id = str(df.iloc[idx, 1] if pd.notna(df.iloc[idx, 1]) else "").strip()
-        photo_url = str(df.iloc[idx, 7] if pd.notna(df.iloc[idx, 7]) else "").strip()
+    for idx in range(1, len(df)):  # Skip 1 header row (row 0)
+        prop_id = str(df.iloc[idx, 0] if pd.notna(df.iloc[idx, 0]) else "").strip()
+        photo_url = str(df.iloc[idx, 1] if pd.notna(df.iloc[idx, 1]) else "").strip()
         
         if not prop_id or not photo_url or not photo_url.startswith("http"):
             skipped += 1
