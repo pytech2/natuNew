@@ -4953,7 +4953,7 @@ async def export_colony_progress_excel(
         "Industrial", "Institutional", "Special Category",
         "Self Cert Yes", "Self Cert No",
         "Valid Serial", "NA Serial", "With GPS", "Unique Owners",
-        "Owner NA", "Assigned Surveyors", "Status"
+        "Owner NA", "Survey Done By", "Status"
     ]
     
     header_font = Font(bold=True, color="FFFFFF")
@@ -4996,7 +4996,7 @@ async def export_colony_progress_excel(
         sc_no = stat.get("self_cert_no", 0)
         completion = round((done / total * 100), 1) if total > 0 else 0
         unique_owners = len([o for o in stat.get("unique_owners", []) if o and str(o).strip()])
-        surveyors = [s for s in stat.get("assigned_employees", []) if s and str(s).strip()]
+        surveyors = sorted(colony_surveyors.get(stat["_id"], set()))
         
         # Determine colony status
         if done == total and total > 0:
