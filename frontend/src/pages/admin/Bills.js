@@ -2412,9 +2412,9 @@ export default function BillsPage() {
                   onClick={() => {
                     const sampleData = [
                       ['', 'Property ID', '', '', '', '', '', 'Photo URL'],
-                      ['', '(Col B)', '', '', '', '', '', '(Col H)'],
-                      ['1', '3UYE8N55', '', '', '', '', '', 'https://example.com/photo1.jpg'],
-                      ['2', '3UUOCQ65', '', '', '', '', '', 'https://example.com/photo2.jpg'],
+                      ['Property ID', 'Photo URL'],
+                      ['3UYE8N55', 'https://example.com/photo1.jpg'],
+                      ['3UUOCQ65', 'https://example.com/photo2.jpg'],
                     ];
                     const csvContent = sampleData.map(row => row.join(',')).join('\n');
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2432,7 +2432,7 @@ export default function BillsPage() {
                   Download Sample Excel
                 </Button>
                 <p className="text-xs text-slate-500 mt-2">
-                  Property ID in Column B, Photo URL in Column H
+                  Column A = Property ID, Column B = Photo URL
                 </p>
               </div>
 
