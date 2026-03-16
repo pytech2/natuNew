@@ -819,7 +819,7 @@ export default function Submissions() {
                         <th className="w-10 px-2 py-3">
                           <input
                             type="checkbox"
-                            checked={selectedIds.length > 0 && selectedIds.length === submissions.filter(s => s.status === 'Pending' || s.status === 'Completed' || !s.status).length}
+                            checked={selectedIds.length > 0 && selectedIds.length === submissions.length}
                             onChange={(e) => e.target.checked ? selectAllPending() : clearSelection()}
                             className="w-4 h-4 rounded border-slate-300"
                           />
@@ -843,7 +843,7 @@ export default function Submissions() {
                       <tr key={sub.id} className={`hover:bg-slate-50 transition-colors text-sm ${selectedIds.includes(sub.id) ? 'bg-emerald-50' : ''}`}>
                         {canApproveReject && (
                           <td className="px-2 py-3">
-                            {(sub.status === 'Pending' || sub.status === 'Completed' || !sub.status) && (
+                            {(sub.status === 'Pending' || sub.status === 'Completed' || sub.status === 'Approved' || sub.status === 'Rejected' || !sub.status) && (
                               <input
                                 type="checkbox"
                                 checked={selectedIds.includes(sub.id)}
@@ -1237,24 +1237,28 @@ export default function Submissions() {
                       Edit Details
                     </Button>
                   )}
-                  {canApproveReject && (!selectedSubmission.status || selectedSubmission.status === 'Pending') && (
-                    <>
-                      <Button
-                        onClick={() => handleApprove(selectedSubmission.id)}
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                      >
-                        <Check className="w-4 h-4 mr-2" />
-                        Approve
-                      </Button>
-                      <Button
-                        onClick={() => openRejectDialog(selectedSubmission)}
-                        variant="destructive"
-                        className="flex-1"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Reject
-                      </Button>
-                    </>
+                  {canApproveReject && (
+                    <div className="flex gap-2">
+                      {selectedSubmission.status !== 'Approved' && (
+                        <Button
+                          onClick={() => handleApprove(selectedSubmission.id)}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                      )}
+                      {selectedSubmission.status !== 'Rejected' && (
+                        <Button
+                          onClick={() => openRejectDialog(selectedSubmission)}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1739,29 +1743,33 @@ export default function Submissions() {
                   )}
                 </Button>
               </div>
-              {canApproveReject && (!selectedSubmission?.status || selectedSubmission?.status === 'Pending') && (
+              {canApproveReject && (
                 <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
-                  <Button
-                    onClick={() => {
-                      setEditDialog(false);
-                      handleApprove(selectedSubmission.id);
-                    }}
-                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setEditDialog(false);
-                      openRejectDialog(selectedSubmission);
-                    }}
-                    variant="destructive"
-                    className="flex-1 sm:flex-none"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Reject
-                  </Button>
+                  {selectedSubmission?.status !== 'Approved' && (
+                    <Button
+                      onClick={() => {
+                        setEditDialog(false);
+                        handleApprove(selectedSubmission.id);
+                      }}
+                      className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Approve
+                    </Button>
+                  )}
+                  {selectedSubmission?.status !== 'Rejected' && (
+                    <Button
+                      onClick={() => {
+                        setEditDialog(false);
+                        openRejectDialog(selectedSubmission);
+                      }}
+                      variant="destructive"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Reject
+                    </Button>
+                  )}
                 </div>
               )}
             </DialogFooter>
