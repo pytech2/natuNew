@@ -396,45 +396,55 @@ export default function PropertyMap() {
   const applyFilters = () => {
     let filtered = [...properties];
     
-    if (filters.category) {
-      filtered = filtered.filter(p => p.category === filters.category);
+    const status = filters.status?.trim();
+    const category = filters.category?.trim();
+    const employee = filters.employee?.trim();
+    const houseStatus = filters.houseStatus?.trim();
+    const propertyUse = filters.propertyUse?.trim();
+    const specialCondition = filters.specialCondition?.trim();
+    const selfSatisfied = filters.selfSatisfied?.trim();
+    const hasSubmission = filters.hasSubmission?.trim();
+    const hasOldPhoto = filters.hasOldPhoto?.trim();
+    
+    if (category) {
+      filtered = filtered.filter(p => p.category === category);
     }
     
-    if (filters.status) {
-      filtered = filtered.filter(p => p.status === filters.status);
+    if (status) {
+      filtered = filtered.filter(p => p.status === status);
     }
     
-    if (filters.employee) {
-      filtered = filtered.filter(p => p.assigned_employee_id === filters.employee);
+    if (employee) {
+      filtered = filtered.filter(p => p.assigned_employee_id === employee);
     }
     
-    if (filters.houseStatus) {
-      filtered = filtered.filter(p => p.sub_house_status === filters.houseStatus);
+    if (houseStatus) {
+      filtered = filtered.filter(p => p.sub_house_status === houseStatus);
     }
     
-    if (filters.propertyUse) {
-      filtered = filtered.filter(p => p.sub_property_use === filters.propertyUse);
+    if (propertyUse) {
+      filtered = filtered.filter(p => p.sub_property_use === propertyUse);
     }
     
-    if (filters.specialCondition) {
-      filtered = filtered.filter(p => p.sub_special_condition === filters.specialCondition);
+    if (specialCondition) {
+      filtered = filtered.filter(p => p.sub_special_condition === specialCondition);
     }
     
-    if (filters.selfSatisfied === 'yes') {
+    if (selfSatisfied === 'yes') {
       filtered = filtered.filter(p => p.sub_self_satisfied === true);
-    } else if (filters.selfSatisfied === 'no') {
+    } else if (selfSatisfied === 'no') {
       filtered = filtered.filter(p => p.sub_self_satisfied === false);
     }
     
-    if (filters.hasSubmission === 'yes') {
+    if (hasSubmission === 'yes') {
       filtered = filtered.filter(p => p.has_submission === true);
-    } else if (filters.hasSubmission === 'no') {
+    } else if (hasSubmission === 'no') {
       filtered = filtered.filter(p => p.has_submission !== true);
     }
     
-    if (filters.hasOldPhoto === 'yes') {
+    if (hasOldPhoto === 'yes') {
       filtered = filtered.filter(p => p.photo_url && p.photo_url.trim() !== '');
-    } else if (filters.hasOldPhoto === 'no') {
+    } else if (hasOldPhoto === 'no') {
       filtered = filtered.filter(p => !p.photo_url || p.photo_url.trim() === '');
     }
     
