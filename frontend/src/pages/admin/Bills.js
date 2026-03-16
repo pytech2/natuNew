@@ -2411,7 +2411,6 @@ export default function BillsPage() {
                   size="sm"
                   onClick={() => {
                     const sampleData = [
-                      ['', 'Property ID', '', '', '', '', '', 'Photo URL'],
                       ['Property ID', 'Photo URL'],
                       ['3UYE8N55', 'https://example.com/photo1.jpg'],
                       ['3UUOCQ65', 'https://example.com/photo2.jpg'],
