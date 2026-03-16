@@ -20,7 +20,7 @@ import csv
 import io
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import json
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter
@@ -3325,16 +3325,15 @@ async def edit_property(
 async def export_data(
     batch_id: Optional[str] = None,
     employee_id: Optional[str] = None,
-    status: Optional[str] = "Approved",  # Default to Approved
-    colony: Optional[str] = None,  # Colony filter
-    date_from: Optional[str] = None,  # Date filter
-    date_to: Optional[str] = None,  # Date filter
+    status: Optional[str] = "Approved",
+    colony: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     if current_user["role"] not in EXPORT_ROLES:
         raise HTTPException(status_code=403, detail="Export access required (Admin or MC Officer)")
     
-    # Build query for properties
     prop_query = {}
     if batch_id and batch_id.strip():
         prop_query["batch_id"] = batch_id
@@ -3343,7 +3342,6 @@ async def export_data(
     if colony and colony.strip():
         prop_query["ward"] = colony
     
-    # Build submission query for status and date filters
     submission_query = {}
     if status and status.strip():
         submission_query["status"] = status
@@ -3355,27 +3353,17 @@ async def export_data(
         else:
             submission_query["submitted_at"] = {"$lte": date_to}
     
-    # If we have submission filters, get property IDs from matching submissions
     if submission_query:
         submissions = await get_db().submissions.find(submission_query, {"property_record_id": 1, "_id": 0}).to_list(100000)
         property_ids = [s["property_record_id"] for s in submissions]
-        
         if not property_ids:
-            # No submissions match, return empty Excel
             wb = Workbook()
             ws = wb.active
-            ws.title = "Approved Survey Data"
             ws.cell(row=1, column=1, value="No submissions found matching the filters")
             export_path = UPLOAD_DIR / f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             wb.save(export_path)
-            return FileResponse(
-                path=str(export_path),
-                filename=f"approved_survey_export_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        
+            return FileResponse(path=str(export_path), filename=f"property_survey_export_{datetime.now().strftime('%Y%m%d')}.xlsx", media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         if "id" in prop_query:
-            # Intersect with existing property_ids filter
             existing_ids = set(prop_query["id"]["$in"]) if isinstance(prop_query["id"], dict) else {prop_query["id"]}
             prop_query["id"] = {"$in": list(existing_ids.intersection(set(property_ids)))}
         else:
@@ -3383,18 +3371,33 @@ async def export_data(
     
     properties = await get_db().properties.find(prop_query, {"_id": 0}).to_list(100000)
     
+    # Batch fetch submissions
+    prop_ids = [p["id"] for p in properties]
+    all_subs = await get_db().submissions.find({"property_record_id": {"$in": prop_ids}}, {"_id": 0}).to_list(100000)
+    sub_map = {s["property_record_id"]: s for s in all_subs}
+    
+    base_url = str(os.environ.get("BASE_URL", "")).rstrip("/")
+    if not base_url:
+        base_url = "https://nstu-app.com"
+    
     wb = Workbook()
     ws = wb.active
     ws.title = "Property Survey Data"
     
     header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True)
+    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     
     headers = [
-        "Property ID", "Owner Name", "Mobile", "Address", "Total Area", "Amount", "Colony Name",
-        "Assigned Employee", "Status", "Receiver Name", "Receiver Mobile No",
-        "Relation", "Submitted By",
-        "GPS Latitude", "GPS Longitude", "Submission Date", "Signature URL", "Photo URLs",
+        "Sr No", "Property ID", "Serial No", "Bill Sr No", "Owner Name", "Owner Mobile", "Address",
+        "Total Area", "Amount", "Colony Name", "Category", "Assigned Employee",
+        "Receiver Name", "Receiver Mobile", "Relation",
+        "House Status", "Property Use", "Special Condition",
+        "Self Satisfied", "Self Certified", "Employee Name", "Survey Status",
+        "Remarks", "Aadhar Number", "Family ID",
+        "Original Lat", "Original Lon", "Survey Lat", "Survey Lon",
+        "Submit Date", "Submit Time",
+        "Photo 1", "Photo 2", "Photo 3", "Photo 4",
         "Approval Status", "Review Remarks"
     ]
     
@@ -3403,60 +3406,121 @@ async def export_data(
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center")
+        cell.border = thin_border
     
     for row_idx, prop in enumerate(properties, 2):
-        submission = await get_db().submissions.find_one(
-            {"property_record_id": prop["id"]}, 
-            {"_id": 0}
-        )
+        sub = sub_map.get(prop["id"], {})
         
-        ws.cell(row=row_idx, column=1, value=prop.get("property_id", ""))
-        ws.cell(row=row_idx, column=2, value=prop.get("owner_name", ""))
-        ws.cell(row=row_idx, column=3, value=prop.get("mobile", ""))
-        ws.cell(row=row_idx, column=4, value=prop.get("address", ""))
-        ws.cell(row=row_idx, column=5, value=prop.get("total_area", ""))
-        ws.cell(row=row_idx, column=6, value=prop.get("amount", ""))
-        ws.cell(row=row_idx, column=7, value=prop.get("ward", ""))
-        ws.cell(row=row_idx, column=8, value=prop.get("assigned_employee_name", ""))
-        ws.cell(row=row_idx, column=9, value=prop.get("status", ""))
+        # Special condition
+        sc = sub.get("special_condition", "")
+        sc_display = ("Property Locked" if sc in ["property_locked", "house_locked"] else 
+                      "Owner Denied" if sc == "owner_denied" else
+                      "Vacant Plot" if sc == "vacant_plot" else
+                      "Wrong Location" if sc == "wrong_location" else
+                      sc.replace("_", " ").title() if sc else "")
         
-        if submission:
-            ws.cell(row=row_idx, column=10, value=submission.get("receiver_name", ""))
-            ws.cell(row=row_idx, column=11, value=submission.get("new_mobile", submission.get("receiver_mobile", "")))
-            ws.cell(row=row_idx, column=12, value=submission.get("relation", ""))
-            ws.cell(row=row_idx, column=13, value=submission.get("employee_name", ""))
-            ws.cell(row=row_idx, column=14, value=submission.get("latitude", ""))
-            ws.cell(row=row_idx, column=15, value=submission.get("longitude", ""))
-            ws.cell(row=row_idx, column=16, value=submission.get("submitted_at", ""))
-            ws.cell(row=row_idx, column=17, value=submission.get("signature_url", ""))
-            photos = submission.get("photos", [])
-            for p_idx, photo in enumerate(photos):
-                photo_url = photo.get("file_url", "")
-                if photo_url:
-                    cell = ws.cell(row=row_idx, column=18)
-                    if p_idx == 0:
-                        cell.value = photo_url
-                        cell.hyperlink = photo_url
-                        cell.font = Font(color="0563C1", underline="single")
-                    else:
-                        existing = cell.value or ""
-                        cell.value = existing + "\n" + photo_url
-            if not photos:
-                ws.cell(row=row_idx, column=18, value="")
-            ws.cell(row=row_idx, column=19, value=submission.get("status", "Pending"))
-            ws.cell(row=row_idx, column=20, value=submission.get("review_remarks", ""))
-    
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
+        house_st = sub.get("house_status", "")
+        house_display = house_st.replace("_", " ").title() if house_st else ""
+        
+        prop_use = sub.get("property_use", "")
+        prop_use_display = (f"Other: {sub.get('property_use_remarks','')}" if prop_use == "other" else
+                            prop_use.replace("_", " ").title() if prop_use else "")
+        
+        self_sat = sub.get("self_satisfied")
+        self_sat_d = "Yes" if self_sat is True else ("No" if self_sat is False else "")
+        
+        self_cert = sub.get("self_cert_verified") or sub.get("self_certified")
+        self_cert_d = "Yes" if self_cert is True else ("No" if self_cert is False else "")
+        
+        recv_name = sub.get("receiver_name") or sub.get("respondent_name", "")
+        recv_mobile = sub.get("receiver_mobile") or sub.get("new_mobile") or sub.get("respondent_phone", "")
+        
+        # Photos
+        photos = sub.get("photos", [])
+        photo_urls = []
+        for p in (photos or []):
+            url = ""
+            if isinstance(p, dict) and p.get("file_url"):
+                url = p["file_url"]
+            elif isinstance(p, str):
+                url = p
+            if url:
+                if url.startswith("/"):
+                    url = f"{base_url}{url}"
+                photo_urls.append(url)
+        while len(photo_urls) < 4:
+            photo_urls.append("")
+        
+        # Date/Time IST
+        submitted_at = sub.get("submitted_at", "")
+        sub_date = ""
+        sub_time = ""
+        if submitted_at:
             try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = min(max_length + 2, 50)
-        ws.column_dimensions[column].width = adjusted_width
+                from datetime import datetime as dt_p
+                from datetime import timedelta as td
+                if "T" in str(submitted_at):
+                    dt_obj = dt_p.fromisoformat(str(submitted_at).replace("Z", "+00:00"))
+                    ist = dt_obj + td(hours=5, minutes=30)
+                    sub_date = ist.strftime("%d/%m/%Y")
+                    sub_time = ist.strftime("%I:%M %p")
+                else:
+                    sub_date = str(submitted_at)[:10]
+            except Exception:
+                sub_date = str(submitted_at)[:10]
+        
+        row = [
+            row_idx - 1,
+            prop.get("property_id", ""),
+            prop.get("serial_number", ""),
+            prop.get("bill_sr_no", ""),
+            prop.get("owner_name", ""),
+            prop.get("mobile", ""),
+            prop.get("address", ""),
+            prop.get("total_area", ""),
+            prop.get("amount", ""),
+            prop.get("ward", prop.get("colony", "")),
+            prop.get("category", ""),
+            prop.get("assigned_employee_name", ""),
+            recv_name,
+            recv_mobile,
+            sub.get("relation", ""),
+            house_display,
+            prop_use_display,
+            sc_display,
+            self_sat_d,
+            self_cert_d,
+            sub.get("employee_name", ""),
+            prop.get("status", ""),
+            sub.get("remarks", ""),
+            sub.get("aadhar_number", ""),
+            sub.get("family_id", ""),
+            prop.get("latitude", ""),
+            prop.get("longitude", ""),
+            sub.get("latitude", ""),
+            sub.get("longitude", ""),
+            sub_date,
+            sub_time,
+            photo_urls[0],
+            photo_urls[1],
+            photo_urls[2],
+            photo_urls[3],
+            sub.get("status", ""),
+            sub.get("review_remarks", ""),
+        ]
+        
+        for col, value in enumerate(row, 1):
+            cell = ws.cell(row=row_idx, column=col, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left')
+            if col >= 32 and col <= 35 and value and str(value).startswith("http"):
+                cell.hyperlink = str(value)
+                cell.value = "Click to View"
+                cell.font = Font(color="0563C1", underline="single")
+    
+    col_widths = [6, 12, 8, 10, 22, 14, 30, 10, 10, 18, 14, 16, 20, 14, 12, 12, 14, 16, 10, 10, 16, 10, 25, 14, 12, 12, 12, 12, 12, 12, 12, 16, 16, 16, 16, 10, 25]
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = w
     
     export_path = UPLOAD_DIR / f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     wb.save(export_path)
