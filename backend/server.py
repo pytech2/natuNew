@@ -2333,16 +2333,16 @@ async def list_wards(current_user: dict = Depends(get_current_user)):
 @api_router.get("/admin/dashboard")
 async def admin_dashboard(
     request: Request,
-    date: str = None,  # Optional date filter (YYYY-MM-DD format, empty = all time)
+    date: str = None,
     current_user: dict = Depends(get_current_user)
 ):
     if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
     town_db = await get_town_data_db(request)
+    na_values = [None, "", "NA", "N/A", "na", "n/a", "UNKNOWN", "unknown", "-", "nil"]
     
     if date:
-        # Date-filtered view: use single aggregation for all counts
         date_start = f"{date}T00:00:00"
         date_end = f"{date}T23:59:59"
         date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
@@ -2359,8 +2359,13 @@ async def admin_dashboard(
         result = await town_db.submissions.aggregate(pipeline).to_list(1)
         stats = result[0] if result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0}
         total, approved, pending, rejected = stats["total"], stats["approved"], stats["pending"], stats["rejected"]
+        # Category and NA counts not available in date mode from submissions
+        category_counts = {}
+        owner_na = 0
+        mobile_na = 0
+        colonies_count = 0
     else:
-        # All time view: single aggregation for property counts
+        # All time: single aggregation for property counts with categories and NA
         pipeline = [
             {"$group": {
                 "_id": None,
@@ -2368,14 +2373,36 @@ async def admin_dashboard(
                 "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
                 "pending": {"$sum": {"$cond": [{"$eq": ["$status", "Pending"]}, 1, 0]}},
                 "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}},
-                "colonies": {"$addToSet": "$colony"}
+                "colonies": {"$addToSet": "$colony"},
+                "residential": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "residential", "options": "i"}}, 1, 0]}},
+                "commercial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "commercial", "options": "i"}}, 1, 0]}},
+                "vacant_plot": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "vacant|plot", "options": "i"}}, 1, 0]}},
+                "agriculture": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "agri", "options": "i"}}, 1, 0]}},
+                "mix_use": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "mix", "options": "i"}}, 1, 0]}},
+                "industrial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "industr", "options": "i"}}, 1, 0]}},
+                "owner_na": {"$sum": {"$cond": [{"$in": ["$owner_name", na_values]}, 1, 0]}},
+                "mobile_na": {"$sum": {"$cond": [{"$in": ["$mobile", na_values]}, 1, 0]}}
             }}
         ]
         result = await town_db.properties.aggregate(pipeline).to_list(1)
         stats = result[0] if result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "colonies": []}
-        total, approved, pending, rejected = stats["total"], stats["approved"], stats["pending"], stats["rejected"]
+        total = stats["total"]
+        approved = stats["approved"]
+        pending = stats["pending"]
+        rejected = stats["rejected"]
+        colonies_count = len([c for c in stats.get("colonies", []) if c])
+        category_counts = {
+            "residential": stats.get("residential", 0),
+            "commercial": stats.get("commercial", 0),
+            "vacant_plot": stats.get("vacant_plot", 0),
+            "agriculture": stats.get("agriculture", 0),
+            "mix_use": stats.get("mix_use", 0),
+            "industrial": stats.get("industrial", 0)
+        }
+        owner_na = stats.get("owner_na", 0)
+        mobile_na = stats.get("mobile_na", 0)
     
-    # Employee count: non-admin users assigned to current town
+    # Employee count
     town_code = request.headers.get("x-town-code")
     if town_code:
         town = await master_db.towns.find_one({"code": town_code}, {"_id": 0})
@@ -2389,10 +2416,7 @@ async def admin_dashboard(
     else:
         employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
     
-    # Get unique colonies count - use cached result from aggregation when available
-    if not date and result:
-        colonies_count = len([c for c in stats.get("colonies", []) if c])
-    else:
+    if date and not colonies_count:
         colonies = await town_db.properties.distinct("colony")
         colonies_count = len([c for c in colonies if c])
     
@@ -2402,7 +2426,10 @@ async def admin_dashboard(
         "pending": pending,
         "rejected": rejected,
         "employees": employees,
-        "colonies": colonies_count
+        "colonies": colonies_count,
+        "category": category_counts,
+        "owner_na": owner_na,
+        "mobile_na": mobile_na
     }
 
 @api_router.get("/admin/employee-progress")
@@ -2659,7 +2686,7 @@ async def get_submission_stats(
     date: str = None,
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] not in ADMIN_ROLES:
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
     town_db = await get_town_data_db(request)
@@ -2670,7 +2697,6 @@ async def get_submission_stats(
         query["submitted_at"] = {"$gte": date_start, "$lte": date_end}
     
     total = await town_db.submissions.count_documents(query)
-    # Single aggregation for status counts instead of 4 separate count_documents
     status_pipeline = [
         {"$match": query},
         {"$group": {"_id": "$status", "count": {"$sum": 1}}}
