@@ -23,10 +23,16 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] Edit submissions after approve/reject
 - [x] Original + Survey location display with distance
 - [x] Property Map filters, stats, edit, old photo display
-- [x] **FIX: Auto-complete system remarks cleaned** - Empty remarks for auto-completed surveys, old data cleaned up (Mar 2026)
-- [x] **FIX: Photo URL external handling** - Frontend detects external URLs (http) and renders directly without prepending backend URL (Mar 2026)
-- [x] **FIX: Original Lat/Lon for auto-submitted** - property_latitude/property_longitude displayed correctly (Mar 2026)
-- [x] **FIX: Employee un-assign from colony** - Handles both assigned_employee_id and assigned_employee_ids array (Mar 2026)
+- [x] **FIX: Auto-complete system remarks cleaned** (Mar 2026)
+- [x] **FIX: Photo URL external handling** - handles http URLs correctly (Mar 2026)
+- [x] **FIX: Original Lat/Lon for auto-submitted** (Mar 2026)
+- [x] **FIX: Employee un-assign from colony** - handles both single/multi-employee (Mar 2026)
+- [x] **Dashboard Redesign** (Mar 2026):
+  - Top row: Total Property + Pending Property (big cards)
+  - Small blocks: Colony, Vacant Plot, Residential, Commercial, Agriculture, Owner NA, Mobile NA
+  - Bill Distribution Status (Total/Pending/Approved/Rejected)
+  - Employee + Today Attendance single-row card
+  - 3 Progress Reports: Town Bill, Survey, Employee Work
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
