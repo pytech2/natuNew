@@ -1178,25 +1178,34 @@ export default function Submissions() {
                 <div>
                   <div className="text-xs font-semibold text-emerald-700 mb-2">Survey Photos</div>
                   <div className="grid grid-cols-3 gap-2">
-                    {selectedSubmission.photos?.filter((photo, index, self) => 
-                      index === self.findIndex(p => p.file_url === photo.file_url)
-                    ).map((photo, idx) => {
-                      const isExternal = photo.file_url?.startsWith('http');
-                      const photoSrc = isExternal ? photo.file_url : `${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`;
+                    {selectedSubmission.photos?.map((photo, idx) => {
+                      // Handle all photo formats: dict with file_url, dict with url, plain string
+                      let url = '';
+                      let type = 'PHOTO';
+                      if (typeof photo === 'string') {
+                        url = photo;
+                      } else if (typeof photo === 'object' && photo) {
+                        url = photo.file_url || photo.url || photo.path || '';
+                        type = photo.photo_type || 'PHOTO';
+                      }
+                      if (!url) return null;
+                      const isExternal = url.startsWith('http');
+                      const photoSrc = isExternal ? url : `${process.env.REACT_APP_BACKEND_URL}${url}`;
                       return (
                         <div key={idx} className="relative group">
                           <img
                             src={photoSrc}
-                            alt={photo.photo_type}
+                            alt={type}
                             className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90"
                             onClick={() => window.open(photoSrc, '_blank')}
+                            onError={(e) => { e.target.style.display = 'none'; }}
                           />
                           <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-semibold ${
-                            photo.photo_type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
-                            photo.photo_type === 'GATE' ? 'bg-amber-100 text-amber-700' :
+                            type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
+                            type === 'GATE' ? 'bg-amber-100 text-amber-700' :
                             'bg-slate-100 text-slate-700'
                           }`}>
-                            {photo.photo_type === 'HOUSE' ? 'PROP' : photo.photo_type}
+                            {type === 'HOUSE' ? 'PROP' : type}
                           </span>
                         </div>
                       );
@@ -1630,24 +1639,33 @@ export default function Submissions() {
                     {editPhotos?.length > 0 ? (
                       <div className="grid grid-cols-2 gap-4">
                         {editPhotos.map((photo, idx) => {
-                          const isExt = photo.file_url?.startsWith('http');
-                          const pSrc = isExt ? photo.file_url : `${process.env.REACT_APP_BACKEND_URL}${photo.file_url}`;
+                          let url = '';
+                          let type = 'PHOTO';
+                          if (typeof photo === 'string') {
+                            url = photo;
+                          } else if (typeof photo === 'object' && photo) {
+                            url = photo.file_url || photo.url || photo.path || '';
+                            type = photo.photo_type || 'PHOTO';
+                          }
+                          if (!url) return null;
+                          const isExt = url.startsWith('http');
+                          const pSrc = isExt ? url : `${process.env.REACT_APP_BACKEND_URL}${url}`;
                           return (
                           <div key={idx} className="relative group">
                             <img
                               src={pSrc}
-                              alt={photo.photo_type}
+                              alt={type}
                               className="w-full h-40 object-cover rounded-lg border-2 border-white shadow cursor-pointer"
                               onClick={() => window.open(pSrc, '_blank')}
+                              onError={(e) => { e.target.style.display = 'none'; }}
                             />
                             <span className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold shadow ${
-                              photo.photo_type === 'HOUSE' ? 'bg-blue-500 text-white' :
-                              photo.photo_type === 'GATE' ? 'bg-amber-500 text-white' :
+                              type === 'HOUSE' ? 'bg-blue-500 text-white' :
+                              type === 'GATE' ? 'bg-amber-500 text-white' :
                               'bg-slate-500 text-white'
                             }`}>
-                              {photo.photo_type}
+                              {type}
                             </span>
-                            {/* Delete Button */}
                             <Button
                               size="sm"
                               variant="destructive"
