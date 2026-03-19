@@ -3437,7 +3437,7 @@ async def export_data(
     
     base_url = str(os.environ.get("BASE_URL", "")).rstrip("/")
     if not base_url:
-        base_url = "https://nstu-app.com"
+        base_url = "https://app.nstuindia.com"
     
     wb = Workbook()
     ws = wb.active
@@ -3741,12 +3741,37 @@ async def export_pdf(
         
         story.append(Paragraph(f"Property ID: {prop.get('property_id', 'N/A')}", heading_style))
         
+        # Special condition display
+        sc = submission.get("special_condition", "")
+        sc_display = ("Property Locked" if sc in ["property_locked", "house_locked"] else 
+                      "Owner Denied" if sc == "owner_denied" else
+                      "Vacant Plot" if sc == "vacant_plot" else
+                      "Wrong Location" if sc == "wrong_location" else
+                      sc.replace("_", " ").title() if sc else "N/A")
+        
+        house_st = submission.get("house_status", "")
+        house_display = house_st.replace("_", " ").title() if house_st else "N/A"
+        
+        prop_use = submission.get("property_use", "")
+        prop_use_display = (f"Other: {submission.get('property_use_remarks','')}" if prop_use == "other" else
+                            prop_use.replace("_", " ").title() if prop_use else "N/A")
+        
+        self_sat = submission.get("self_satisfied", "")
+        self_sat_d = "Yes" if self_sat in [True, "yes", "Yes"] else ("No" if self_sat in [False, "no", "No"] else str(self_sat) if self_sat else "N/A")
+        
+        # Property Info table
         prop_data = [
             ["Owner Name", prop.get("owner_name", "N/A")],
             ["Mobile", prop.get("mobile", "N/A")],
             ["Address", prop.get("address", "N/A")],
             ["Colony Name", prop.get("ward", "N/A")],
-            ["Amount", prop.get("amount", "N/A")],
+            ["Category", prop.get("category", "N/A")],
+            ["Total Area", str(prop.get("total_area", "N/A"))],
+            ["Amount", str(prop.get("amount", "N/A"))],
+            ["Serial No", str(prop.get("serial_number", "N/A"))],
+            ["Bill Sr No", str(prop.get("bill_sr_no", "N/A"))],
+            ["Original Latitude", str(prop.get("latitude", "N/A"))],
+            ["Original Longitude", str(prop.get("longitude", "N/A"))],
         ]
         
         prop_table = Table(prop_data, colWidths=[80*mm, 90*mm])
@@ -3762,20 +3787,45 @@ async def export_pdf(
         story.append(prop_table)
         story.append(Spacer(1, 10))
         
+        # Submit date/time IST
+        submitted_at = submission.get("submitted_at", "")
+        sub_date_time = "N/A"
+        if submitted_at:
+            try:
+                from datetime import datetime as dt_p, timedelta as td
+                if "T" in str(submitted_at):
+                    dt_obj = dt_p.fromisoformat(str(submitted_at).replace("Z", "+00:00"))
+                    ist = dt_obj + td(hours=5, minutes=30)
+                    sub_date_time = ist.strftime("%d/%m/%Y %I:%M %p")
+                else:
+                    sub_date_time = str(submitted_at)[:10]
+            except Exception:
+                sub_date_time = str(submitted_at)[:10]
+        
         story.append(Paragraph("Survey Information", heading_style))
         survey_data = [
             ["Receiver Name", submission.get("receiver_name", "N/A")],
-            ["Receiver Mobile No", submission.get("new_mobile", submission.get("receiver_mobile", "N/A"))],
+            ["Receiver Mobile", submission.get("new_mobile", submission.get("receiver_mobile", "N/A"))],
             ["Relation", submission.get("relation", "N/A")],
+            ["House Status", house_display],
+            ["Property Use", prop_use_display],
+            ["Special Condition", sc_display],
+            ["Self Satisfied", self_sat_d],
             ["Submitted By", submission.get("employee_name", "N/A")],
-            ["Submitted At", submission.get("submitted_at", "N/A")],
-            ["GPS Latitude", str(submission.get("latitude", "N/A"))],
-            ["GPS Longitude", str(submission.get("longitude", "N/A"))],
+            ["Submitted At", sub_date_time],
+            ["Survey Latitude", str(submission.get("latitude", "N/A"))],
+            ["Survey Longitude", str(submission.get("longitude", "N/A"))],
             ["Status", submission.get("status", "Pending")],
         ]
         
         if submission.get("remarks"):
             survey_data.append(["Remarks", submission.get("remarks")])
+        if submission.get("review_remarks"):
+            survey_data.append(["Review Remarks", submission.get("review_remarks")])
+        if submission.get("aadhar_number"):
+            survey_data.append(["Aadhar Number", submission.get("aadhar_number")])
+        if submission.get("family_id"):
+            survey_data.append(["Family ID", submission.get("family_id")])
         
         survey_table = Table(survey_data, colWidths=[80*mm, 90*mm])
         survey_table.setStyle(TableStyle([
@@ -4955,6 +5005,16 @@ async def auto_complete_surveys(
         if "vacant" in category or "plot" in category:
             is_vacant = True
         
+        # Map category to property_use (keep original category)
+        if "commercial" in category:
+            property_use = "commercial"
+        elif "mix" in category:
+            property_use = "mix_use"
+        elif "vacant" in category or "plot" in category:
+            property_use = "residential"
+        else:
+            property_use = "residential"
+        
         # Set receiver name, relation, special condition based on owner status
         if is_owner_na and is_vacant:
             receiver_name = "Vacant Plot"
@@ -4988,7 +5048,7 @@ async def auto_complete_surveys(
             "relation": relation,
             "self_satisfied": "yes",
             "house_status": house_status,
-            "property_use": "residential",
+            "property_use": property_use,
             "special_condition": special_condition,
             "photos": photos,
             "latitude": prop.get("latitude"),

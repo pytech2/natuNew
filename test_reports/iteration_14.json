@@ -1,0 +1,111 @@
+{
+  "summary": "Tested 3 bug fixes: 1) Auto-complete property_use mapping from category, 2) Excel export base_url changed to https://app.nstuindia.com, 3) PDF export includes all required fields. All tests passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Auto-complete endpoint exists and accessible",
+    "Auto-complete property_use mapping logic verified in code - correctly maps commercial→commercial, mix→mix_use",
+    "Existing submissions contain various property_use values: commercial, mix_use, residential",
+    "Excel export base_url correctly set to https://app.nstuindia.com at line 3440",
+    "PDF export code includes all 15 required fields (Category, Total Area, Serial No, Bill Sr No, House Status, Property Use, Special Condition, Self Satisfied, Original Lat/Lon, Survey Lat/Lon, Aadhar, Family ID, Review Remarks)",
+    "PDF export endpoint returns valid PDF (794KB)",
+    "PDF text extraction confirmed: Category, Total Area, Serial No, Bill Sr No, House Status, Property Use fields present",
+    "PDF export uses DD/MM/YYYY date format",
+    "Dashboard API returns correct data (Total: 5315, Pending: 0)",
+    "Submission stats API working (Total: 5329, Pending: 53, Approved: 5265)",
+    "Frontend dashboard loads correctly after backend changes",
+    "All dashboard stats display properly: Total Colony (6), Vacant Plot (1268), Residential (3460), Commercial (341)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_three_fixes.py",
+    "/app/test_reports/pytest/pytest_three_fixes.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix 1 (property_use mapping): Correctly implemented at lines 5008-5016 - uses property category to determine property_use (commercial→commercial, mix→mix_use, vacant/plot→residential, else→residential)",
+    "Fix 2 (base_url): Changed from old URL to https://app.nstuindia.com at line 3440 in export function",
+    "Fix 3 (PDF fields): All fields properly added to prop_data (lines 3763-3775) and survey_data (lines 3806-3828) tables in PDF export"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_three_fixes.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (dashboard loads, all stats visible)"
+  },
+  "test_credentials": {
+    "admin": "admin / nastu123",
+    "town_code": "THS (Thanesar)"
+  },
+  "seed_data_creation": "None - used existing database with 5315 properties",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Three bug fixes verified: (1) Auto-complete now maps category to property_use dynamically instead of hardcoding 'residential'. (2) Excel export photo URLs now use https://app.nstuindia.com as base. (3) PDF export includes Category, Total Area, Serial No, Bill Sr No, House Status, Property Use, Special Condition, Self Satisfied, Original Lat/Lon, Survey Lat/Lon, Aadhar Number, Family ID, Review Remarks with DD/MM/YYYY date format. Note: Property_use fix only affects NEW auto-completions - existing data still has old values but already contains commercial, mix_use, residential values.",
+  "verified_fixes": {
+    "fix_1_auto_complete_property_use": {
+      "status": "VERIFIED",
+      "location": "server.py lines 5008-5016",
+      "mapping": "commercial→commercial, mix→mix_use, vacant/plot→residential, default→residential",
+      "note": "Fix only applies to new auto-completions, existing data unchanged"
+    },
+    "fix_2_export_base_url": {
+      "status": "VERIFIED",
+      "location": "server.py line 3440",
+      "old_value": "https://nstu-app.com (or similar)",
+      "new_value": "https://app.nstuindia.com"
+    },
+    "fix_3_pdf_export_fields": {
+      "status": "VERIFIED",
+      "location": "server.py lines 3763-3828",
+      "fields_added": [
+        "Category",
+        "Total Area",
+        "Serial No",
+        "Bill Sr No",
+        "House Status",
+        "Property Use",
+        "Special Condition",
+        "Self Satisfied",
+        "Original Latitude",
+        "Original Longitude",
+        "Survey Latitude",
+        "Survey Longitude",
+        "Aadhar Number",
+        "Family ID",
+        "Review Remarks"
+      ],
+      "date_format": "DD/MM/YYYY"
+    }
+  },
+  "dashboard_verification": {
+    "total_properties": 5315,
+    "pending_properties": 0,
+    "categories": {
+      "total_colony": 6,
+      "vacant_plot": 1268,
+      "residential": 3460,
+      "commercial": 341,
+      "agriculture": 0,
+      "owner_na": 174,
+      "mobile_na": 1036
+    },
+    "bill_distribution": {
+      "total": 5329,
+      "pending": 53,
+      "approved": 5265,
+      "rejected": 0
+    },
+    "employees": 12,
+    "progress": {
+      "town_bill": "100%",
+      "survey": "100%"
+    }
+  }
+}
