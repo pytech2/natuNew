@@ -560,7 +560,7 @@ export default function Submissions() {
         <Card>
           <CardContent className="py-4">
             {/* Basic Filters Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 items-end">
               {/* Search Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">Search</label>
@@ -623,6 +623,24 @@ export default function Submissions() {
                 </Select>
               </div>
               
+              {/* Special Condition Filter */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-500">Special Condition</label>
+                <Select value={specialConditionFilter} onValueChange={setSpecialConditionFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Conditions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value=" ">All Conditions</SelectItem>
+                    <SelectItem value="property_locked">Property Locked</SelectItem>
+                    <SelectItem value="owner_denied">Owner Denied</SelectItem>
+                    <SelectItem value="vacant_plot">Vacant Plot</SelectItem>
+                    <SelectItem value="wrong_location">Wrong Location</SelectItem>
+                    <SelectItem value="normal">Normal Survey</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Date From Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">From Date</label>
