@@ -18,21 +18,19 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] Old photos display and upload
 - [x] Cleanup Duplicates with submission reassignment
 - [x] Colony Progress Excel with Category, Self Certified, Survey Done By columns
-- [x] Comprehensive 37-column export
+- [x] Comprehensive 37-column Excel export
 - [x] Same Mobile / Same Owner duplicate filters in submissions
 - [x] Edit submissions after approve/reject
 - [x] Original + Survey location display with distance
 - [x] Property Map filters, stats, edit, old photo display
-- [x] **FIX: Auto-complete system remarks cleaned** (Mar 2026)
-- [x] **FIX: Photo URL external handling** - handles http URLs correctly (Mar 2026)
-- [x] **FIX: Original Lat/Lon for auto-submitted** (Mar 2026)
-- [x] **FIX: Employee un-assign from colony** - handles both single/multi-employee (Mar 2026)
-- [x] **Dashboard Redesign** (Mar 2026):
-  - Top row: Total Property + Pending Property (big cards)
-  - Small blocks: Colony, Vacant Plot, Residential, Commercial, Agriculture, Owner NA, Mobile NA
-  - Bill Distribution Status (Total/Pending/Approved/Rejected)
-  - Employee + Today Attendance single-row card
-  - 3 Progress Reports: Town Bill, Survey, Employee Work
+- [x] Auto-complete system remarks cleaned (Mar 2026)
+- [x] Photo URL external handling - handles http URLs correctly (Mar 2026)
+- [x] Original Lat/Lon for auto-submitted (Mar 2026)
+- [x] Employee un-assign from colony - handles both single/multi-employee (Mar 2026)
+- [x] **Dashboard Redesign** (Mar 2026): Total/Pending top row, category blocks, bill distribution, progress reports
+- [x] **Auto-submit category mapping** (Mar 2026): property_use now maps from bill's category (not hardcoded "residential")
+- [x] **Export photo URL fix** (Mar 2026): base_url changed to https://app.nstuindia.com
+- [x] **PDF export enhanced** (Mar 2026): Added Category, Total Area, Serial No, Bill Sr No, House Status, Property Use, Special Condition, Self Satisfied, Lat/Lon, Aadhar, Family ID, Review Remarks, formatted dates
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
