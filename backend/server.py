@@ -3192,7 +3192,6 @@ async def export_submissions(
             cell.alignment = Alignment(horizontal='left')
             if col >= 29 and col <= 32 and value and str(value).startswith("http"):
                 cell.hyperlink = str(value)
-                cell.value = "Click to View"
                 cell.font = Font(color="0563C1", underline="single")
     
     column_widths = [6, 10, 10, 12, 22, 14, 30, 18, 14, 20, 14, 12, 12, 14, 16, 10, 10, 16, 10, 25, 14, 12, 12, 12, 12, 12, 12, 12, 16, 16, 16, 16]
@@ -3574,7 +3573,6 @@ async def export_data(
             cell.alignment = Alignment(horizontal='left')
             if col >= 32 and col <= 35 and value and str(value).startswith("http"):
                 cell.hyperlink = str(value)
-                cell.value = "Click to View"
                 cell.font = Font(color="0563C1", underline="single")
     
     col_widths = [6, 12, 8, 10, 22, 14, 30, 10, 10, 18, 14, 16, 20, 14, 12, 12, 14, 16, 10, 10, 16, 10, 25, 14, 12, 12, 12, 12, 12, 12, 12, 16, 16, 16, 16, 10, 25]
