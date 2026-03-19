@@ -3118,6 +3118,9 @@ async def export_submissions(
         
         photos = sub.get("photos", [])
         photo_urls = []
+        # Prioritize local survey photos (starting with /) over external old photos
+        local_photos = []
+        external_photos = []
         for p in (photos or []):
             url = ""
             if isinstance(p, dict) and p.get("file_url"):
@@ -3126,8 +3129,10 @@ async def export_submissions(
                 url = p
             if url:
                 if url.startswith("/"):
-                    url = f"{base_url}{url}"
-                photo_urls.append(url)
+                    local_photos.append(f"{base_url}{url}")
+                elif url.startswith("http"):
+                    external_photos.append(url)
+        photo_urls = local_photos + external_photos
         while len(photo_urls) < 4:
             photo_urls.append("")
         
@@ -3493,9 +3498,10 @@ async def export_data(
         recv_name = sub.get("receiver_name") or sub.get("respondent_name", "")
         recv_mobile = sub.get("receiver_mobile") or sub.get("new_mobile") or sub.get("respondent_phone", "")
         
-        # Photos
+        # Photos - prioritize local survey photos over external old photos
         photos = sub.get("photos", [])
-        photo_urls = []
+        local_photos = []
+        external_photos = []
         for p in (photos or []):
             url = ""
             if isinstance(p, dict) and p.get("file_url"):
@@ -3504,8 +3510,10 @@ async def export_data(
                 url = p
             if url:
                 if url.startswith("/"):
-                    url = f"{base_url}{url}"
-                photo_urls.append(url)
+                    local_photos.append(f"{base_url}{url}")
+                elif url.startswith("http"):
+                    external_photos.append(url)
+        photo_urls = local_photos + external_photos
         while len(photo_urls) < 4:
             photo_urls.append("")
         
