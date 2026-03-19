@@ -3284,6 +3284,56 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
     
     return {"message": f"Submission {new_status.lower()}"}
 
+
+@api_router.post("/admin/submissions/approve-all")
+async def approve_all_submissions(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve ALL submissions matching filters in one go"""
+    if current_user["role"] not in ADMIN_VIEW_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    body = await request.json()
+    query = {}
+    
+    if body.get("status"):
+        query["status"] = body["status"]
+    if body.get("colony") and body["colony"].strip():
+        query["colony"] = body["colony"]
+    if body.get("employee_id") and body["employee_id"].strip():
+        query["employee_id"] = body["employee_id"]
+    
+    # Approve all matching submissions
+    sub_result = await get_db().submissions.update_many(
+        query,
+        {"$set": {
+            "status": "Approved",
+            "reviewed_by": current_user["id"],
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "review_remarks": ""
+        }}
+    )
+    
+    # Also update properties - get all matching submission property_record_ids
+    matching_subs = await get_db().submissions.find(
+        query, {"_id": 0, "property_record_id": 1}
+    ).to_list(None)
+    prop_ids = [s["property_record_id"] for s in matching_subs if s.get("property_record_id")]
+    
+    if prop_ids:
+        await get_db().properties.update_many(
+            {"id": {"$in": prop_ids}},
+            {"$set": {
+                "status": "Approved",
+                "locked": True,
+                "locked_at": datetime.now(timezone.utc).isoformat(),
+                "locked_by": current_user["id"]
+            }}
+        )
+    
+    return {"message": f"Approved {sub_result.modified_count} submissions", "count": sub_result.modified_count}
+
 @api_router.put("/admin/submissions/{submission_id}")
 async def edit_submission(
     submission_id: str,
