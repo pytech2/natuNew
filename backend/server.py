@@ -22,6 +22,8 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import json
+import httpx
+from urllib.parse import quote, unquote
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -472,6 +474,23 @@ async def serve_legacy_upload(filename: str):
         media_type=content_type,
         headers={"Cache-Control": "public, max-age=86400"}
     )
+
+@api_router.get("/proxy-image")
+async def proxy_image(url: str):
+    """Proxy external image URLs through app domain"""
+    decoded_url = unquote(url)
+    if not decoded_url.startswith("http"):
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    try:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            resp = await client.get(decoded_url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            return Response(content=resp.content, media_type=content_type, headers={"Cache-Control": "public, max-age=86400"})
+    except httpx.RequestError:
+        raise HTTPException(status_code=502, detail="Failed to fetch external image")
+
 
 # ============== MODELS ==============
 
@@ -3118,15 +3137,17 @@ async def export_submissions(
         
         photos = sub.get("photos", [])
         photo_urls = []
-        # Only include local survey photos (starting with /), skip external old photos
         for p in (photos or []):
             url = ""
             if isinstance(p, dict) and p.get("file_url"):
                 url = p.get("file_url")
             elif isinstance(p, str):
                 url = p
-            if url and url.startswith("/"):
-                photo_urls.append(f"{base_url}{url}")
+            if url:
+                if url.startswith("/"):
+                    photo_urls.append(f"{base_url}{url}")
+                elif url.startswith("http"):
+                    photo_urls.append(f"{base_url}/api/proxy-image?url={quote(url, safe='')}")
         while len(photo_urls) < 4:
             photo_urls.append("")
         
@@ -3492,7 +3513,7 @@ async def export_data(
         recv_name = sub.get("receiver_name") or sub.get("respondent_name", "")
         recv_mobile = sub.get("receiver_mobile") or sub.get("new_mobile") or sub.get("respondent_phone", "")
         
-        # Photos - only local survey photos, skip external old photos
+        # Photos - local photos direct, external via proxy
         photos = sub.get("photos", [])
         photo_urls = []
         for p in (photos or []):
@@ -3501,8 +3522,11 @@ async def export_data(
                 url = p["file_url"]
             elif isinstance(p, str):
                 url = p
-            if url and url.startswith("/"):
-                photo_urls.append(f"{base_url}{url}")
+            if url:
+                if url.startswith("/"):
+                    photo_urls.append(f"{base_url}{url}")
+                elif url.startswith("http"):
+                    photo_urls.append(f"{base_url}/api/proxy-image?url={quote(url, safe='')}")
         while len(photo_urls) < 4:
             photo_urls.append("")
         
