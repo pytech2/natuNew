@@ -2398,7 +2398,9 @@ async def admin_dashboard(
                 "vacant_plot": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "vacant|plot", "options": "i"}}, 1, 0]}},
                 "agriculture": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "agri", "options": "i"}}, 1, 0]}},
                 "mix_use": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "mix", "options": "i"}}, 1, 0]}},
-                "industrial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "industr", "options": "i"}}, 1, 0]}},
+                "industrial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "^Industrial$", "options": "i"}}, 1, 0]}},
+                "institutional": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "institutional", "options": "i"}}, 1, 0]}},
+                "special_category": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "special", "options": "i"}}, 1, 0]}},
                 "owner_na": {"$sum": {"$cond": [{"$in": ["$owner_name", na_values]}, 1, 0]}},
                 "mobile_na": {"$sum": {"$cond": [{"$in": ["$mobile", na_values]}, 1, 0]}}
             }}
@@ -2416,7 +2418,9 @@ async def admin_dashboard(
             "vacant_plot": stats.get("vacant_plot", 0),
             "agriculture": stats.get("agriculture", 0),
             "mix_use": stats.get("mix_use", 0),
-            "industrial": stats.get("industrial", 0)
+            "industrial": stats.get("industrial", 0),
+            "institutional": stats.get("institutional", 0),
+            "special_category": stats.get("special_category", 0)
         }
         owner_na = stats.get("owner_na", 0)
         mobile_na = stats.get("mobile_na", 0)

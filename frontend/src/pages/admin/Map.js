@@ -124,6 +124,9 @@ const createNumberedIcon = (number, category) => {
     'Vacant': '#22c55e',
     'Mix Use': '#a855f7',
     'Mixed': '#a855f7',
+    'Industrial': '#6b7280',
+    'Institutional': '#0891b2',
+    'Special Category': '#ec4899',
     'default': '#6b7280'
   };
   
@@ -386,6 +389,9 @@ export default function PropertyMap() {
         commercial: props.filter(p => p.category === 'Commercial').length,
         vacant: props.filter(p => p.category === 'Vacant Plot').length,
         mixUse: props.filter(p => p.category === 'Mix Use').length,
+        industrial: props.filter(p => p.category === 'Industrial').length,
+        institutional: props.filter(p => p.category === 'Institutional').length,
+        specialCategory: props.filter(p => p.category === 'Special Category').length,
         // Survey status
         pending: props.filter(p => p.status === 'Pending').length,
         completed: props.filter(p => p.status === 'Completed').length,
@@ -894,6 +900,24 @@ export default function PropertyMap() {
                       <p className="text-xl font-bold">{stats.mixUse}</p>
                     </CardContent>
                   </Card>
+                  <Card className="bg-gradient-to-br from-gray-500 to-gray-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Industrial</span>
+                      <p className="text-xl font-bold">{stats.industrial}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Institutional</span>
+                      <p className="text-xl font-bold">{stats.institutional}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white">
+                    <CardContent className="p-3">
+                      <span className="text-xs opacity-80">Special Cat.</span>
+                      <p className="text-xl font-bold">{stats.specialCategory}</p>
+                    </CardContent>
+                  </Card>
                 </div>
                 {/* Row 2: Submission based stats */}
                 <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-2">
@@ -1071,7 +1095,7 @@ export default function PropertyMap() {
                         <SelectItem value="Mix Use">Mix Use</SelectItem>
                         <SelectItem value="Industrial">Industrial</SelectItem>
                         <SelectItem value="Institutional">Institutional</SelectItem>
-                        <SelectItem value="Agriculture">Agriculture</SelectItem>
+                        <SelectItem value="Special Category">Special Category</SelectItem>
                         <SelectItem value="Vacant Plot">Vacant Plot</SelectItem>
                       </SelectContent>
                     </Select>

@@ -210,17 +210,12 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* ===== SMALL STAT BLOCKS: Colony, Vacant, Residential, Commercial, Agriculture, Owner NA, Mobile NA ===== */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+        {/* ===== SMALL STAT BLOCKS: Colony, Categories, Owner NA, Mobile NA ===== */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2">
           <div data-testid="stat-total-colony" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
             <FolderOpen className="w-5 h-5 mx-auto text-purple-500 mb-1" />
             <p className="text-xl font-bold text-slate-800">{stats?.colonies || 0}</p>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Total Colony</p>
-          </div>
-          <div data-testid="stat-vacant-plot" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
-            <Layers className="w-5 h-5 mx-auto text-orange-500 mb-1" />
-            <p className="text-xl font-bold text-slate-800">{stats?.category?.vacant_plot || 0}</p>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Vacant Plot</p>
           </div>
           <div data-testid="stat-residential" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
             <Home className="w-5 h-5 mx-auto text-blue-500 mb-1" />
@@ -232,10 +227,30 @@ export default function Dashboard() {
             <p className="text-xl font-bold text-slate-800">{stats?.category?.commercial || 0}</p>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Commercial</p>
           </div>
-          <div data-testid="stat-agriculture" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
-            <TreePine className="w-5 h-5 mx-auto text-green-600 mb-1" />
-            <p className="text-xl font-bold text-slate-800">{stats?.category?.agriculture || 0}</p>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Agriculture</p>
+          <div data-testid="stat-vacant-plot" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <Layers className="w-5 h-5 mx-auto text-orange-500 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.vacant_plot || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Vacant Plot</p>
+          </div>
+          <div data-testid="stat-mix-use" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <Layers className="w-5 h-5 mx-auto text-teal-500 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.mix_use || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Mix Use</p>
+          </div>
+          <div data-testid="stat-industrial" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <Building className="w-5 h-5 mx-auto text-gray-600 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.industrial || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Industrial</p>
+          </div>
+          <div data-testid="stat-institutional" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <Landmark className="w-5 h-5 mx-auto text-cyan-600 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.institutional || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Institutional</p>
+          </div>
+          <div data-testid="stat-special-category" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <Landmark className="w-5 h-5 mx-auto text-pink-500 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.special_category || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Special Cat.</p>
           </div>
           <div data-testid="stat-owner-na" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow border-red-100">
             <UserX className="w-5 h-5 mx-auto text-red-500 mb-1" />
