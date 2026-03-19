@@ -28,7 +28,8 @@ import {
   Eye, Check, X, Edit, User, Phone, Home, Hash, CreditCard, 
   Building, Users, FileText, Pen, Image as ImageIcon, Save,
   ExternalLink, Trash2, Plus, AlertTriangle, Lock, UserX, CheckCircle, Navigation,
-  Download, Filter, ChevronDown, ChevronUp, Calendar, Search, CheckSquare, Loader2
+  Download, Filter, ChevronDown, ChevronUp, Calendar, Search, CheckSquare, Loader2,
+  XCircle, Clock
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -316,7 +317,7 @@ export default function Submissions() {
       }
       
       if (successCount > 0) {
-        toast.success(`✅ Approved ${successCount} submissions${failCount > 0 ? `, ${failCount} failed` : ''}`);
+        toast.success(`Approved ${successCount} submissions${failCount > 0 ? `, ${failCount} failed` : ''}`);
       }
       setSelectedIds([]);
       fetchSubmissions();
@@ -325,6 +326,62 @@ export default function Submissions() {
     } finally {
       setBulkApproving(false);
     }
+  };
+
+  // Bulk reject selected submissions
+  const [bulkRejecting, setBulkRejecting] = useState(false);
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const handleBulkReject = async () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt('Rejection reason (required):');
+    if (!reason || !reason.trim()) {
+      toast.error('Rejection reason is required');
+      return;
+    }
+    setBulkRejecting(true);
+    let successCount = 0;
+    let failCount = 0;
+    try {
+      for (const id of selectedIds) {
+        try {
+          await axios.post(`${API_URL}/admin/submissions/approve`, {
+            submission_id: id,
+            action: 'REJECT',
+            remarks: reason.trim()
+          }, { headers: { Authorization: `Bearer ${token}` } });
+          successCount++;
+        } catch (err) { failCount++; }
+      }
+      if (successCount > 0) toast.success(`Rejected ${successCount} submissions${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      setSelectedIds([]);
+      fetchSubmissions();
+    } catch (error) { toast.error('Bulk reject failed'); }
+    finally { setBulkRejecting(false); }
+  };
+
+  const handleBulkPendingReview = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Set ${selectedIds.length} submissions to Pending Review?`)) return;
+    setBulkPending(true);
+    let successCount = 0;
+    let failCount = 0;
+    try {
+      for (const id of selectedIds) {
+        try {
+          await axios.post(`${API_URL}/admin/submissions/approve`, {
+            submission_id: id,
+            action: 'PENDING',
+            remarks: ''
+          }, { headers: { Authorization: `Bearer ${token}` } });
+          successCount++;
+        } catch (err) { failCount++; }
+      }
+      if (successCount > 0) toast.success(`Set ${successCount} submissions to Pending${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      setSelectedIds([]);
+      fetchSubmissions();
+    } catch (error) { toast.error('Bulk pending failed'); }
+    finally { setBulkPending(false); }
   };
 
   // Toggle single selection
@@ -340,6 +397,12 @@ export default function Submissions() {
       .filter(s => s.status === 'Pending' || s.status === 'Completed' || !s.status)
       .map(s => s.id);
     setSelectedIds(pendingIds);
+  };
+
+  // Select all visible submissions
+  const selectAll = () => {
+    const allIds = submissions.map(s => s.id);
+    setSelectedIds(allIds);
   };
 
   // Clear selection
@@ -790,15 +853,26 @@ export default function Submissions() {
           <>
             {/* Bulk Action Bar */}
             {canApproveReject && (
-              <div className="mb-3 flex items-center gap-3 flex-wrap">
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={selectAllPending}
                   className="h-8"
+                  data-testid="select-all-pending-btn"
                 >
                   <CheckSquare className="w-4 h-4 mr-1" />
                   Select All Pending
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAll}
+                  className="h-8"
+                  data-testid="select-all-btn"
+                >
+                  <CheckSquare className="w-4 h-4 mr-1" />
+                  Select All
                 </Button>
                 {selectedIds.length > 0 && (
                   <>
@@ -809,7 +883,8 @@ export default function Submissions() {
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700 h-8"
                       onClick={handleBulkApprove}
-                      disabled={bulkApproving}
+                      disabled={bulkApproving || bulkRejecting || bulkPending}
+                      data-testid="bulk-approve-btn"
                     >
                       {bulkApproving ? (
                         <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -817,6 +892,36 @@ export default function Submissions() {
                         <CheckCircle className="w-4 h-4 mr-1" />
                       )}
                       Approve {selectedIds.length}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8"
+                      onClick={handleBulkReject}
+                      disabled={bulkApproving || bulkRejecting || bulkPending}
+                      data-testid="bulk-reject-btn"
+                    >
+                      {bulkRejecting ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <XCircle className="w-4 h-4 mr-1" />
+                      )}
+                      Reject {selectedIds.length}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 border-amber-400 text-amber-700 hover:bg-amber-50"
+                      onClick={handleBulkPendingReview}
+                      disabled={bulkApproving || bulkRejecting || bulkPending}
+                      data-testid="bulk-pending-btn"
+                    >
+                      {bulkPending ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Clock className="w-4 h-4 mr-1" />
+                      )}
+                      Pending Review
                     </Button>
                     <Button
                       variant="ghost"
@@ -841,7 +946,7 @@ export default function Submissions() {
                           <input
                             type="checkbox"
                             checked={selectedIds.length > 0 && selectedIds.length === submissions.length}
-                            onChange={(e) => e.target.checked ? selectAllPending() : clearSelection()}
+                            onChange={(e) => e.target.checked ? selectAll() : clearSelection()}
                             className="w-4 h-4 rounded border-slate-300"
                           />
                         </th>
