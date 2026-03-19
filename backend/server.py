@@ -3613,6 +3613,14 @@ async def export_data(
 def add_watermark_to_photo(photo_path, latitude, longitude, submitted_at):
     try:
         img = PILImage.open(photo_path)
+        
+        # Resize large images for PDF compression (max 800px wide)
+        max_size = 800
+        if img.width > max_size or img.height > max_size:
+            ratio = min(max_size / img.width, max_size / img.height)
+            new_size = (int(img.width * ratio), int(img.height * ratio))
+            img = img.resize(new_size, PILImage.LANCZOS)
+        
         draw = ImageDraw.Draw(img)
         
         if isinstance(submitted_at, str):
@@ -3633,14 +3641,14 @@ def add_watermark_to_photo(photo_path, latitude, longitude, submitted_at):
             f"Long: {longitude:.6f}" if longitude else "Long: N/A"
         ]
         
-        font_size = max(16, min(img.width, img.height) // 25)
+        font_size = max(14, min(img.width, img.height) // 30)
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
         except:
             font = ImageFont.load_default()
         
         padding = font_size // 2
-        line_height = font_size + 5
+        line_height = font_size + 4
         
         max_text_width = max([draw.textlength(line, font=font) for line in watermark_lines])
         box_width = int(max_text_width + padding * 2)
@@ -3673,7 +3681,7 @@ def add_watermark_to_photo(photo_path, latitude, longitude, submitted_at):
         img = img.convert('RGB')
         
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-        img.save(temp_file.name, 'JPEG', quality=90)
+        img.save(temp_file.name, 'JPEG', quality=45, optimize=True)
         return temp_file.name
     except Exception as e:
         logger.error(f"Error adding watermark: {e}")
@@ -3735,16 +3743,16 @@ async def export_pdf(
     doc = SimpleDocTemplate(
         str(pdf_path),
         pagesize=A4,
-        rightMargin=20*mm,
-        leftMargin=20*mm,
-        topMargin=20*mm,
-        bottomMargin=20*mm
+        rightMargin=15*mm,
+        leftMargin=15*mm,
+        topMargin=15*mm,
+        bottomMargin=15*mm
     )
     
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=20, alignment=TA_CENTER, textColor=colors.HexColor('#0f172a'))
-    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=10, textColor=colors.HexColor('#1e40af'))
-    normal_style = ParagraphStyle('CustomNormal', parent=styles['Normal'], fontSize=10, spaceAfter=5)
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=14, spaceAfter=10, alignment=TA_CENTER, textColor=colors.HexColor('#0f172a'))
+    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=11, spaceAfter=5, textColor=colors.HexColor('#1e40af'))
+    normal_style = ParagraphStyle('CustomNormal', parent=styles['Normal'], fontSize=8, spaceAfter=3)
     
     story = []
     
@@ -3793,18 +3801,18 @@ async def export_pdf(
             ["Original Longitude", str(prop.get("longitude", "N/A"))],
         ]
         
-        prop_table = Table(prop_data, colWidths=[80*mm, 90*mm])
+        prop_table = Table(prop_data, colWidths=[75*mm, 95*mm])
         prop_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#0f172a')),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('PADDING', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('PADDING', (0, 0), (-1, -1), 5),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         story.append(prop_table)
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 6))
         
         # Submit date/time IST
         submitted_at = submission.get("submitted_at", "")
@@ -3846,18 +3854,18 @@ async def export_pdf(
         if submission.get("family_id"):
             survey_data.append(["Family ID", submission.get("family_id")])
         
-        survey_table = Table(survey_data, colWidths=[80*mm, 90*mm])
+        survey_table = Table(survey_data, colWidths=[75*mm, 95*mm])
         survey_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#0f172a')),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('PADDING', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('PADDING', (0, 0), (-1, -1), 5),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         story.append(survey_table)
-        story.append(Spacer(1, 15))
+        story.append(Spacer(1, 8))
         
         photos = submission.get("photos", [])
         if photos:
@@ -3914,10 +3922,10 @@ async def export_pdf(
                     )
                     
                     try:
-                        img = RLImage(watermarked_path, width=80*mm, height=60*mm)
+                        img = RLImage(watermarked_path, width=65*mm, height=50*mm)
                         story.append(Paragraph(f"<b>{photo_type}</b>", normal_style))
                         story.append(img)
-                        story.append(Spacer(1, 10))
+                        story.append(Spacer(1, 5))
                     except Exception as e:
                         logger.error(f"Error adding photo to PDF: {e}")
                     finally:
