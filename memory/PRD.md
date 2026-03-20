@@ -42,6 +42,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Auto-complete All Colonies** (Mar 2026): Added "All Colonies" option in auto-complete dialog
 - [x] **Surveyor Report Excel** (Mar 2026): Date-wise progress + Refusal progress 2-sheet Excel download from Dashboard (fixed 404 route placement bug)
 - [x] **Report Download Filters** (Mar 2026): Added filter dialog with Month/Year, Date Range, Surveyor, Colony, Category, Status filters for report download
+- [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info (receiver, house status, property use, surveyed by, condition)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123

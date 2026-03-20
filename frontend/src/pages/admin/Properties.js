@@ -33,7 +33,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Search, UserPlus, FileSpreadsheet, ChevronLeft, ChevronRight, MapPin, Eye, User, Phone, Home, Navigation, ExternalLink, Trash2, UserMinus, Users } from 'lucide-react';
+import { Search, UserPlus, FileSpreadsheet, ChevronLeft, ChevronRight, MapPin, Eye, User, Phone, Home, Navigation, ExternalLink, Trash2, UserMinus, Users, Image, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -123,6 +123,9 @@ export default function Properties() {
   // Property detail dialog
   const [detailDialog, setDetailDialog] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [propertyPhotos, setPropertyPhotos] = useState([]);
+  const [propertySubmission, setPropertySubmission] = useState(null);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   // Block Assign Colonies dialog
   const [blockColonyDialog, setBlockColonyDialog] = useState(false);
@@ -549,6 +552,49 @@ export default function Properties() {
     );
   };
 
+  const handleViewProperty = async (prop) => {
+    setSelectedProperty(prop);
+    setDetailDialog(true);
+    setPropertyPhotos([]);
+    setPropertySubmission(null);
+    setLoadingPhotos(true);
+    try {
+      const res = await axios.get(`${API_URL}/submission/by-property/${prop.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const sub = res.data?.submission;
+      setPropertySubmission(sub);
+      if (sub) {
+        const photos = [];
+        // Collect all photos from submission
+        if (sub.photos && Array.isArray(sub.photos)) {
+          sub.photos.forEach(p => {
+            const url = typeof p === 'string' ? p : (p.file_url || p.url || p.path || '');
+            if (url) {
+              const isExternal = url.startsWith('http');
+              photos.push({
+                url: isExternal ? url : `${process.env.REACT_APP_BACKEND_URL}${url}`,
+                label: typeof p === 'object' ? (p.photo_type || 'Photo') : 'Photo'
+              });
+            }
+          });
+        }
+        // Check property_photo_url (legacy old photo)
+        if (sub.property_photo_url) {
+          photos.unshift({
+            url: sub.property_photo_url,
+            label: 'Old Property Photo'
+          });
+        }
+        setPropertyPhotos(photos);
+      }
+    } catch (e) {
+      // No submission found - that's fine
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
   const toggleSelectAll = () => {
     if (selectedProperties.length === properties.length) {
       setSelectedProperties([]);
@@ -846,12 +892,10 @@ export default function Properties() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setSelectedProperty(prop);
-                                setDetailDialog(true);
-                              }}
+                              onClick={() => handleViewProperty(prop)}
                               className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               title="View Details"
+                              data-testid={`view-property-${prop.id}`}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -1220,6 +1264,87 @@ export default function Properties() {
                         Open in Google Maps
                         <ExternalLink className="w-4 h-4" />
                       </a>
+                    )}
+
+                    {/* Property Photos Section */}
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
+                        <Image className="w-4 h-4 text-blue-500" />
+                        Property Photos
+                      </h4>
+                      {loadingPhotos ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                          <span className="ml-2 text-sm text-slate-500">Loading photos...</span>
+                        </div>
+                      ) : propertyPhotos.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {propertyPhotos.map((photo, idx) => (
+                            <div key={idx} className="relative group rounded-lg overflow-hidden border bg-slate-50">
+                              <img
+                                src={photo.url}
+                                alt={photo.label}
+                                className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => window.open(photo.url, '_blank')}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                              <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 text-center">
+                                {photo.label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : propertySubmission ? (
+                        <p className="text-xs text-slate-400 text-center py-4">No photos in submission</p>
+                      ) : (
+                        <p className="text-xs text-slate-400 text-center py-4">No survey submission yet</p>
+                      )}
+                    </div>
+
+                    {/* Submission Info */}
+                    {propertySubmission && (
+                      <div className="border-t pt-3">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {propertySubmission.receiver_name && (
+                            <div className="bg-green-50 p-2 rounded">
+                              <span className="text-green-600 font-medium">Receiver:</span>
+                              <span className="ml-1">{propertySubmission.receiver_name}</span>
+                            </div>
+                          )}
+                          {propertySubmission.house_status && (
+                            <div className="bg-blue-50 p-2 rounded">
+                              <span className="text-blue-600 font-medium">House:</span>
+                              <span className="ml-1 capitalize">{propertySubmission.house_status}</span>
+                            </div>
+                          )}
+                          {propertySubmission.special_condition && (
+                            <div className="bg-amber-50 p-2 rounded">
+                              <span className="text-amber-600 font-medium">Condition:</span>
+                              <span className="ml-1 capitalize">{propertySubmission.special_condition.replace(/_/g, ' ')}</span>
+                            </div>
+                          )}
+                          {propertySubmission.property_use && (
+                            <div className="bg-purple-50 p-2 rounded">
+                              <span className="text-purple-600 font-medium">Use:</span>
+                              <span className="ml-1 capitalize">{propertySubmission.property_use}</span>
+                            </div>
+                          )}
+                          {propertySubmission.employee_name && (
+                            <div className="bg-slate-50 p-2 rounded">
+                              <span className="text-slate-600 font-medium">Surveyed By:</span>
+                              <span className="ml-1">{propertySubmission.employee_name}</span>
+                            </div>
+                          )}
+                          {propertySubmission.status && (
+                            <div className="bg-slate-50 p-2 rounded">
+                              <span className="text-slate-600 font-medium">Survey Status:</span>
+                              <span className={`ml-1 font-semibold ${propertySubmission.status === 'Approved' ? 'text-green-600' : propertySubmission.status === 'Pending' ? 'text-amber-600' : 'text-red-600'}`}>
+                                {propertySubmission.status}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     <Button variant="outline" onClick={() => setDetailDialog(false)} className="w-full">
