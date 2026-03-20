@@ -3344,6 +3344,43 @@ async def approve_all_submissions(
     
     return {"message": f"Approved {sub_result.modified_count} submissions", "count": sub_result.modified_count}
 
+
+@api_router.post("/admin/cleanup-rejected")
+async def cleanup_rejected_submissions(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete all rejected submissions and reset their properties to Pending"""
+    if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    town_db = get_db()
+    
+    # Find all rejected submissions
+    rejected_subs = await town_db.submissions.find(
+        {"status": "Rejected"}, {"_id": 0, "id": 1, "property_record_id": 1}
+    ).to_list(None)
+    
+    if not rejected_subs:
+        return {"message": "No rejected submissions found", "deleted": 0, "properties_reset": 0}
+    
+    prop_ids = [s["property_record_id"] for s in rejected_subs if s.get("property_record_id")]
+    
+    # Delete all rejected submissions
+    del_result = await town_db.submissions.delete_many({"status": "Rejected"})
+    
+    # Reset properties to Pending
+    prop_result = await town_db.properties.update_many(
+        {"id": {"$in": prop_ids}},
+        {"$set": {"status": "Pending", "locked": False, "reject_remarks": None}}
+    )
+    
+    return {
+        "message": f"Deleted {del_result.deleted_count} rejected submissions, reset {prop_result.modified_count} properties to Pending",
+        "deleted": del_result.deleted_count,
+        "properties_reset": prop_result.modified_count
+    }
+
 @api_router.put("/admin/submissions/{submission_id}")
 async def edit_submission(
     submission_id: str,
