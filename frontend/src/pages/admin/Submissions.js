@@ -665,8 +665,9 @@ export default function Submissions() {
               </div>
             </div>
 
-            {/* Advanced Filters Toggle */}
+            {/* Advanced Filters Toggle - Admin Only */}
             <div className="mt-4 flex items-center justify-between">
+              {canApproveReject ? (
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
@@ -680,6 +681,7 @@ export default function Submissions() {
                   </span>
                 )}
               </button>
+              ) : <div />}
               
               <div className="flex items-center gap-3">
                 {activeFilterCount > 0 && (
