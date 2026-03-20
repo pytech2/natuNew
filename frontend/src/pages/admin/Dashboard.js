@@ -211,7 +211,7 @@ export default function Dashboard() {
         </div>
 
         {/* ===== SMALL STAT BLOCKS: Colony, Categories, Owner NA, Mobile NA ===== */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
           <div data-testid="stat-total-colony" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
             <FolderOpen className="w-5 h-5 mx-auto text-purple-500 mb-1" />
             <p className="text-xl font-bold text-slate-800">{stats?.colonies || 0}</p>
@@ -251,6 +251,11 @@ export default function Dashboard() {
             <Landmark className="w-5 h-5 mx-auto text-pink-500 mb-1" />
             <p className="text-xl font-bold text-slate-800">{stats?.category?.special_category || 0}</p>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Special Cat.</p>
+          </div>
+          <div data-testid="stat-agriculture" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow">
+            <TreePine className="w-5 h-5 mx-auto text-green-600 mb-1" />
+            <p className="text-xl font-bold text-slate-800">{stats?.category?.agriculture || 0}</p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Agriculture</p>
           </div>
           <div data-testid="stat-owner-na" className="bg-white rounded-xl border p-3 text-center shadow-sm hover:shadow transition-shadow border-red-100">
             <UserX className="w-5 h-5 mx-auto text-red-500 mb-1" />
