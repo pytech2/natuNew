@@ -7750,9 +7750,15 @@ async def surveyor_report(
     request: Request,
     month: int = None,
     year: int = None,
+    surveyor_id: str = None,
+    date_from: str = None,
+    date_to: str = None,
+    colony: str = None,
+    category: str = None,
+    status: str = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Generate Surveyor Date-wise + Refusal Progress Report Excel"""
+    """Generate Surveyor Date-wise + Refusal Progress Report Excel with filters"""
     if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -7779,17 +7785,37 @@ async def surveyor_report(
     else:
         employees = await master_db.users.find({"role": {"$ne": "ADMIN"}}, {"_id": 0}).to_list(None)
     
-    # Get all submissions for this month
-    month_start = f"{report_year}-{report_month:02d}-01T00:00:00"
-    if report_month == 12:
-        month_end = f"{report_year + 1}-01-01T00:00:00"
+    # Filter employees by surveyor_id if specified
+    if surveyor_id:
+        employees = [e for e in employees if e.get("id") == surveyor_id]
+    
+    # Build submission query with filters
+    sub_query = {}
+    
+    # Date filtering: use date_from/date_to if provided, else use month/year
+    if date_from and date_to:
+        sub_query["submitted_at"] = {"$gte": f"{date_from}T00:00:00", "$lte": f"{date_to}T23:59:59"}
     else:
-        month_end = f"{report_year}-{report_month + 1:02d}-01T00:00:00"
+        month_start = f"{report_year}-{report_month:02d}-01T00:00:00"
+        if report_month == 12:
+            month_end = f"{report_year + 1}-01-01T00:00:00"
+        else:
+            month_end = f"{report_year}-{report_month + 1:02d}-01T00:00:00"
+        sub_query["submitted_at"] = {"$gte": month_start, "$lt": month_end}
+    
+    if surveyor_id:
+        sub_query["employee_id"] = surveyor_id
+    if status:
+        sub_query["status"] = status
+    if colony:
+        sub_query["colony"] = colony
+    if category:
+        sub_query["category"] = category
     
     all_subs = await town_db.submissions.find(
-        {"submitted_at": {"$gte": month_start, "$lt": month_end}},
+        sub_query,
         {"_id": 0, "employee_id": 1, "employee_name": 1, "submitted_at": 1,
-         "special_condition": 1, "house_status": 1, "status": 1}
+         "special_condition": 1, "house_status": 1, "status": 1, "colony": 1, "category": 1}
     ).to_list(None)
     
     # Build employee submission maps
@@ -7853,7 +7879,24 @@ async def surveyor_report(
     ws1 = wb.active
     ws1.title = "Date-wise Progress"
     ws1.merge_cells('A1:H1')
-    ws1['A1'] = f"Surveyors Date-wise Progress Report - {town_name} ({report_month:02d}/{report_year})"
+    # Build filter description for title
+    filter_parts = [town_name]
+    if date_from and date_to:
+        filter_parts.append(f"{date_from} to {date_to}")
+    else:
+        filter_parts.append(f"{report_month:02d}/{report_year}")
+    if surveyor_id:
+        emp_name = next((e.get("name", surveyor_id) for e in employees if e.get("id") == surveyor_id), surveyor_id)
+        filter_parts.append(f"Surveyor: {emp_name}")
+    if colony:
+        filter_parts.append(f"Colony: {colony}")
+    if category:
+        filter_parts.append(f"Category: {category}")
+    if status:
+        filter_parts.append(f"Status: {status}")
+    filter_desc = " | ".join(filter_parts)
+
+    ws1['A1'] = f"Surveyors Date-wise Progress Report - {filter_desc}"
     ws1['A1'].font = title_font
     
     headers1 = ["Sr No", "User ID", "Name", "City", "Total Forms"]
@@ -7893,7 +7936,7 @@ async def surveyor_report(
     # ===== Sheet 2: Refusal Progress =====
     ws2 = wb.create_sheet("Refusal Progress")
     ws2.merge_cells('A1:H1')
-    ws2['A1'] = f"Surveyors Refusal Progress Report - {town_name} ({report_month:02d}/{report_year})"
+    ws2['A1'] = f"Surveyors Refusal Progress Report - {filter_desc}"
     ws2['A1'].font = title_font
     
     headers2 = ["Sr No", "User ID", "Name", "City", "Total Forms",
@@ -7934,7 +7977,9 @@ async def surveyor_report(
         ws2.column_dimensions[col_letter].width = 15
     
     # Save
-    report_path = f"/tmp/surveyor_report_{report_year}_{report_month:02d}.xlsx"
+    import time as _time
+    ts = int(_time.time())
+    report_path = f"/tmp/surveyor_report_{report_year}_{report_month:02d}_{ts}.xlsx"
     wb.save(report_path)
     
     return FileResponse(

@@ -16,8 +16,10 @@ import {
   FileSpreadsheet, CheckCircle, Clock, Users, FolderOpen,
   MapPin, TrendingUp, XCircle, Eye, Trash2, Loader2, Download,
   ClipboardCheck, Calendar, Home, Building, Landmark, TreePine,
-  UserX, Phone, Layers
+  UserX, Phone, Layers, Filter, SlidersHorizontal
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Label } from '../../components/ui/label';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const COLORS = ['#059669', '#f59e0b', '#3b82f6', '#ef4444'];
@@ -46,6 +48,19 @@ export default function Dashboard() {
   const [removeDialog, setRemoveDialog] = useState(false);
   const [colonyToRemove, setColonyToRemove] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [reportDialog, setReportDialog] = useState(false);
+  const [reportFilters, setReportFilters] = useState({
+    month: (new Date().getMonth() + 1).toString(),
+    year: new Date().getFullYear().toString(),
+    surveyor_id: '',
+    date_from: '',
+    date_to: '',
+    colony: '',
+    category: '',
+    status: ''
+  });
+  const [colonies, setColonies] = useState([]);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   useEffect(() => { fetchData(); }, [viewMode, selectedDate]);
 
@@ -128,6 +143,49 @@ export default function Dashboard() {
     finally { setRemoving(false); }
   };
 
+  const fetchColonies = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/map/colonies`, { headers: { Authorization: `Bearer ${token}` } });
+      setColonies(res.data.colonies || []);
+    } catch { }
+  };
+
+  const handleOpenReportDialog = () => {
+    fetchColonies();
+    setReportDialog(true);
+  };
+
+  const handleDownloadReport = async () => {
+    setDownloadingReport(true);
+    try {
+      const params = new URLSearchParams();
+      if (reportFilters.month) params.append('month', reportFilters.month);
+      if (reportFilters.year) params.append('year', reportFilters.year);
+      if (reportFilters.surveyor_id) params.append('surveyor_id', reportFilters.surveyor_id);
+      if (reportFilters.date_from) params.append('date_from', reportFilters.date_from);
+      if (reportFilters.date_to) params.append('date_to', reportFilters.date_to);
+      if (reportFilters.colony) params.append('colony', reportFilters.colony);
+      if (reportFilters.category) params.append('category', reportFilters.category);
+      if (reportFilters.status) params.append('status', reportFilters.status);
+      
+      const res = await axios.get(`${API_URL}/admin/surveyor-report?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `surveyor_report_${reportFilters.year}_${reportFilters.month.padStart(2, '0')}.xlsx`;
+      a.click();
+      toast.success('Report downloaded!');
+      setReportDialog(false);
+    } catch (e) {
+      toast.error('Failed to download report');
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
   const pieData = stats ? [
     { name: 'Approved', value: stats.approved },
     { name: 'Pending', value: stats.pending },
@@ -165,20 +223,8 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2" data-testid="download-surveyor-report"
-              onClick={async () => {
-                try {
-                  const now = new Date();
-                  const res = await axios.get(`${API_URL}/admin/surveyor-report?month=${now.getMonth()+1}&year=${now.getFullYear()}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    responseType: 'blob'
-                  });
-                  const url = window.URL.createObjectURL(new Blob([res.data]));
-                  const a = document.createElement('a'); a.href = url;
-                  a.download = `surveyor_report_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}.xlsx`;
-                  a.click(); toast.success('Report downloaded!');
-                } catch(e) { toast.error('Failed to download report'); }
-              }}>
-              <Download className="w-4 h-4" /> Download Report
+              onClick={handleOpenReportDialog}>
+              <SlidersHorizontal className="w-4 h-4" /> Download Report
             </Button>
             {viewMode === 'today' && (
               <input type="date" data-testid="date-picker" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
@@ -704,6 +750,139 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Report Filter Dialog */}
+      <Dialog open={reportDialog} onOpenChange={setReportDialog}>
+        <DialogContent className="max-w-lg" data-testid="report-filter-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="w-5 h-5 text-indigo-600" />
+              Download Surveyor Report
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Month & Year Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Month</Label>
+                <Select value={reportFilters.month} onValueChange={(v) => setReportFilters(f => ({...f, month: v}))}>
+                  <SelectTrigger data-testid="report-filter-month"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[...Array(12)].map((_, i) => (
+                      <SelectItem key={i+1} value={(i+1).toString()}>
+                        {new Date(2000, i, 1).toLocaleString('en', {month: 'long'})}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Year</Label>
+                <Select value={reportFilters.year} onValueChange={(v) => setReportFilters(f => ({...f, year: v}))}>
+                  <SelectTrigger data-testid="report-filter-year"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[2024, 2025, 2026, 2027].map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Date From</Label>
+                <input type="date" data-testid="report-filter-date-from" value={reportFilters.date_from}
+                  onChange={(e) => setReportFilters(f => ({...f, date_from: e.target.value}))}
+                  className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Date To</Label>
+                <input type="date" data-testid="report-filter-date-to" value={reportFilters.date_to}
+                  onChange={(e) => setReportFilters(f => ({...f, date_to: e.target.value}))}
+                  className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 -mt-2">Date range overrides Month/Year if both provided</p>
+
+            {/* Surveyor */}
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1 block">Surveyor</Label>
+              <Select value={reportFilters.surveyor_id} onValueChange={(v) => setReportFilters(f => ({...f, surveyor_id: v === '_all' ? '' : v}))}>
+                <SelectTrigger data-testid="report-filter-surveyor"><SelectValue placeholder="All Surveyors" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Surveyors</SelectItem>
+                  {employeeProgress.map(emp => (
+                    <SelectItem key={emp.employee_id} value={emp.employee_id}>{emp.employee_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Colony */}
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1 block">Colony</Label>
+              <Select value={reportFilters.colony} onValueChange={(v) => setReportFilters(f => ({...f, colony: v === '_all' ? '' : v}))}>
+                <SelectTrigger data-testid="report-filter-colony"><SelectValue placeholder="All Colonies" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Colonies</SelectItem>
+                  {colonies.map(c => (
+                    <SelectItem key={c.name} value={c.name}>{c.name} ({c.count})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category & Status Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Category</Label>
+                <Select value={reportFilters.category} onValueChange={(v) => setReportFilters(f => ({...f, category: v === '_all' ? '' : v}))}>
+                  <SelectTrigger data-testid="report-filter-category"><SelectValue placeholder="All Categories" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Categories</SelectItem>
+                    <SelectItem value="residential">Residential</SelectItem>
+                    <SelectItem value="commercial">Commercial</SelectItem>
+                    <SelectItem value="vacant_plot">Vacant Plot</SelectItem>
+                    <SelectItem value="mix_use">Mix Use</SelectItem>
+                    <SelectItem value="industrial">Industrial</SelectItem>
+                    <SelectItem value="institutional">Institutional</SelectItem>
+                    <SelectItem value="special_category">Special Category</SelectItem>
+                    <SelectItem value="agriculture">Agriculture</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-slate-600 mb-1 block">Status</Label>
+                <Select value={reportFilters.status} onValueChange={(v) => setReportFilters(f => ({...f, status: v === '_all' ? '' : v}))}>
+                  <SelectTrigger data-testid="report-filter-status"><SelectValue placeholder="All Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Status</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" size="sm" data-testid="report-filter-reset"
+              onClick={() => setReportFilters({
+                month: (new Date().getMonth() + 1).toString(),
+                year: new Date().getFullYear().toString(),
+                surveyor_id: '', date_from: '', date_to: '', colony: '', category: '', status: ''
+              })}>
+              Reset Filters
+            </Button>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2" 
+              data-testid="report-filter-download" onClick={handleDownloadReport} disabled={downloadingReport}>
+              {downloadingReport ? (<><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>) : (<><Download className="w-4 h-4" /> Download Excel</>)}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
