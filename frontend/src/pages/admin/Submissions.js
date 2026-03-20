@@ -667,6 +667,20 @@ export default function Submissions() {
 
             {/* Advanced Filters Toggle */}
             <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                <Filter className="w-4 h-4" />
+                Advanced Filters
+                {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {activeFilterCount > 0 && (
+                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">
+                    {activeFilterCount} active
+                  </span>
+                )}
+              </button>
+              
               <div className="flex items-center gap-3">
                 {activeFilterCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearAllFilters}>
@@ -674,9 +688,6 @@ export default function Submissions() {
                     Clear All
                   </Button>
                 )}
-              </div>
-              
-              <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-500">
                   Total: <span className="font-semibold">{pagination.total}</span> submissions
                 </span>
@@ -699,6 +710,95 @@ export default function Submissions() {
                 )}
               </div>
             </div>
+
+            {/* Advanced Filters Panel */}
+            {showAdvancedFilters && (
+              <div className="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Self Certified Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Self Certified</label>
+                  <Select value={selfCertifiedFilter} onValueChange={setSelfCertifiedFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All</SelectItem>
+                      <SelectItem value="yes">Self Certified</SelectItem>
+                      <SelectItem value="no">Not Self Certified</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Photo Status Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Photo Status</label>
+                  <Select value={photoStatusFilter} onValueChange={setPhotoStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All</SelectItem>
+                      <SelectItem value="with_photos">With Photos</SelectItem>
+                      <SelectItem value="without_photos">Without Photos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Duplicate Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Duplicate Check</label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={duplicateFilter === 'same_mobile' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDuplicateFilter(duplicateFilter === 'same_mobile' ? '' : 'same_mobile')}
+                      className="text-xs"
+                    >
+                      Same Mobile
+                    </Button>
+                    <Button
+                      variant={duplicateFilter === 'same_owner' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDuplicateFilter(duplicateFilter === 'same_owner' ? '' : 'same_owner')}
+                      className="text-xs"
+                    >
+                      Same Owner
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Quick Status Filters */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Quick Filters</label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={specialConditionFilter === 'property_locked' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'property_locked' ? ' ' : 'property_locked')}
+                      className="text-xs"
+                    >
+                      Locked
+                    </Button>
+                    <Button
+                      variant={specialConditionFilter === 'owner_denied' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'owner_denied' ? ' ' : 'owner_denied')}
+                      className="text-xs"
+                    >
+                      Denied
+                    </Button>
+                    <Button
+                      variant={specialConditionFilter === 'vacant_plot' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSpecialConditionFilter(specialConditionFilter === 'vacant_plot' ? ' ' : 'vacant_plot')}
+                      className="text-xs"
+                    >
+                      Vacant
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
