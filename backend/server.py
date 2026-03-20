@@ -7745,6 +7745,204 @@ async def init_admin():
     await master_db.users.insert_one(admin_doc)
     return {"message": "Admin user created", "username": "admin", "password": "admin123"}
 
+@api_router.get("/admin/surveyor-report")
+async def surveyor_report(
+    request: Request,
+    month: int = None,
+    year: int = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate Surveyor Date-wise + Refusal Progress Report Excel"""
+    if current_user["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+    from calendar import monthrange
+    
+    town_db = get_db()
+    now = datetime.now(timezone.utc)
+    report_month = month or now.month
+    report_year = year or now.year
+    days_in_month = monthrange(report_year, report_month)[1]
+    
+    # Get town info
+    town_code = request.headers.get("x-town-code", "")
+    town = await master_db.towns.find_one({"code": town_code}, {"_id": 0}) if town_code else None
+    town_name = town.get("name", town_code) if town else town_code
+    
+    # Get all employees for this town
+    if town:
+        employees = await master_db.users.find(
+            {"role": {"$ne": "ADMIN"}, "assigned_town": town["id"]}, {"_id": 0}
+        ).to_list(None)
+    else:
+        employees = await master_db.users.find({"role": {"$ne": "ADMIN"}}, {"_id": 0}).to_list(None)
+    
+    # Get all submissions for this month
+    month_start = f"{report_year}-{report_month:02d}-01T00:00:00"
+    if report_month == 12:
+        month_end = f"{report_year + 1}-01-01T00:00:00"
+    else:
+        month_end = f"{report_year}-{report_month + 1:02d}-01T00:00:00"
+    
+    all_subs = await town_db.submissions.find(
+        {"submitted_at": {"$gte": month_start, "$lt": month_end}},
+        {"_id": 0, "employee_id": 1, "employee_name": 1, "submitted_at": 1,
+         "special_condition": 1, "house_status": 1, "status": 1}
+    ).to_list(None)
+    
+    # Build employee submission maps
+    emp_daily = {}  # emp_id -> {day: count}
+    emp_conditions = {}  # emp_id -> {normal, locked, denied, vacant, wrong}
+    emp_totals = {}  # emp_id -> total
+    
+    for sub in all_subs:
+        eid = sub.get("employee_id", "unknown")
+        sc = sub.get("special_condition", "")
+        
+        # Daily count
+        if eid not in emp_daily:
+            emp_daily[eid] = {}
+            emp_conditions[eid] = {"normal": 0, "locked": 0, "denied": 0, "vacant": 0, "wrong": 0}
+            emp_totals[eid] = 0
+        
+        emp_totals[eid] = emp_totals.get(eid, 0) + 1
+        
+        # Parse date
+        sub_at = sub.get("submitted_at", "")
+        if sub_at:
+            try:
+                from datetime import datetime as dt_p, timedelta as td
+                if "T" in str(sub_at):
+                    dt_obj = dt_p.fromisoformat(str(sub_at).replace("Z", "+00:00"))
+                    ist = dt_obj + td(hours=5, minutes=30)
+                    day = ist.day
+                else:
+                    day = int(str(sub_at)[8:10])
+                emp_daily[eid][day] = emp_daily[eid].get(day, 0) + 1
+            except:
+                pass
+        
+        # Condition count
+        if sc in ["property_locked", "house_locked"]:
+            emp_conditions[eid]["locked"] += 1
+        elif sc == "owner_denied":
+            emp_conditions[eid]["denied"] += 1
+        elif sc == "vacant_plot":
+            emp_conditions[eid]["vacant"] += 1
+        elif sc == "wrong_location":
+            emp_conditions[eid]["wrong"] += 1
+        else:
+            emp_conditions[eid]["normal"] += 1
+    
+    # Create workbook
+    wb = Workbook()
+    
+    # Styles
+    header_fill = PatternFill(start_color="1565C0", end_color="1565C0", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=10)
+    title_font = Font(bold=True, size=14)
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center')
+    
+    # ===== Sheet 1: Date-wise Progress =====
+    ws1 = wb.active
+    ws1.title = "Date-wise Progress"
+    ws1.merge_cells('A1:H1')
+    ws1['A1'] = f"Surveyors Date-wise Progress Report - {town_name} ({report_month:02d}/{report_year})"
+    ws1['A1'].font = title_font
+    
+    headers1 = ["Sr No", "User ID", "Name", "City", "Total Forms"]
+    for d in range(1, days_in_month + 1):
+        headers1.append(str(d))
+    
+    ws1.append([])  # blank row
+    ws1.append(headers1)
+    header_row = 3
+    for col in range(1, len(headers1) + 1):
+        cell = ws1.cell(row=header_row, column=col)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = thin_border
+        cell.alignment = center_align
+    
+    for idx, emp in enumerate(employees, 1):
+        eid = emp.get("id", "")
+        total = emp_totals.get(eid, 0)
+        daily = emp_daily.get(eid, {})
+        row = [idx, emp.get("username", ""), emp.get("name", ""), town_name, total]
+        for d in range(1, days_in_month + 1):
+            row.append(daily.get(d, 0))
+        ws1.append(row)
+        for col in range(1, len(row) + 1):
+            cell = ws1.cell(row=header_row + idx, column=col)
+            cell.border = thin_border
+            cell.alignment = center_align
+    
+    # Auto width for first columns
+    ws1.column_dimensions['A'].width = 8
+    ws1.column_dimensions['B'].width = 15
+    ws1.column_dimensions['C'].width = 20
+    ws1.column_dimensions['D'].width = 15
+    ws1.column_dimensions['E'].width = 12
+    
+    # ===== Sheet 2: Refusal Progress =====
+    ws2 = wb.create_sheet("Refusal Progress")
+    ws2.merge_cells('A1:H1')
+    ws2['A1'] = f"Surveyors Refusal Progress Report - {town_name} ({report_month:02d}/{report_year})"
+    ws2['A1'].font = title_font
+    
+    headers2 = ["Sr No", "User ID", "Name", "City", "Total Forms",
+                 "Normal Distribution", "House Locked", "Owner Denied",
+                 "Vacant Plot", "Wrong Location", "Total Locked/Refused",
+                 "% Locked", "% Refused", "% Vacant"]
+    
+    ws2.append([])
+    ws2.append(headers2)
+    header_row2 = 3
+    for col in range(1, len(headers2) + 1):
+        cell = ws2.cell(row=header_row2, column=col)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = thin_border
+        cell.alignment = center_align
+    
+    for idx, emp in enumerate(employees, 1):
+        eid = emp.get("id", "")
+        total = emp_totals.get(eid, 0)
+        cond = emp_conditions.get(eid, {"normal": 0, "locked": 0, "denied": 0, "vacant": 0, "wrong": 0})
+        total_refused = cond["locked"] + cond["denied"]
+        pct_locked = round(cond["locked"] / total, 2) if total > 0 else 0
+        pct_refused = round(cond["denied"] / total, 2) if total > 0 else 0
+        pct_vacant = round(cond["vacant"] / total, 2) if total > 0 else 0
+        
+        row = [idx, emp.get("username", ""), emp.get("name", ""), town_name, total,
+               cond["normal"], cond["locked"], cond["denied"], cond["vacant"], cond["wrong"],
+               total_refused, pct_locked, pct_refused, pct_vacant]
+        ws2.append(row)
+        for col in range(1, len(row) + 1):
+            cell = ws2.cell(row=header_row2 + idx, column=col)
+            cell.border = thin_border
+            cell.alignment = center_align
+    
+    # Auto width
+    for col_letter in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']:
+        ws2.column_dimensions[col_letter].width = 15
+    
+    # Save
+    report_path = f"/tmp/surveyor_report_{report_year}_{report_month:02d}.xlsx"
+    wb.save(report_path)
+    
+    return FileResponse(
+        report_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"surveyor_report_{town_name}_{report_year}_{report_month:02d}.xlsx"
+    )
+
 # Include the router
 app.include_router(api_router)
 

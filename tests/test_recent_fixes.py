@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://tax-survey-hub.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://property-tax-mgmt.preview.emergentagent.com').rstrip('/')
 
 # Credentials
 ADMIN_USERNAME = "admin"

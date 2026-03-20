@@ -164,6 +164,22 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex items-center gap-3">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2" data-testid="download-surveyor-report"
+              onClick={async () => {
+                try {
+                  const now = new Date();
+                  const res = await axios.get(`${API_URL}/admin/surveyor-report?month=${now.getMonth()+1}&year=${now.getFullYear()}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: 'blob'
+                  });
+                  const url = window.URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement('a'); a.href = url;
+                  a.download = `surveyor_report_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}.xlsx`;
+                  a.click(); toast.success('Report downloaded!');
+                } catch(e) { toast.error('Failed to download report'); }
+              }}>
+              <Download className="w-4 h-4" /> Download Report
+            </Button>
             {viewMode === 'today' && (
               <input type="date" data-testid="date-picker" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
                 className="px-3 py-2 border rounded-lg text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500" />

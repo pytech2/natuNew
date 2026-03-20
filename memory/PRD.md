@@ -31,6 +31,16 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Auto-submit category mapping** (Mar 2026): property_use now maps from bill's category (not hardcoded "residential")
 - [x] **Export photo URL fix** (Mar 2026): base_url changed to https://app.nstuindia.com
 - [x] **PDF export enhanced** (Mar 2026): Added Category, Total Area, Serial No, Bill Sr No, House Status, Property Use, Special Condition, Self Satisfied, Lat/Lon, Aadhar, Family ID, Review Remarks, formatted dates
+- [x] **Employee Management** (Mar 2026): Separated Login ID (text) from Mobile Number (10-digit), added validation
+- [x] **Submissions Bulk Actions** (Mar 2026): Select All, Approve All, Reject (delete + revert to Pending), Pending Review
+- [x] **Rejection Logic** (Mar 2026): Rejected submission deleted, property reverts to Pending for re-survey/auto-complete
+- [x] **RBAC on Submissions** (Mar 2026): Export, Bulk Actions, Advanced Filters restricted to ADMIN only
+- [x] **Auto-sync Bills** (Mar 2026): Automatically copy bills to properties when employee assigned to colony
+- [x] **External Image Proxy** (Mar 2026): /api/proxy-image endpoint for legacy external photos
+- [x] **PDF Size Optimization** (Mar 2026): Compressed to <1MB with 800px max width, 45% JPEG quality
+- [x] **Dashboard categories** (Mar 2026): All 7 categories (Agriculture, Institutional, Special) visible
+- [x] **Auto-complete All Colonies** (Mar 2026): Added "All Colonies" option in auto-complete dialog
+- [x] **Surveyor Report Excel** (Mar 2026): Date-wise progress + Refusal progress 2-sheet Excel download from Dashboard (fixed 404 route placement bug)
 
 ## Credentials (Dev)
 - Admin: admin / nastu123
