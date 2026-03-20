@@ -136,6 +136,7 @@ export default function BillsPage() {
   const [autoCompleteDialog, setAutoCompleteDialog] = useState(false);
   const [autoCompleteEmployee, setAutoCompleteEmployee] = useState('');
   const [autoCompleteDate, setAutoCompleteDate] = useState('');
+  const [autoCompleteColony, setAutoCompleteColony] = useState('');
   const [deletingSelfCert, setDeletingSelfCert] = useState(false);
 
   // Old Photos Upload state
@@ -505,9 +506,8 @@ export default function BillsPage() {
     setAutoCompleting(true);
     try {
       const params = new URLSearchParams();
-      if (filters.colony) params.append('colony', filters.colony);
+      if (autoCompleteColony) params.append('colony', autoCompleteColony);
       
-      // Find selected employee name
       const selectedEmp = employees.find(e => e.id === autoCompleteEmployee);
       
       const response = await axios.post(
@@ -525,6 +525,7 @@ export default function BillsPage() {
       setAutoCompleteDialog(false);
       setAutoCompleteEmployee('');
       setAutoCompleteDate('');
+      setAutoCompleteColony('');
       fetchBills();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to auto-complete surveys');
@@ -2175,12 +2176,27 @@ export default function BillsPage() {
               <AlertDialogTitle>Auto Complete Pending Surveys?</AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3">
-                  <p>
-                    {filters.colony 
-                      ? `Auto-complete all pending surveys for colony "${filters.colony}".`
+                  <p className="font-medium text-slate-700">
+                    {autoCompleteColony 
+                      ? `Auto-complete pending surveys for colony "${autoCompleteColony}".`
                       : 'Auto-complete ALL pending surveys across ALL colonies.'
                     }
                   </p>
+
+                  {/* Colony Selector */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Select Colony</label>
+                    <select
+                      value={autoCompleteColony}
+                      onChange={(e) => setAutoCompleteColony(e.target.value)}
+                      className="w-full border rounded-md p-2 text-sm"
+                    >
+                      <option value="">All Colonies (Sab ek saath)</option>
+                      {colonies.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                   
                   {/* Employee Selector */}
                   <div className="space-y-1">
