@@ -53,6 +53,7 @@ export default function Employees() {
   const [resetting, setResetting] = useState(false);
   const [editFormData, setEditFormData] = useState({ name: '', authority: '' });
   const [formData, setFormData] = useState({
+    login_id: '',
     mobile: '',
     password: '',
     name: '',
@@ -147,16 +148,15 @@ export default function Employees() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateMobile(formData.mobile)) {
-      toast.error('Please enter a valid 10-digit mobile number');
+    if (!formData.login_id || !formData.login_id.trim()) {
+      toast.error('Please enter a Login ID');
       return;
     }
 
     try {
-      // Use mobile as username
       const submitData = {
         ...formData,
-        username: formData.mobile, // Mobile number is the username
+        username: formData.login_id.trim(),
         permissions: formData.role === 'SURVEYOR' ? null : formData.permissions
       };
       
@@ -166,6 +166,7 @@ export default function Employees() {
       toast.success('Employee created successfully');
       setDialogOpen(false);
       setFormData({
+        login_id: '',
         mobile: '',
         password: '',
         name: '',
@@ -271,7 +272,7 @@ export default function Employees() {
                 <DialogHeader>
                   <DialogTitle className="font-heading">Add New Employee</DialogTitle>
                   <DialogDescription>
-                    Create a new employee account using mobile number
+                    Create a new employee account
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -287,7 +288,18 @@ export default function Employees() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile Number (Login ID)</Label>
+                    <Label htmlFor="login_id">Login ID</Label>
+                    <Input
+                      id="login_id"
+                      data-testid="employee-login-id-input"
+                      value={formData.login_id}
+                      onChange={(e) => setFormData({ ...formData, login_id: e.target.value })}
+                      placeholder="Enter login ID (text)"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile Number</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -300,11 +312,9 @@ export default function Employees() {
                         }}
                         placeholder="10-digit mobile number"
                         className="pl-10"
-                        required
                         maxLength={10}
                       />
                     </div>
-                    <p className="text-xs text-slate-500">This will be used as login ID</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
@@ -424,7 +434,7 @@ export default function Employees() {
                       type="submit" 
                       data-testid="create-employee-btn"
                       className="bg-slate-900 hover:bg-slate-800"
-                      disabled={!validateMobile(formData.mobile)}
+                      disabled={!formData.login_id?.trim() || !formData.name?.trim() || !formData.password}
                     >
                       Create Employee
                     </Button>
@@ -451,10 +461,10 @@ export default function Employees() {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Mobile / Login</th>
+                      <th>Login ID</th>
+                      <th>Mobile</th>
                       <th>Role</th>
                       <th>Authority</th>
-                      <th>Permissions</th>
                       <th>Assigned Area</th>
                       {canManageEmployees && <th>Actions</th>}
                     </tr>
@@ -465,6 +475,9 @@ export default function Employees() {
                         <td className="font-medium">{emp.name}</td>
                         <td>
                           <span className="font-mono text-sm">{emp.username}</span>
+                        </td>
+                        <td>
+                          <span className="text-sm text-slate-600">{emp.mobile || '-'}</span>
                         </td>
                         <td>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[emp.role] || 'bg-slate-100'}`}>
