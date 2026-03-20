@@ -3278,6 +3278,10 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
         if data.remarks:
             prop_update["reject_remarks"] = data.remarks
         prop_update["locked"] = False
+        # Reset property to Pending so it's available for re-submission and auto-complete
+        prop_update["status"] = "Pending"
+        # Delete the rejected submission so property is clean for new submission
+        await get_db().submissions.delete_one({"id": data.submission_id})
     elif data.action == "PENDING":
         prop_update["locked"] = False
     
@@ -3286,6 +3290,8 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
         {"$set": prop_update}
     )
     
+    if data.action == "REJECT":
+        return {"message": "Submission rejected and property reset to Pending for re-submission"}
     return {"message": f"Submission {new_status.lower()}"}
 
 
