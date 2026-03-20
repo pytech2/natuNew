@@ -1596,6 +1596,50 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
     
     emp_name_map = {emp["id"]: emp["name"] for emp in new_employees}
     
+    # AUTO-COPY: Check if bills exist for this colony but haven't been copied to properties yet
+    bills_count = await get_db().bills.count_documents({"colony": {"$regex": f"^{re.escape(data.area.strip())}$", "$options": "i"}})
+    props_count = await get_db().properties.count_documents({"ward": data.area})
+    
+    if bills_count > 0 and props_count == 0:
+        # Auto-copy bills to properties for this colony
+        bills = await get_db().bills.find(
+            {"colony": {"$regex": f"^{re.escape(data.area.strip())}$", "$options": "i"}}, {"_id": 0}
+        ).sort("serial_number", 1).to_list(None)
+        
+        existing_props = await get_db().properties.find({}, {"property_id": 1, "_id": 0}).to_list(None)
+        existing_ids = set(p.get("property_id", "") for p in existing_props if p.get("property_id"))
+        
+        auto_batch_id = str(uuid.uuid4())
+        auto_copied = 0
+        for bill in bills:
+            pid = bill.get("property_id", "")
+            if pid and pid not in existing_ids:
+                prop = {
+                    "id": str(uuid.uuid4()),
+                    "property_id": pid,
+                    "batch_id": auto_batch_id,
+                    "owner_name": bill.get("owner_name", ""),
+                    "mobile": bill.get("mobile", ""),
+                    "address": bill.get("address", ""),
+                    "ward": bill.get("colony", ""),
+                    "colony": bill.get("colony", ""),
+                    "category": bill.get("category", "Residential"),
+                    "total_area": bill.get("total_area", ""),
+                    "amount": bill.get("amount", ""),
+                    "serial_number": bill.get("serial_number", 0),
+                    "bill_sr_no": bill.get("bill_sr_no", ""),
+                    "latitude": bill.get("latitude"),
+                    "longitude": bill.get("longitude"),
+                    "photo_url": bill.get("photo_url", ""),
+                    "status": "Pending",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await get_db().properties.insert_one(prop)
+                existing_ids.add(pid)
+                auto_copied += 1
+        
+        logger.info(f"Auto-copied {auto_copied} bills to properties for colony {data.area}")
+    
     # Build query - just filter by area, serial filtering done in Python
     query = {"ward": data.area}
     
