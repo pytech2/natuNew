@@ -117,7 +117,8 @@ export default function Submissions() {
 
   // Check permissions based on role
   const canEdit = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
-  const canApproveReject = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
+  const canApproveReject = ['ADMIN'].includes(user?.role);
+  const canExport = ['ADMIN'].includes(user?.role);
 
   const employeeIdFilter = searchParams.get('employee_id') || '';
 
@@ -679,6 +680,7 @@ export default function Submissions() {
                 <span className="text-sm text-slate-500">
                   Total: <span className="font-semibold">{pagination.total}</span> submissions
                 </span>
+                {canExport && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -694,6 +696,7 @@ export default function Submissions() {
                     </>
                   )}
                 </Button>
+                )}
               </div>
             </div>
           </CardContent>
