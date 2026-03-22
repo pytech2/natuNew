@@ -45,6 +45,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info (receiver, house status, property use, surveyed by, condition)
 - [x] **Logo & Name Update** (Mar 2026): Changed logo to new NSTU badge and company name to "National Services Technical Unit" across Login, Sidebar, SelectTown, PDFs, manifest, page title
 - [x] **Dashboard Dark Theme Redesign** (Mar 2026): Complete dark navy blue theme with glassmorphism cards, glowing cyan/pink borders, neon accents, dark-themed charts and tables
+- [x] **Login & SelectTown Dark Theme** (Mar 2026): Login page and Town selection page redesigned with matching dark navy theme, glassmorphism, glowing orbs, neon accents
 
 ## Credentials (Dev)
 - Admin: admin / nastu123

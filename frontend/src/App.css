@@ -1,6 +1,6 @@
 /* App-specific styles */
 .login-bg {
-    background-image: url('https://images.unsplash.com/photo-1761733570309-d748db709a67?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBjaXR5JTIwYWVyaWFsJTIwdmlldyUyMG1vZGVybnxlbnwwfHx8fDE3Njc1MTE4Mzl8MA&ixlib=rb-4.1.0&q=85');
+    background: linear-gradient(135deg, #0a0e27 0%, #0d1137 40%, #1a0a2e 70%, #0a0e27 100%);
     background-size: cover;
     background-position: center;
 }
