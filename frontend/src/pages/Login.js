@@ -72,7 +72,8 @@ export default function Login() {
             <h1 className="text-xl font-bold text-white tracking-wide" style={{textShadow: '0 0 20px rgba(0, 245, 212, 0.2)'}}>
               National Services Technical Unit
             </h1>
-            <p className="text-cyan-300/50 text-sm mt-1">Property Survey & Notice Distribution System</p>
+            <p className="text-cyan-200/60 text-sm mt-1">NSTU India Private Limited</p>
+            <p className="text-cyan-300/40 text-xs mt-0.5">Survey, Bill & Notice Distribution</p>
           </div>
 
           {/* Divider */}
@@ -142,6 +143,7 @@ export default function Login() {
                 <MapPin className="w-3 h-3" />
                 <span>National Services Technical Unit</span>
               </div>
+              <p className="text-center text-cyan-400/30 text-[10px] mt-1">NSTU India Private Limited</p>
             </div>
           </div>
         </div>
