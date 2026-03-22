@@ -32,7 +32,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       const userData = await login(username, password);
-      toast.success(`Welcome back, ${userData.name}!`);
+      toast.success(`Ram Ram, ${userData.name}!`);
       navigate(userData.role === 'ADMIN' ? '/admin' : '/employee');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Login failed. Please check your credentials.');

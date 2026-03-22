@@ -68,7 +68,7 @@ export default function EmployeeDashboard() {
         {/* Welcome */}
         <div className="text-center py-4">
           <h2 className="text-xl font-heading font-bold text-slate-900">
-            Welcome, {user?.name}!
+            Ram Ram, {user?.name}!
           </h2>
           <p className="text-slate-500 mt-1">Ready for today&apos;s surveys?</p>
         </div>
