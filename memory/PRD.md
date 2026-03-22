@@ -43,6 +43,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Surveyor Report Excel** (Mar 2026): Date-wise progress + Refusal progress 2-sheet Excel download from Dashboard (fixed 404 route placement bug)
 - [x] **Report Download Filters** (Mar 2026): Added filter dialog with Month/Year, Date Range, Surveyor, Colony, Category, Status filters for report download
 - [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info (receiver, house status, property use, surveyed by, condition)
+- [x] **Logo & Name Update** (Mar 2026): Changed logo to new NSTU badge and company name to "National Services Technical Unit" across Login, Sidebar, SelectTown, PDFs, manifest, page title
 
 ## Credentials (Dev)
 - Admin: admin / nastu123

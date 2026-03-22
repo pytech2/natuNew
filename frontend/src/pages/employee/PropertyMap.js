@@ -176,7 +176,7 @@ export default function PropertyMap() {
       // Add header
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('NSTU INDIA PRIVATE LIMITED', pageWidth / 2, 15, { align: 'center' });
+      pdf.text('NATIONAL SERVICES TECHNICAL UNIT', pageWidth / 2, 15, { align: 'center' });
       
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');

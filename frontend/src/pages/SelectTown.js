@@ -180,7 +180,7 @@ export default function SelectTown() {
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-white font-bold">NSTU India Private Limited</h1>
+              <h1 className="text-white font-bold">National Services Technical Unit</h1>
               <p className="text-indigo-200 text-sm">Property Tax Management System</p>
             </div>
           </div>

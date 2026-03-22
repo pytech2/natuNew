@@ -53,13 +53,13 @@ export default function Login() {
           <div className="mx-auto">
             <img 
               src="/nstu-logo.png" 
-              alt="NSTU INDIA PRIVATE LIMITED" 
+              alt="National Services Technical Unit" 
               className="w-48 h-48 object-contain mx-auto"
             />
           </div>
           <div>
             <CardTitle className="text-2xl font-heading font-bold text-slate-900">
-              NSTU INDIA PRIVATE LIMITED
+              National Services Technical Unit
             </CardTitle>
             <CardDescription className="text-slate-500 mt-2">
               Property Survey & Notice Distribution System
@@ -120,7 +120,7 @@ export default function Login() {
           <div className="mt-6 pt-6 border-t border-slate-100">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
               <MapPin className="w-3 h-3" />
-              <span>NSTU INDIA PRIVATE LIMITED</span>
+              <span>National Services Technical Unit</span>
             </div>
           </div>
         </CardContent>

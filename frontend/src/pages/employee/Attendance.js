@@ -169,7 +169,7 @@ export default function Attendance() {
       
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('NSTU INDIA PRIVATE LIMITED', 105, 12, { align: 'center' });
+      pdf.text('NATIONAL SERVICES TECHNICAL UNIT', 105, 12, { align: 'center' });
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.text('Property Survey Map', 105, 18, { align: 'center' });

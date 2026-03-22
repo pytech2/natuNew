@@ -116,12 +116,12 @@ export default function AdminLayout({ children, title }) {
           <div className="flex items-center gap-2">
             <img 
               src="/nstu-logo.png" 
-              alt="NSTU INDIA PRIVATE LIMITED" 
+              alt="National Services Technical Unit" 
               className="w-14 h-14 object-contain rounded-lg bg-white p-1"
             />
             <div>
-              <h1 className="font-heading font-bold text-white text-xs leading-tight">NSTU INDIA PRIVATE LIMITED</h1>
-              <p className="text-[10px] text-slate-400">Property Tax Manager</p>
+              <h1 className="font-heading font-bold text-white text-xs leading-tight">NATIONAL SERVICES TECHNICAL UNIT</h1>
+              <p className="text-[10px] text-slate-400">Property Tax Management</p>
             </div>
           </div>
         </div>
