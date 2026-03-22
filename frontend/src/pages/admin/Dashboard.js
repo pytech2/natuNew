@@ -33,8 +33,9 @@ const ROLE_LABELS = {
 const DARK_COLORS = ['#00f5d4', '#f72585', '#7209b7', '#ffd60a', '#4cc9f0'];
 
 export default function Dashboard() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'ADMIN';
   const [stats, setStats] = useState(null);
   const [submissionStats, setSubmissionStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [employeeProgress, setEmployeeProgress] = useState([]);
@@ -229,17 +230,21 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white border border-cyan-400/30 shadow-lg shadow-cyan-500/20 flex items-center gap-2" data-testid="download-surveyor-report"
-              onClick={handleOpenReportDialog}>
-              <SlidersHorizontal className="w-4 h-4" /> Download Report
-            </Button>
+            {isAdmin && (
+              <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white border border-cyan-400/30 shadow-lg shadow-cyan-500/20 flex items-center gap-2" data-testid="download-surveyor-report"
+                onClick={handleOpenReportDialog}>
+                <SlidersHorizontal className="w-4 h-4" /> Download Report
+              </Button>
+            )}
             {viewMode === 'today' && (
               <input type="date" data-testid="date-picker" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
                 className="px-3 py-2 border border-cyan-500/30 rounded-lg text-sm text-cyan-200 shadow-sm focus:ring-2 focus:ring-cyan-500" style={{background: 'rgba(13,17,55,0.8)'}} />
             )}
-            <Button size="sm" variant="outline" data-testid="download-today-report" className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-2" onClick={downloadTodayReport}>
-              <Download className="w-4 h-4" /> {viewMode === 'today' ? 'Download Day Report' : 'Download Report'}
-            </Button>
+            {isAdmin && (
+              <Button size="sm" variant="outline" data-testid="download-today-report" className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-2" onClick={downloadTodayReport}>
+                <Download className="w-4 h-4" /> {viewMode === 'today' ? 'Download Day Report' : 'Download Report'}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -326,6 +331,7 @@ export default function Dashboard() {
         </div>
 
         {/* ===== EMPLOYEE + ATTENDANCE ===== */}
+        {isAdmin && (
         <div data-testid="employee-attendance-card" className={`${glassCard} cursor-pointer hover:border-cyan-500/40 transition-all`}
           style={glassCardBg} onClick={() => navigate('/admin/attendance')}>
           <div className="p-4">
@@ -360,6 +366,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        )}
 
         {/* ===== PROGRESS REPORTS ===== */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -436,7 +443,7 @@ export default function Dashboard() {
         </div>
 
         {/* ===== TOWN-WISE PROGRESS ===== */}
-        {townStats.length > 0 && (
+        {isAdmin && townStats.length > 0 && (
           <div className={glassCard} style={glassCardBg}>
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-base font-semibold text-cyan-200 flex items-center gap-2">
@@ -477,6 +484,7 @@ export default function Dashboard() {
         )}
 
         {/* ===== CHARTS ===== */}
+        {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className={glassCard} style={glassCardBg}>
             <div className="p-4">
@@ -522,8 +530,10 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        )}
 
         {/* ===== EMPLOYEE PROGRESS TABLE ===== */}
+        {isAdmin && (
         <div className={glassCard} style={glassCardBg}>
           <div className="px-5 pt-4 pb-2 border-b" style={{borderColor: 'rgba(0,245,212,0.1)'}}>
             <div className="flex items-center justify-between">
@@ -627,6 +637,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* Employee Colony Progress Dialog */}
