@@ -109,7 +109,7 @@ export default function AdminLayout({ children, title }) {
   const navItems = getNavItems();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen" style={{background: '#0a0e27'}}>
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="p-3">
@@ -117,11 +117,12 @@ export default function AdminLayout({ children, title }) {
             <img 
               src="/nstu-logo.png" 
               alt="National Services Technical Unit" 
-              className="w-14 h-14 object-contain rounded-lg bg-white p-1"
+              className="w-14 h-14 object-contain rounded-lg"
+              style={{filter: 'drop-shadow(0 0 8px rgba(0,245,212,0.2))'}}
             />
             <div>
               <h1 className="font-heading font-bold text-white text-xs leading-tight">NATIONAL SERVICES TECHNICAL UNIT</h1>
-              <p className="text-[10px] text-slate-400">Property Tax Management</p>
+              <p className="text-[10px] text-cyan-400/50">Property Tax Management</p>
             </div>
           </div>
         </div>
@@ -144,21 +145,21 @@ export default function AdminLayout({ children, title }) {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-slate-800">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t" style={{borderColor: 'rgba(0,245,212,0.1)'}}>
           <div className="flex items-center gap-2 px-2 mb-2">
-            <div className="w-7 h-7 bg-slate-700 rounded-full flex items-center justify-center">
-              <span className="text-xs font-bold text-white">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{background: 'rgba(0,245,212,0.15)', boxShadow: '0 0 8px rgba(0,245,212,0.15)'}}>
+              <span className="text-xs font-bold text-cyan-300">
                 {user?.name?.charAt(0) || 'A'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-white truncate">{user?.name}</p>
-              <p className="text-[10px] text-slate-400">{ROLE_DISPLAY[user?.role] || user?.role}</p>
+              <p className="text-xs font-medium text-cyan-100 truncate">{user?.name}</p>
+              <p className="text-[10px] text-cyan-400/50">{ROLE_DISPLAY[user?.role] || user?.role}</p>
             </div>
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800 text-sm h-8"
+            className="w-full justify-start text-cyan-400/60 hover:text-cyan-300 hover:bg-cyan-500/10 text-sm h-8"
             onClick={handleLogout}
             data-testid="admin-logout-btn"
           >
@@ -169,17 +170,18 @@ export default function AdminLayout({ children, title }) {
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-30">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 border-b" style={{background: 'rgba(13,17,55,0.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(0,245,212,0.12)'}}>
         <div className="flex items-center justify-between px-4 h-14">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-cyan-400 hover:bg-cyan-500/10"
             data-testid="mobile-menu-btn"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
-          <h1 className="font-heading font-bold text-slate-900">{title}</h1>
+          <h1 className="font-heading font-bold text-cyan-100">{title}</h1>
           <TownSelector className="h-8 text-xs" />
         </div>
       </header>
@@ -187,7 +189,7 @@ export default function AdminLayout({ children, title }) {
       {/* Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="lg:hidden fixed inset-0 bg-black/60 z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -196,7 +198,7 @@ export default function AdminLayout({ children, title }) {
       <main className="main-with-sidebar pt-14 lg:pt-0">
         <div className="p-4 md:p-6 lg:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 hidden lg:block">
+            <h1 className="text-2xl md:text-3xl font-heading font-bold text-cyan-100 hidden lg:block" style={{textShadow: '0 0 20px rgba(0,245,212,0.15)'}}>
               {title}
             </h1>
             <div className="hidden lg:block">
