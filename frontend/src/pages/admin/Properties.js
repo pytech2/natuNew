@@ -558,6 +558,24 @@ export default function Properties() {
     setPropertyPhotos([]);
     setPropertySubmission(null);
     setLoadingPhotos(true);
+    
+    const photos = [];
+    
+    // 1. Add OLD photo from property itself (uploaded via CSV)
+    if (prop.photo_url && prop.photo_url.trim()) {
+      const oldUrl = prop.photo_url.startsWith('http') 
+        ? prop.photo_url 
+        : `${process.env.REACT_APP_BACKEND_URL}${prop.photo_url}`;
+      // Use proxy for external government URLs
+      const proxyUrl = prop.photo_url.includes('property.ulbharyana.gov.in') || prop.photo_url.includes('http')
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/proxy-image?url=${encodeURIComponent(prop.photo_url)}`
+        : oldUrl;
+      photos.push({
+        url: proxyUrl,
+        label: 'Old Property Photo'
+      });
+    }
+    
     try {
       const res = await axios.get(`${API_URL}/submission/by-property/${prop.id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -565,8 +583,17 @@ export default function Properties() {
       const sub = res.data?.submission;
       setPropertySubmission(sub);
       if (sub) {
-        const photos = [];
-        // Collect all photos from submission
+        // 2. Add old photo from submission's property_photo_url if not already added
+        if (sub.property_photo_url && sub.property_photo_url.trim() && !prop.photo_url) {
+          const subOldUrl = sub.property_photo_url.includes('http')
+            ? `${process.env.REACT_APP_BACKEND_URL}/api/proxy-image?url=${encodeURIComponent(sub.property_photo_url)}`
+            : `${process.env.REACT_APP_BACKEND_URL}${sub.property_photo_url}`;
+          photos.push({
+            url: subOldUrl,
+            label: 'Old Property Photo'
+          });
+        }
+        // 3. Add survey submission photos
         if (sub.photos && Array.isArray(sub.photos)) {
           sub.photos.forEach(p => {
             const url = typeof p === 'string' ? p : (p.file_url || p.url || p.path || '');
@@ -574,23 +601,16 @@ export default function Properties() {
               const isExternal = url.startsWith('http');
               photos.push({
                 url: isExternal ? url : `${process.env.REACT_APP_BACKEND_URL}${url}`,
-                label: typeof p === 'object' ? (p.photo_type || 'Photo') : 'Photo'
+                label: typeof p === 'object' ? (p.photo_type || 'Survey Photo') : 'Survey Photo'
               });
             }
           });
         }
-        // Check property_photo_url (legacy old photo)
-        if (sub.property_photo_url) {
-          photos.unshift({
-            url: sub.property_photo_url,
-            label: 'Old Property Photo'
-          });
-        }
-        setPropertyPhotos(photos);
       }
     } catch (e) {
-      // No submission found - that's fine
+      // No submission found - that's fine, old photo still shows
     } finally {
+      setPropertyPhotos(photos);
       setLoadingPhotos(false);
     }
   };

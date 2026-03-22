@@ -1514,7 +1514,8 @@ async def list_properties(
         "address": 1, "colony": 1, "ward": 1, "town": 1, "latitude": 1,
         "longitude": 1, "status": 1, "serial_number": 1, "bill_sr_no": 1,
         "amount": 1, "category": 1, "total_area": 1, "assigned_employee_id": 1,
-        "assigned_employee_name": 1, "assigned_employee_ids": 1, "batch_id": 1, "created_at": 1
+        "assigned_employee_name": 1, "assigned_employee_ids": 1, "batch_id": 1, "created_at": 1,
+        "photo_url": 1
     }
     
     skip = (page - 1) * limit
