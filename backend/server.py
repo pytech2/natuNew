@@ -4480,6 +4480,76 @@ async def get_employee_own_progress(current_user: dict = Depends(get_current_use
         "total_completed": total_completed
     }
 
+@api_router.get("/employee/daily-progress")
+async def get_employee_daily_progress(
+    month: int = None,
+    year: int = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get employee's own date-wise survey count for a given month"""
+    from calendar import monthrange
+    now = datetime.now(timezone.utc)
+    m = month or now.month
+    y = year or now.year
+    days_in_month = monthrange(y, m)[1]
+    
+    month_start = f"{y}-{m:02d}-01T00:00:00"
+    if m == 12:
+        month_end = f"{y + 1}-01-01T00:00:00"
+    else:
+        month_end = f"{y}-{m + 1:02d}-01T00:00:00"
+    
+    subs = await get_db().submissions.find(
+        {
+            "employee_id": current_user["id"],
+            "submitted_at": {"$gte": month_start, "$lt": month_end}
+        },
+        {"_id": 0, "submitted_at": 1, "special_condition": 1}
+    ).to_list(None)
+    
+    daily = {}
+    conditions = {"normal": 0, "locked": 0, "denied": 0, "vacant": 0, "wrong": 0}
+    
+    for sub in subs:
+        sub_at = sub.get("submitted_at", "")
+        sc = sub.get("special_condition", "")
+        
+        if sub_at:
+            try:
+                if "T" in str(sub_at):
+                    dt_obj = datetime.fromisoformat(str(sub_at).replace("Z", "+00:00"))
+                    ist = dt_obj + timedelta(hours=5, minutes=30)
+                    day = ist.day
+                else:
+                    day = int(str(sub_at)[8:10])
+                daily[day] = daily.get(day, 0) + 1
+            except:
+                pass
+        
+        if sc in ["property_locked", "house_locked"]:
+            conditions["locked"] += 1
+        elif sc == "owner_denied":
+            conditions["denied"] += 1
+        elif sc == "vacant_plot":
+            conditions["vacant"] += 1
+        elif sc == "wrong_location":
+            conditions["wrong"] += 1
+        else:
+            conditions["normal"] += 1
+    
+    daily_list = []
+    for d in range(1, days_in_month + 1):
+        daily_list.append({"day": d, "count": daily.get(d, 0)})
+    
+    return {
+        "month": m,
+        "year": y,
+        "total": len(subs),
+        "daily": daily_list,
+        "conditions": conditions,
+        "days_in_month": days_in_month
+    }
+
 # ============== ATTENDANCE ROUTES ==============
 
 @api_router.get("/employee/attendance/today")
