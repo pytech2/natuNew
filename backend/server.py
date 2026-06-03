@@ -2554,6 +2554,14 @@ async def get_employee_progress(
     sub_stats_cursor = await town_db.submissions.aggregate(sub_pipeline).to_list(None)
     sub_stats = {s["_id"]: s["count"] for s in sub_stats_cursor}
     
+    # Batch: Get OVERALL (all-time) submission counts per employee
+    overall_pipeline = [
+        {"$match": {"employee_id": {"$in": emp_ids}}},
+        {"$group": {"_id": "$employee_id", "count": {"$sum": 1}}}
+    ]
+    overall_stats_cursor = await town_db.submissions.aggregate(overall_pipeline).to_list(None)
+    overall_stats = {s["_id"]: s["count"] for s in overall_stats_cursor}
+    
     progress = []
     for emp in employees:
         eid = emp["id"]
@@ -2563,9 +2571,11 @@ async def get_employee_progress(
         progress.append({
             "employee_id": eid,
             "employee_name": emp["name"],
+            "employee_mobile": emp.get("mobile", ""),
             "role": emp["role"],
             "total_assigned": ps["total"],
             "completed": ps["completed"],
+            "overall_completed": overall_stats.get(eid, 0),
             "pending": ps["total"] - ps["completed"],
             "today_completed": sub_stats.get(eid, 0),
             "assigned_colonies": assigned_colonies,
