@@ -95,18 +95,19 @@ export default function Dashboard() {
 
   const downloadTodayReport = () => {
     const dateForReport = viewMode === 'today' ? selectedDate : new Date().toISOString().split('T')[0];
-    const headers = ['Employee', 'Role', 'Assigned', 'Today Completed', 'Overall Completed', 'Pending', 'Progress %', 'Colonies'];
-    const sortedData = [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0));
+    const headers = ['Employee', 'Role', 'Assigned', 'Today Completed', 'Overall Completed', 'Completed', 'Pending', 'Progress %', 'Colonies'];
+    const sortedData = [...employeeProgress].sort((a, b) => (b.overall_completed || 0) - (a.overall_completed || 0));
     const rows = sortedData.map(emp => {
       const pct = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
-      return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.total_assigned || 0, emp.today_completed || 0, emp.completed || 0, emp.pending || 0, pct + '%', (emp.assigned_colonies || []).join('; ')];
+      return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.total_assigned || 0, emp.today_completed || 0, emp.overall_completed || 0, emp.completed || 0, emp.pending || 0, pct + '%', (emp.assigned_colonies || []).join('; ')];
     });
     const totalAssigned = sortedData.reduce((s, e) => s + (e.total_assigned || 0), 0);
     const totalToday = sortedData.reduce((s, e) => s + (e.today_completed || 0), 0);
+    const totalOverall = sortedData.reduce((s, e) => s + (e.overall_completed || 0), 0);
     const totalCompleted = sortedData.reduce((s, e) => s + (e.completed || 0), 0);
     const totalPending = sortedData.reduce((s, e) => s + (e.pending || 0), 0);
-    rows.push(['', '', '', '', '', '', '', '']);
-    rows.push(['TOTAL', '', totalAssigned, totalToday, totalCompleted, totalPending, totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) + '%' : '0%', '']);
+    rows.push(['', '', '', '', '', '', '', '', '']);
+    rows.push(['TOTAL', '', totalAssigned, totalToday, totalOverall, totalCompleted, totalPending, totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) + '%' : '0%', '']);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -418,7 +419,7 @@ export default function Dashboard() {
               </h4>
               <div className="space-y-2 max-h-[140px] overflow-y-auto">
                 {employeeProgress.length > 0 ? (
-                  [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0)).slice(0, 5).map((emp) => {
+                  [...employeeProgress].sort((a, b) => (b.overall_completed || 0) - (a.overall_completed || 0)).slice(0, 5).map((emp) => {
                     const pct = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
                     return (
                       <div key={emp.employee_id} className="flex items-center gap-2 text-xs">
@@ -541,11 +542,11 @@ export default function Dashboard() {
                 <Users className="w-5 h-5 text-emerald-400" /> Employee Progress Report
               </h3>
               <Button size="sm" variant="outline" className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-2" onClick={() => {
-                const headers = ['Employee', 'Role', 'Assigned', 'Today', 'Completed', 'Pending', 'Progress %'];
-                const sortedData = [...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0));
+                const headers = ['Employee', 'Role', 'Assigned', 'Today', 'Overall Completed', 'Completed', 'Pending', 'Progress %'];
+                const sortedData = [...employeeProgress].sort((a, b) => (b.overall_completed || 0) - (a.overall_completed || 0));
                 const rows = sortedData.map(emp => {
                   const pct = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
-                  return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.total_assigned || 0, emp.today_completed, emp.completed, emp.pending, pct + '%'];
+                  return [emp.employee_name, ROLE_LABELS[emp.role] || emp.role, emp.total_assigned || 0, emp.today_completed, emp.overall_completed || 0, emp.completed, emp.pending, pct + '%'];
                 });
                 const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
@@ -566,6 +567,7 @@ export default function Dashboard() {
                       <th className="text-left px-4 py-3 text-xs font-semibold text-cyan-300/70 uppercase">Employee</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-cyan-300/70 uppercase">Role</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold uppercase" style={{color: '#00f5d4', background: 'rgba(0,245,212,0.08)'}}>Today</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold uppercase" style={{color: '#f72585', background: 'rgba(247,37,133,0.08)'}}>Overall</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-cyan-300/70 uppercase">Assigned</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-cyan-300/70 uppercase">Completed</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-cyan-300/70 uppercase">Pending</th>
@@ -574,7 +576,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...employeeProgress].sort((a, b) => (b.today_completed || 0) - (a.today_completed || 0)).map((emp, idx) => {
+                    {[...employeeProgress].sort((a, b) => (b.overall_completed || 0) - (a.overall_completed || 0)).map((emp, idx) => {
                       const pct = emp.total_assigned > 0 ? Math.round((emp.completed / emp.total_assigned) * 100) : 0;
                       const rowColors = ['#f72585', '#4cc9f0', '#7209b7', '#00f5d4', '#ffd60a'];
                       return (
@@ -601,6 +603,12 @@ export default function Dashboard() {
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl font-bold text-lg text-emerald-300"
                               style={{background: 'rgba(0,245,212,0.15)', boxShadow: '0 0 12px rgba(0,245,212,0.15)'}}>
                               {emp.today_completed}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center" style={{background: 'rgba(247,37,133,0.05)'}}>
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl font-bold text-lg text-pink-300"
+                              style={{background: 'rgba(247,37,133,0.15)', boxShadow: '0 0 12px rgba(247,37,133,0.15)'}}>
+                              {emp.overall_completed || 0}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center"><span className="font-semibold text-cyan-200">{emp.total_assigned || 0}</span></td>

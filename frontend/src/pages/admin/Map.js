@@ -319,7 +319,8 @@ export default function PropertyMap() {
   const fetchPropertiesByColony = async (colony) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/map/properties?colony=${encodeURIComponent(colony)}&limit=5000`, {
+      const colonyParam = colony === 'ALL_AREAS' ? '' : colony;
+      const response = await axios.get(`${API_URL}/map/properties?colony=${encodeURIComponent(colonyParam)}&limit=5000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -792,7 +793,7 @@ export default function PropertyMap() {
         {showMap && (
           <>
             {/* Colony Selection Info Banner - Show only when no colony selected */}
-            {!filters.colony && (
+            {(!filters.colony || filters.colony === 'ALL_AREAS') && (
               <Card className="border-2 border-blue-200 bg-blue-50/50">
                 <CardContent className="py-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
@@ -806,7 +807,7 @@ export default function PropertyMap() {
                     <div className="flex gap-2 items-center">
                       <Select 
                         value={filters.colony} 
-                        onValueChange={(v) => { setShowFullTown(false); setFilters({ ...filters, colony: v === 'ALL_AREAS' ? '' : v }); }}
+                        onValueChange={(v) => { setShowFullTown(false); setFilters({ ...filters, colony: v }); }}
                       >
                         <SelectTrigger className="w-[250px] h-10 bg-white border-blue-300">
                           <SelectValue placeholder="-- Select Colony --" />
@@ -1351,7 +1352,7 @@ export default function PropertyMap() {
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <MapIcon className="w-4 h-4" />
               {filters.colony 
-                ? `Property Locations - ${filters.colony} (Click marker for details)` 
+                ? `Property Locations - ${filters.colony === 'ALL_AREAS' ? 'All Areas' : filters.colony} (Click marker for details)` 
                 : 'Property Map - Select a colony above to load properties'}
             </CardTitle>
           </CardHeader>

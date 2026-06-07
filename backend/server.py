@@ -4282,7 +4282,7 @@ async def submit_survey(
         raise HTTPException(status_code=404, detail="Property not found")
     
     # Check if property is locked (survey already completed and approved)
-    if prop.get("locked") == True:
+    if prop.get("locked") is True:
         raise HTTPException(status_code=403, detail="This property is locked. Survey already completed.")
     
     # Check if property status is Completed or Approved - prevent re-submission
