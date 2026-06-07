@@ -873,6 +873,23 @@ export default function BillsPage() {
     }
   };
 
+  const [syncingSelfCert, setSyncingSelfCert] = useState(false);
+  const handleSyncSelfCert = async () => {
+    setSyncingSelfCert(true);
+    try {
+      const response = await axios.post(`${API_URL}/admin/sync-self-certified`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 120000
+      });
+      toast.success(response.data.message);
+      fetchSelfCertStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to sync self-certification');
+    } finally {
+      setSyncingSelfCert(false);
+    }
+  };
+
   // Old Photos functions
   const fetchOldPhotoStats = async () => {
     try {
@@ -2317,6 +2334,21 @@ export default function BillsPage() {
                       Delete All
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSyncSelfCert}
+                    disabled={syncingSelfCert}
+                    className="border-green-300 text-green-600 hover:bg-green-50"
+                    data-testid="sync-self-cert-btn"
+                  >
+                    {syncingSelfCert ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Sync Bills
+                  </Button>
                 </div>
               )}
 

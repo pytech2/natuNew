@@ -4922,9 +4922,20 @@ async def upload_pdf_bills(
     skipped_count = 0
     na_serial_count = 0
     
-    # Load self-certified PIDs from database for matching
+    # Load self-certified PIDs from BOTH database sources
     self_certified_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
     self_certified_pids = set(doc["pid"].upper() for doc in self_certified_docs if doc.get("pid"))
+    
+    # Also check properties collection for self_certified = True or "Yes"
+    async for prop in get_db().properties.find(
+        {"$or": [{"self_certified": True}, {"self_certified": "Yes"}]},
+        {"property_id": 1}
+    ):
+        if prop.get("property_id"):
+            self_certified_pids.add(str(prop["property_id"]).upper())
+    
+    logger.info(f"PDF upload: {len(self_certified_pids)} self-certified PIDs found from all sources")
+    
     self_certified_count = 0
     not_self_certified_count = 0
     
@@ -7606,6 +7617,59 @@ async def clear_self_certification(current_user: dict = Depends(get_current_user
     return {
         "message": f"Cleared {result.deleted_count} self-certified PIDs"
     }
+
+@api_router.post("/admin/sync-self-certified")
+async def sync_self_certified(current_user: dict = Depends(get_current_user)):
+    """Sync self_certified status on bills from properties + self_certified_pids collections"""
+    if current_user["role"] not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Build comprehensive self-certified set
+    self_certified_pids = set()
+    
+    # From self_certified_pids collection
+    sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+    for doc in sc_docs:
+        if doc.get("pid"):
+            self_certified_pids.add(str(doc["pid"]).upper())
+    
+    # From properties collection
+    async for prop in get_db().properties.find(
+        {"$or": [{"self_certified": True}, {"self_certified": "Yes"}]},
+        {"property_id": 1}
+    ):
+        if prop.get("property_id"):
+            self_certified_pids.add(str(prop["property_id"]).upper())
+    
+    if not self_certified_pids:
+        return {"message": "No self-certified PIDs found in database", "updated": 0}
+    
+    # Update bills: set self_certified = True where property_id matches
+    updated_true = 0
+    updated_false = 0
+    
+    async for bill in get_db().bills.find({}, {"_id": 1, "property_id": 1, "self_certified": 1}):
+        pid = str(bill.get("property_id", "")).upper()
+        is_certified = pid in self_certified_pids if pid else False
+        current = bill.get("self_certified", False)
+        
+        if is_certified != current:
+            await get_db().bills.update_one(
+                {"_id": bill["_id"]},
+                {"$set": {"self_certified": is_certified}}
+            )
+            if is_certified:
+                updated_true += 1
+            else:
+                updated_false += 1
+    
+    return {
+        "message": f"Synced! {updated_true} bills marked self-certified, {updated_false} bills marked not-certified",
+        "total_certified_pids": len(self_certified_pids),
+        "updated_to_true": updated_true,
+        "updated_to_false": updated_false
+    }
+
 
 @api_router.post("/admin/upload-old-photos")
 async def upload_old_photos(
