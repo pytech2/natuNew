@@ -6149,9 +6149,8 @@ async def generate_arranged_pdf(
     
     included_count = 0
     
-    # Build comprehensive self-certified property ID set
+    # Build self-certified set efficiently with single query
     self_certified_set = set()
-    # From self_certified_pids collection
     try:
         sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
         for doc in sc_docs:
@@ -6159,16 +6158,54 @@ async def generate_arranged_pdf(
                 self_certified_set.add(str(doc["pid"]).upper())
     except Exception:
         pass
-    # From properties collection
-    async for prop in get_db().properties.find({"self_certified": True}, {"property_id": 1}):
-        if prop.get("property_id"):
-            self_certified_set.add(str(prop["property_id"]).upper())
-    # From properties with string "Yes"
-    async for prop in get_db().properties.find({"self_certified": "Yes"}, {"property_id": 1}):
+    async for prop in get_db().properties.find(
+        {"$or": [{"self_certified": True}, {"self_certified": "Yes"}]},
+        {"property_id": 1}
+    ):
         if prop.get("property_id"):
             self_certified_set.add(str(prop["property_id"]).upper())
     
     logger.info(f"PDF generation: {len(self_certified_set)} self-certified property IDs found")
+    
+    # Pre-generate custom note image ONCE (reuse for all pages)
+    note_img_path = None
+    if custom_note and custom_note.strip():
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            note_text = custom_note.strip()
+            note_img_path = f"/tmp/custom_note_{timestamp}.png"
+            
+            font_paths = [
+                '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
+                '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
+                '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
+                '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+            ]
+            pil_font = None
+            for fp in font_paths:
+                if os.path.exists(fp):
+                    try:
+                        pil_font = ImageFont.truetype(fp, 22)
+                        break
+                    except Exception:
+                        continue
+            if not pil_font:
+                pil_font = ImageFont.load_default()
+            
+            tmp_img = Image.new('RGBA', (1, 1))
+            tmp_draw = ImageDraw.Draw(tmp_img)
+            bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
+            text_w = bbox[2] - bbox[0] + 20
+            text_h = bbox[3] - bbox[1] + 10
+            
+            note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
+            note_draw = ImageDraw.Draw(note_img)
+            note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
+            note_img.save(note_img_path, 'PNG')
+            logger.info(f"Pre-generated note image: {text_w}x{text_h}")
+        except Exception as e:
+            logger.warning(f"Could not pre-generate note image: {e}")
+            note_img_path = None
     
     if bills_per_page == 1:
         # ONE BILL PER PAGE - Copy original page directly, add serial overlay
@@ -6237,54 +6274,17 @@ async def generate_arranged_pdf(
                 )
             
             # Add custom note for non-self-certified properties
-            if not is_self_certified and custom_note and custom_note.strip():
+            if not is_self_certified and note_img_path and os.path.exists(note_img_path):
                 try:
-                    note_img_path = "/tmp/custom_note_img.png"
-                    # Generate note image using Pillow
-                    from PIL import Image, ImageDraw, ImageFont
-                    note_text = custom_note.strip()
-                    
-                    # Try Hindi-capable fonts
-                    font_paths = [
-                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
-                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
-                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
-                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-                    ]
-                    pil_font = None
-                    for fp in font_paths:
-                        if os.path.exists(fp):
-                            try:
-                                pil_font = ImageFont.truetype(fp, 22)
-                                break
-                            except Exception:
-                                continue
-                    if not pil_font:
-                        pil_font = ImageFont.load_default()
-                    
-                    # Measure text and create image
-                    tmp_img = Image.new('RGBA', (1, 1))
-                    tmp_draw = ImageDraw.Draw(tmp_img)
-                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
-                    text_w = bbox[2] - bbox[0] + 20
-                    text_h = bbox[3] - bbox[1] + 10
-                    
-                    note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
-                    note_draw = ImageDraw.Draw(note_img)
-                    note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
-                    note_img.save(note_img_path, 'PNG')
-                    
-                    # Insert image into PDF - TOP RIGHT position
                     if rotation == 90:
                         img_rect = fitz.Rect(10, 100, 60, rect.height - 10)
                     elif rotation == 270:
                         img_rect = fitz.Rect(rect.width - 60, 10, rect.width - 10, rect.height - 100)
                     else:
                         img_rect = fitz.Rect(100, 10, rect.width - 10, 60)
-                    
                     new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
                 except Exception as e:
-                    logger.warning(f"Could not add custom note to PDF: {e}")
+                    logger.warning(f"Could not add note to PDF page: {e}")
             
             included_count += 1
     else:
@@ -6362,41 +6362,8 @@ async def generate_arranged_pdf(
             bill_prop_id = str(bill.get("property_id", "")).upper()
             is_self_certified = bill.get("self_certified", False) or (bill_prop_id in self_certified_set)
             
-            if not is_self_certified and custom_note and custom_note.strip():
+            if not is_self_certified and note_img_path and os.path.exists(note_img_path):
                 try:
-                    from PIL import Image as PILImage, ImageDraw, ImageFont
-                    note_text = custom_note.strip()
-                    note_img_path = "/tmp/custom_note_compact.png"
-                    
-                    font_paths = [
-                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
-                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
-                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
-                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-                    ]
-                    pil_font = None
-                    font_size_px = 11 if num_bills == 3 else 13
-                    for fp in font_paths:
-                        if os.path.exists(fp):
-                            try:
-                                pil_font = ImageFont.truetype(fp, font_size_px)
-                                break
-                            except Exception:
-                                continue
-                    if not pil_font:
-                        pil_font = ImageFont.load_default()
-                    
-                    tmp_img = PILImage.new('RGBA', (1, 1))
-                    tmp_draw = ImageDraw.Draw(tmp_img)
-                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
-                    text_w = bbox[2] - bbox[0] + 10
-                    text_h = bbox[3] - bbox[1] + 6
-                    
-                    note_img = PILImage.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
-                    note_draw = ImageDraw.Draw(note_img)
-                    note_draw.text((5, 1), note_text, fill=(204, 0, 0), font=pil_font)
-                    note_img.save(note_img_path, 'PNG')
-                    
                     note_rect = fitz.Rect(rect.x0 + 5, rect.y0 + 2, rect.x1 - 5, rect.y0 + 20)
                     current_page.insert_image(note_rect, filename=note_img_path)
                 except Exception as e:
@@ -6438,6 +6405,13 @@ async def generate_arranged_pdf(
     )
     output_pdf.close()
     src_pdf.close()
+    
+    # Cleanup temp note image
+    if note_img_path and os.path.exists(note_img_path):
+        try:
+            os.unlink(note_img_path)
+        except Exception:
+            pass
     
     pages_created = (included_count + bills_per_page - 1) // bills_per_page if bills_per_page > 1 else included_count
     
@@ -7314,37 +7288,35 @@ async def split_bills_by_specific_employees(
             # Add custom note for non-self-certified properties
             if not is_self_certified and custom_note and custom_note.strip():
                 try:
-                    note_img_path = "/tmp/custom_note_split_img.png"
-                    from PIL import Image, ImageDraw, ImageFont
-                    note_text = custom_note.strip()
-                    
-                    font_paths = [
-                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
-                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
-                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
-                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-                    ]
-                    pil_font = None
-                    for fp in font_paths:
-                        if os.path.exists(fp):
-                            try:
-                                pil_font = ImageFont.truetype(fp, 28)
-                                break
-                            except Exception:
-                                continue
-                    if not pil_font:
-                        pil_font = ImageFont.load_default()
-                    
-                    tmp_img = Image.new('RGBA', (1, 1))
-                    tmp_draw = ImageDraw.Draw(tmp_img)
-                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
-                    text_w = bbox[2] - bbox[0] + 20
-                    text_h = bbox[3] - bbox[1] + 10
-                    
-                    note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
-                    note_draw = ImageDraw.Draw(note_img)
-                    note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
-                    note_img.save(note_img_path, 'PNG')
+                    note_img_path_split = f"/tmp/custom_note_split_{timestamp}.png"
+                    if not os.path.exists(note_img_path_split):
+                        from PIL import Image, ImageDraw, ImageFont
+                        note_text = custom_note.strip()
+                        font_paths = [
+                            '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
+                            '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
+                            '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
+                            '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+                        ]
+                        pil_font = None
+                        for fp in font_paths:
+                            if os.path.exists(fp):
+                                try:
+                                    pil_font = ImageFont.truetype(fp, 28)
+                                    break
+                                except Exception:
+                                    continue
+                        if not pil_font:
+                            pil_font = ImageFont.load_default()
+                        tmp_img = Image.new('RGBA', (1, 1))
+                        tmp_draw = ImageDraw.Draw(tmp_img)
+                        bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
+                        text_w = bbox[2] - bbox[0] + 20
+                        text_h = bbox[3] - bbox[1] + 10
+                        note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
+                        note_draw = ImageDraw.Draw(note_img)
+                        note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
+                        note_img.save(note_img_path_split, 'PNG')
                     
                     if rotation == 90:
                         img_rect = fitz.Rect(477, 5, 542, 590)
@@ -7352,8 +7324,7 @@ async def split_bills_by_specific_employees(
                         img_rect = fitz.Rect(rect.width - 542, rect.height - 590, rect.width - 477, rect.height - 5)
                     else:
                         img_rect = fitz.Rect(5, rect.height - 390, rect.width - 5, rect.height - 325)
-                    
-                    new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
+                    new_page.insert_image(img_rect, filename=note_img_path_split, rotate=rotation)
                 except Exception as e:
                     logger.warning(f"Could not add custom note to split PDF: {e}")
         
