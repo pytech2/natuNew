@@ -1510,11 +1510,12 @@ export default function BillsPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Batch Name {files.length > 1 && <span className="text-xs text-slate-500">(Each file will use its filename as batch)</span>}</Label>
+                <Label>Batch / Colony Name {files.length > 1 && <span className="text-xs text-slate-500">(Each file will use its filename as batch)</span>}</Label>
                 <Input
                   value={batchName}
                   onChange={(e) => setBatchName(e.target.value)}
-                  placeholder="e.g., Akash Nagar Bills 2025-26"
+                  placeholder="e.g., Vijay Nagar Part 1"
+                  maxLength={100}
                   disabled={files.length > 1}
                 />
               </div>

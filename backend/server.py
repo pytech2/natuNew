@@ -4960,6 +4960,10 @@ async def upload_pdf_bills(
             # Extract bill data (pass page for block-based BillSrNo extraction)
             bill_data = extract_bill_data(text, page_num + 1, page)
 
+            # Use batch_name as colony - ensures separate uploads stay separate
+            # e.g., "Vijay Nagar" and "Vijay Nagar Part 1" remain distinct colonies
+            bill_data["colony"] = batch_name.strip()
+
             # Upload ALL records - no skipping during upload
             # Filtering is done at PDF print time via skip_empty_names option
             
