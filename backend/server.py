@@ -6014,6 +6014,7 @@ async def generate_arranged_pdf(
     self_certified_filter: str = Form("all"),
     skip_na_names: str = Form("true"),
     skip_vacant: str = Form("true"),
+    custom_note: str = Form(""),
     current_user: dict = Depends(get_current_user)
 ):
     """Generate PDF with invoices. 3 per page = landscape bills scaled & stacked vertically on A4."""
@@ -6214,53 +6215,55 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add note for non-self-certified properties - using pre-generated image
-            if not is_self_certified:
-                # Use pre-generated Hindi note image
-                note_img_path = "/tmp/hindi_note_cached.png"
-                
-                # Generate image only if it doesn't exist
-                if not os.path.exists(note_img_path):
-                    try:
-                        import subprocess
-                        import tempfile
-                        
-                        hindi_note_html = '''<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:22px;font-weight:bold;color:#cc0000;background:transparent;white-space:nowrap;}</style>
-</head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
-                        
-                        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-                            f.write(hindi_note_html)
-                            html_path = f.name
-                        
-                        try:
-                            subprocess.run([
-                                'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                                '--encoding', 'utf-8', '--width', '1150', '--height', '50', '--quality', '100',
-                                html_path, note_img_path
-                            ], capture_output=True, timeout=30)
-                        finally:
-                            if os.path.exists(html_path):
-                                os.unlink(html_path)
-                    except Exception as e:
-                        logger.warning(f"Could not generate Hindi note image (xvfb-run/wkhtmltoimage may not be installed): {e}")
-                
-                if os.path.exists(note_img_path):
-                    try:
-                        # Insert image into PDF - TOP RIGHT position (serial number is now on LEFT)
-                        if rotation == 90:
-                            # Rotated page - place at TOP RIGHT (visually)
-                            img_rect = fitz.Rect(10, 100, 60, rect.height - 10)
-                        elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 60, 10, rect.width - 10, rect.height - 100)
-                        else:
-                            # Normal page - TOP RIGHT position
-                            img_rect = fitz.Rect(100, 10, rect.width - 10, 60)
-                        
-                        new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
-                    except Exception as e:
-                        logger.error(f"Error inserting Hindi note image: {e}")
+            # Add custom note for non-self-certified properties
+            if not is_self_certified and custom_note and custom_note.strip():
+                try:
+                    note_img_path = "/tmp/custom_note_img.png"
+                    # Generate note image using Pillow
+                    from PIL import Image, ImageDraw, ImageFont
+                    note_text = custom_note.strip()
+                    
+                    # Try Hindi-capable fonts
+                    font_paths = [
+                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
+                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
+                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
+                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+                    ]
+                    pil_font = None
+                    for fp in font_paths:
+                        if os.path.exists(fp):
+                            try:
+                                pil_font = ImageFont.truetype(fp, 22)
+                                break
+                            except Exception:
+                                continue
+                    if not pil_font:
+                        pil_font = ImageFont.load_default()
+                    
+                    # Measure text and create image
+                    tmp_img = Image.new('RGBA', (1, 1))
+                    tmp_draw = ImageDraw.Draw(tmp_img)
+                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
+                    text_w = bbox[2] - bbox[0] + 20
+                    text_h = bbox[3] - bbox[1] + 10
+                    
+                    note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
+                    note_draw = ImageDraw.Draw(note_img)
+                    note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
+                    note_img.save(note_img_path, 'PNG')
+                    
+                    # Insert image into PDF - TOP RIGHT position
+                    if rotation == 90:
+                        img_rect = fitz.Rect(10, 100, 60, rect.height - 10)
+                    elif rotation == 270:
+                        img_rect = fitz.Rect(rect.width - 60, 10, rect.width - 10, rect.height - 100)
+                    else:
+                        img_rect = fitz.Rect(100, 10, rect.width - 10, 60)
+                    
+                    new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
+                except Exception as e:
+                    logger.warning(f"Could not add custom note to PDF: {e}")
             
             included_count += 1
     else:
@@ -6388,6 +6391,7 @@ async def split_bills_by_employee(
     sn_color: str = Form("red"),
     skip_na_names: str = Form("true"),
     skip_vacant: str = Form("true"),
+    custom_note: str = Form(""),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills into separate PDFs for each employee"""
@@ -7046,6 +7050,7 @@ async def split_bills_by_specific_employees(
     employee_ids: str = Form(...),  # Comma-separated employee IDs
     sn_font_size: int = Form(48),
     sn_color: str = Form("red"),
+    custom_note: str = Form(""),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills among specific employees and generate separate PDFs"""
@@ -7225,52 +7230,51 @@ async def split_bills_by_specific_employees(
                 rotate=text_rotate
             )
             
-            # Add note for non-self-certified properties - using pre-generated image
-            if not is_self_certified:
-                # Use pre-generated Hindi note image
-                note_img_path = "/tmp/hindi_note_cached.png"
-                
-                # Generate image only if it doesn't exist
-                if not os.path.exists(note_img_path):
-                    try:
-                        import subprocess
-                        import tempfile
-                        
-                        hindi_note_html = '''<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<style>body{margin:0;padding:0;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:34px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
-</head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
-                        
-                        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-                            f.write(hindi_note_html)
-                            html_path = f.name
-                        
-                        try:
-                            subprocess.run([
-                                'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                                '--encoding', 'utf-8', '--width', '1300', '--height', '70', '--quality', '100',
-                                html_path, note_img_path
-                            ], capture_output=True, timeout=30)
-                        finally:
-                            if os.path.exists(html_path):
-                                os.unlink(html_path)
-                    except Exception as e:
-                        logger.warning(f"Could not generate Hindi note image (xvfb-run/wkhtmltoimage may not be installed): {e}")
-                
-                if os.path.exists(note_img_path):
-                    try:
-                        # Insert image into PDF - left aligned, 300px from bottom
-                        if rotation == 90:
-                            # Y=5 for left align, 300px padding from bottom
-                            img_rect = fitz.Rect(477, 5, 542, 590)
-                        elif rotation == 270:
-                            img_rect = fitz.Rect(rect.width - 542, rect.height - 590, rect.width - 477, rect.height - 5)
-                        else:
-                            img_rect = fitz.Rect(5, rect.height - 390, rect.width - 5, rect.height - 325)
-                        
-                        new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
-                    except Exception as e:
-                        logger.error(f"Error inserting Hindi note image: {e}")
+            # Add custom note for non-self-certified properties
+            if not is_self_certified and custom_note and custom_note.strip():
+                try:
+                    note_img_path = "/tmp/custom_note_split_img.png"
+                    from PIL import Image, ImageDraw, ImageFont
+                    note_text = custom_note.strip()
+                    
+                    font_paths = [
+                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
+                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
+                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
+                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+                    ]
+                    pil_font = None
+                    for fp in font_paths:
+                        if os.path.exists(fp):
+                            try:
+                                pil_font = ImageFont.truetype(fp, 28)
+                                break
+                            except Exception:
+                                continue
+                    if not pil_font:
+                        pil_font = ImageFont.load_default()
+                    
+                    tmp_img = Image.new('RGBA', (1, 1))
+                    tmp_draw = ImageDraw.Draw(tmp_img)
+                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
+                    text_w = bbox[2] - bbox[0] + 20
+                    text_h = bbox[3] - bbox[1] + 10
+                    
+                    note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
+                    note_draw = ImageDraw.Draw(note_img)
+                    note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
+                    note_img.save(note_img_path, 'PNG')
+                    
+                    if rotation == 90:
+                        img_rect = fitz.Rect(477, 5, 542, 590)
+                    elif rotation == 270:
+                        img_rect = fitz.Rect(rect.width - 542, rect.height - 590, rect.width - 477, rect.height - 5)
+                    else:
+                        img_rect = fitz.Rect(5, rect.height - 390, rect.width - 5, rect.height - 325)
+                    
+                    new_page.insert_image(img_rect, filename=note_img_path, rotate=rotation)
+                except Exception as e:
+                    logger.warning(f"Could not add custom note to split PDF: {e}")
         
         output_pdf.save(
             str(output_path),

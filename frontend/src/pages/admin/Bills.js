@@ -101,7 +101,8 @@ export default function BillsPage() {
     print_serial: true,
     self_certified_filter: 'all',
     skip_na_names: true,
-    skip_vacant: true
+    skip_vacant: true,
+    custom_note: 'Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।'
   });
   
   // Split by employee state
@@ -602,6 +603,7 @@ export default function BillsPage() {
       formData.append('self_certified_filter', pdfOptions.self_certified_filter || 'all');
       formData.append('skip_na_names', pdfOptions.skip_na_names ? 'true' : 'false');
       formData.append('skip_vacant', pdfOptions.skip_vacant ? 'true' : 'false');
+      formData.append('custom_note', pdfOptions.custom_note || '');
 
       const response = await axios.post(`${API_URL}/admin/bills/generate-pdf`, formData, {
         headers: { 
@@ -1748,6 +1750,22 @@ export default function BillsPage() {
                     : pdfOptions.self_certified_filter === 'self_certified'
                     ? 'Only include self-certified properties'
                     : 'Only include properties that are NOT self-certified'}
+                </p>
+              </div>
+
+              {/* Custom Note for Non-Self-Certified Bills */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Non-Self-Certified Note (PDF पर लिखा जाएगा)</Label>
+                <textarea
+                  value={pdfOptions.custom_note}
+                  onChange={(e) => setPdfOptions({...pdfOptions, custom_note: e.target.value})}
+                  placeholder="यहाँ Hindi/English note लिखें जो non-self-certified bills पर print होगा"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  data-testid="custom-note-input"
+                />
+                <p className="text-xs text-slate-500">
+                  यह text non-self-certified bills के ऊपर red color में print होगा। खाली छोड़ने पर note नहीं आएगा।
                 </p>
               </div>
 
