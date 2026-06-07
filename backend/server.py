@@ -6172,17 +6172,15 @@ async def generate_arranged_pdf(
             samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(gargi_font):
-                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                _font_name = 'gargi'
-            elif os.path.exists(samyak_font):
-                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                _font_name = 'samyak'
-            elif os.path.exists(freesans_font):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                _font_name = 'freesans'
-            else:
-                _font_name = 'helv'
+            try:
+                if os.path.exists(gargi_font):
+                    new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                elif os.path.exists(samyak_font):
+                    new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                elif os.path.exists(freesans_font):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
+            except Exception as font_err:
+                logger.warning(f"Could not load custom font: {font_err}")
             
             # Add serial number (LEFT side)
             if should_print_serial:
@@ -6219,27 +6217,30 @@ async def generate_arranged_pdf(
                 
                 # Generate image only if it doesn't exist
                 if not os.path.exists(note_img_path):
-                    import subprocess
-                    import tempfile
-                    
-                    hindi_note_html = '''<!DOCTYPE html>
+                    try:
+                        import subprocess
+                        import tempfile
+                        
+                        hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:2px 5px;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:22px;font-weight:bold;color:#cc0000;background:transparent;white-space:nowrap;}</style>
 </head><body>Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
-                    
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-                        f.write(hindi_note_html)
-                        html_path = f.name
-                    
-                    try:
-                        subprocess.run([
-                            'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                            '--encoding', 'utf-8', '--width', '1150', '--height', '50', '--quality', '100',
-                            html_path, note_img_path
-                        ], capture_output=True, timeout=30)
-                    finally:
-                        if os.path.exists(html_path):
-                            os.unlink(html_path)
+                        
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                            f.write(hindi_note_html)
+                            html_path = f.name
+                        
+                        try:
+                            subprocess.run([
+                                'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
+                                '--encoding', 'utf-8', '--width', '1150', '--height', '50', '--quality', '100',
+                                html_path, note_img_path
+                            ], capture_output=True, timeout=30)
+                        finally:
+                            if os.path.exists(html_path):
+                                os.unlink(html_path)
+                    except Exception as e:
+                        logger.warning(f"Could not generate Hindi note image (xvfb-run/wkhtmltoimage may not be installed): {e}")
                 
                 if os.path.exists(note_img_path):
                     try:
@@ -6543,17 +6544,15 @@ async def split_bills_by_employee(
             samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(gargi_font):
-                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                _font_name = 'gargi'
-            elif os.path.exists(samyak_font):
-                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                _font_name = 'samyak'
-            elif os.path.exists(freesans_font):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                _font_name = 'freesans'
-            else:
-                _font_name = 'helv'
+            try:
+                if os.path.exists(gargi_font):
+                    new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                elif os.path.exists(samyak_font):
+                    new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                elif os.path.exists(freesans_font):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
+            except Exception as font_err:
+                logger.warning(f"Could not load custom font: {font_err}")
             
             # Add serial number (RIGHT side)
             if rotation == 90:
@@ -7190,17 +7189,15 @@ async def split_bills_by_specific_employees(
             samyak_font = '/usr/share/fonts/truetype/samyak-fonts/Samyak-Devanagari.ttf'
             freesans_font = '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
             
-            if os.path.exists(gargi_font):
-                new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                _font_name = 'gargi'
-            elif os.path.exists(samyak_font):
-                new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                _font_name = 'samyak'
-            elif os.path.exists(freesans_font):
-                new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                _font_name = 'freesans'
-            else:
-                _font_name = 'helv'
+            try:
+                if os.path.exists(gargi_font):
+                    new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
+                elif os.path.exists(samyak_font):
+                    new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
+                elif os.path.exists(freesans_font):
+                    new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
+            except Exception as font_err:
+                logger.warning(f"Could not load custom font: {font_err}")
             
             # Add serial number (RIGHT side)
             if rotation == 90:
@@ -7231,27 +7228,30 @@ async def split_bills_by_specific_employees(
                 
                 # Generate image only if it doesn't exist
                 if not os.path.exists(note_img_path):
-                    import subprocess
-                    import tempfile
-                    
-                    hindi_note_html = '''<!DOCTYPE html>
+                    try:
+                        import subprocess
+                        import tempfile
+                        
+                        hindi_note_html = '''<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>body{margin:0;padding:0;font-family:'Noto Sans Devanagari','Lohit Devanagari',sans-serif;font-size:34px;color:#cc0000;background:transparent;white-space:nowrap;}</style>
 </head><body>Note : आप अपनी Property ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी Property के साथ कोई छेड़ -छाड़ ना कर सके।</body></html>'''
-                    
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-                        f.write(hindi_note_html)
-                        html_path = f.name
-                    
-                    try:
-                        subprocess.run([
-                            'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
-                            '--encoding', 'utf-8', '--width', '1300', '--height', '70', '--quality', '100',
-                            html_path, note_img_path
-                        ], capture_output=True, timeout=30)
-                    finally:
-                        if os.path.exists(html_path):
-                            os.unlink(html_path)
+                        
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                            f.write(hindi_note_html)
+                            html_path = f.name
+                        
+                        try:
+                            subprocess.run([
+                                'xvfb-run', '--auto-servernum', 'wkhtmltoimage',
+                                '--encoding', 'utf-8', '--width', '1300', '--height', '70', '--quality', '100',
+                                html_path, note_img_path
+                            ], capture_output=True, timeout=30)
+                        finally:
+                            if os.path.exists(html_path):
+                                os.unlink(html_path)
+                    except Exception as e:
+                        logger.warning(f"Could not generate Hindi note image (xvfb-run/wkhtmltoimage may not be installed): {e}")
                 
                 if os.path.exists(note_img_path):
                     try:
