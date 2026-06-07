@@ -6031,6 +6031,10 @@ async def generate_arranged_pdf(
     if colony and colony.strip():
         query["colony"] = {"$regex": f"^{re.escape(colony.strip())}$", "$options": "i"}
     
+    # Must have at least batch or colony filter
+    if "batch_id" not in query and "colony" not in query:
+        raise HTTPException(status_code=400, detail="Pehle Batch ya Colony select karein")
+    
     # Add self_certified filter
     if self_certified_filter == "self_certified":
         query["self_certified"] = True
