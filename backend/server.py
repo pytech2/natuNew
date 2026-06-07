@@ -1340,12 +1340,12 @@ async def upload_batch(
             if lat_str:
                 try:
                     prop["latitude"] = float(lat_str)
-                except:
+                except (ValueError, TypeError):
                     pass
             if lng_str:
                 try:
                     prop["longitude"] = float(lng_str)
-                except:
+                except (ValueError, TypeError):
                     pass
             
             properties.append(prop)
@@ -1385,12 +1385,12 @@ async def upload_batch(
             if lat_str:
                 try:
                     prop["latitude"] = float(lat_str)
-                except:
+                except (ValueError, TypeError):
                     pass
             if lng_str:
                 try:
                     prop["longitude"] = float(lng_str)
-                except:
+                except (ValueError, TypeError):
                     pass
             
             properties.append(prop)
@@ -1658,7 +1658,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             bill_sr_num = 0
             try:
                 bill_sr_num = int(bill_sr_str)
-            except:
+            except (ValueError, TypeError):
                 pass
             
             # Handle N-prefix serial numbers (e.g., N45, N584, N123)
@@ -1666,7 +1666,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             if bill_sr_str.upper().startswith("N"):
                 try:
                     n_serial = int(bill_sr_str[1:])  # Extract number after "N"
-                except:
+                except (ValueError, TypeError):
                     pass
             
             # Use the best available serial: actual serial > bill_sr_no as number > N-prefix number
@@ -1691,7 +1691,7 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
             if emp_id not in new_emp_ids:
                 continue
                 
-            emp_name = emp_name_map.get(emp_id, "Unknown")
+            _emp_name = emp_name_map.get(emp_id, "Unknown")
             
             # Assign 'count' properties to this employee
             for i in range(int(count)):
@@ -2738,7 +2738,7 @@ async def get_town_stats(request: Request, current_user: dict = Depends(get_curr
     
     town_db = await get_town_data_db(request)
     pipeline = [
-        {"$match": {"town": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$match": {"town": {"$exists": True, "$nin": [None, ""]}}},
         {"$group": {
             "_id": "$town",
             "total": {"$sum": 1},
@@ -2853,7 +2853,7 @@ async def list_submissions(
     # Photo status filter
     if photo_status and photo_status.strip():
         if photo_status == "with_photos":
-            query["photos"] = {"$exists": True, "$ne": [], "$ne": None}
+            query["photos"] = {"$exists": True, "$nin": [[], None]}
         elif photo_status == "without_photos":
             query["$or"] = [
                 {"photos": {"$exists": False}},
@@ -3051,7 +3051,7 @@ async def export_submissions(
     # Photo status filter
     if photo_status and photo_status.strip():
         if photo_status == "with_photos":
-            query["photos"] = {"$exists": True, "$ne": [], "$ne": None}
+            query["photos"] = {"$exists": True, "$nin": [[], None]}
         elif photo_status == "without_photos":
             query["$or"] = [
                 {"photos": {"$exists": False}},
@@ -3778,7 +3778,7 @@ def add_watermark_to_photo(photo_path, latitude, longitude, submitted_at):
         if isinstance(submitted_at, str):
             try:
                 dt = datetime.fromisoformat(submitted_at.replace('Z', '+00:00'))
-            except:
+            except (ValueError, TypeError):
                 dt = datetime.now()
         else:
             dt = submitted_at or datetime.now()
@@ -3796,7 +3796,7 @@ def add_watermark_to_photo(photo_path, latitude, longitude, submitted_at):
         font_size = max(14, min(img.width, img.height) // 30)
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except:
+        except (OSError, IOError):
             font = ImageFont.load_default()
         
         padding = font_size // 2
@@ -4086,7 +4086,7 @@ async def export_pdf(
                             try:
                                 if temp_photo_path.exists():
                                     temp_photo_path.unlink()
-                            except:
+                            except (ValueError, TypeError):
                                 pass
         
         signature_url = submission.get("signature_url")
@@ -4138,7 +4138,7 @@ async def export_pdf(
                         try:
                             if temp_sig_path.exists():
                                 temp_sig_path.unlink()
-                        except:
+                        except (ValueError, TypeError):
                             pass
         
         story.append(PageBreak())
@@ -4468,7 +4468,7 @@ async def get_employee_own_progress(current_user: dict = Depends(get_current_use
     pending = stat_counts.get("Pending", 0)
     rejected = stat_counts.get("Rejected", 0)
     in_progress = stat_counts.get("In Progress", 0)
-    approved = stat_counts.get("Approved", 0)
+    _approved = stat_counts.get("Approved", 0)
     
     # Today's completed
     today_completed = await get_db().submissions.count_documents({
@@ -4534,7 +4534,7 @@ async def get_employee_daily_progress(
                 else:
                     day = int(str(sub_at)[8:10])
                 daily[day] = daily.get(day, 0) + 1
-            except:
+            except (ValueError, TypeError):
                 pass
         
         if sc in ["property_locked", "house_locked"]:
@@ -4959,10 +4959,7 @@ async def upload_pdf_bills(
             
             # Extract bill data (pass page for block-based BillSrNo extraction)
             bill_data = extract_bill_data(text, page_num + 1, page)
-            
-            owner_name = bill_data.get("owner_name", "")
-            category = bill_data.get("category", "")
-            
+
             # Upload ALL records - no skipping during upload
             # Filtering is done at PDF print time via skip_empty_names option
             
@@ -5184,7 +5181,7 @@ async def auto_complete_surveys(
     body = {}
     try:
         body = await request.json()
-    except:
+    except Exception:
         pass
     
     selected_employee_id = body.get("employee_id") or employee_id
@@ -5347,7 +5344,7 @@ async def export_colony_progress_excel(
     # Get all colonies with their property counts using aggregation
     na_owner_list = [None, "", "NA", "N/A", "na", "n/a", "UNKNOWN", "unknown"]
     prop_pipeline = [
-        {"$match": {"ward": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$match": {"ward": {"$exists": True, "$nin": [None, ""]}}},
         {"$group": {
             "_id": "$ward",
             "total": {"$sum": 1},
@@ -5384,14 +5381,14 @@ async def export_colony_progress_excel(
     # Get actual surveyor names from submissions (who did the survey)
     # First build colony map from properties: property internal id -> colony/ward
     all_props = await get_db().properties.find(
-        {"ward": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"ward": {"$exists": True, "$nin": [None, ""]}},
         {"_id": 0, "id": 1, "ward": 1}
     ).to_list(None)
     prop_colony_map = {p["id"]: p["ward"] for p in all_props}
     
     # Get surveyor names from submissions grouped by colony
     survey_names_pipeline = [
-        {"$match": {"employee_name": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$match": {"employee_name": {"$exists": True, "$nin": [None, ""]}}},
         {"$group": {
             "_id": "$property_record_id",
             "employee_name": {"$first": "$employee_name"}
@@ -6177,15 +6174,15 @@ async def generate_arranged_pdf(
             
             if os.path.exists(gargi_font):
                 new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                font_name = 'gargi'
+                _font_name = 'gargi'
             elif os.path.exists(samyak_font):
                 new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                font_name = 'samyak'
+                _font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                font_name = 'freesans'
+                _font_name = 'freesans'
             else:
-                font_name = 'helv'
+                _font_name = 'helv'
             
             # Add serial number (LEFT side)
             if should_print_serial:
@@ -6538,7 +6535,7 @@ async def split_bills_by_employee(
             
             # Add Hindi message FIRST (left side), then serial number (right side)
             # Both at top with 50px padding
-            is_self_certified = bill.get("self_certified", False)
+            _is_self_certified = bill.get("self_certified", False)
             
             # Load font for Hindi + English support
             # Try Gargi font for proper Hindi rendering
@@ -6548,15 +6545,15 @@ async def split_bills_by_employee(
             
             if os.path.exists(gargi_font):
                 new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                font_name = 'gargi'
+                _font_name = 'gargi'
             elif os.path.exists(samyak_font):
                 new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                font_name = 'samyak'
+                _font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                font_name = 'freesans'
+                _font_name = 'freesans'
             else:
-                font_name = 'helv'
+                _font_name = 'helv'
             
             # Add serial number (RIGHT side)
             if rotation == 90:
@@ -6714,7 +6711,7 @@ async def copy_bills_to_properties(
     if current_user["role"] not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    should_skip_duplicates = skip_duplicates.lower() == "true"
+    _should_skip_duplicates = skip_duplicates.lower() == "true"
     should_skip_vacant = skip_vacant_plots.lower() == "true"
     should_skip_na = skip_na_names.lower() == "true"
     should_skip_duplicate_gps = skip_duplicate_gps.lower() == "true"
@@ -7195,15 +7192,15 @@ async def split_bills_by_specific_employees(
             
             if os.path.exists(gargi_font):
                 new_page.insert_font(fontname='gargi', fontbuffer=open(gargi_font, 'rb').read())
-                font_name = 'gargi'
+                _font_name = 'gargi'
             elif os.path.exists(samyak_font):
                 new_page.insert_font(fontname='samyak', fontbuffer=open(samyak_font, 'rb').read())
-                font_name = 'samyak'
+                _font_name = 'samyak'
             elif os.path.exists(freesans_font):
                 new_page.insert_font(fontname='freesans', fontbuffer=open(freesans_font, 'rb').read())
-                font_name = 'freesans'
+                _font_name = 'freesans'
             else:
-                font_name = 'helv'
+                _font_name = 'helv'
             
             # Add serial number (RIGHT side)
             if rotation == 90:
@@ -7624,7 +7621,7 @@ async def missing_photos_report(
     
     # Get properties WITH photo_url
     with_photo = await town_db.properties.count_documents(
-        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}}
+        {"photo_url": {"$exists": True, "$nin": [None, ""]}}
     )
     total = await town_db.properties.count_documents({})
     
@@ -7693,7 +7690,7 @@ async def clear_old_photos(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     result = await get_db().properties.update_many(
-        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"photo_url": {"$exists": True, "$nin": [None, ""]}},
         {"$unset": {"photo_url": ""}}
     )
     
@@ -7708,7 +7705,7 @@ async def get_old_photos_stats(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     total_with_photos = await get_db().properties.count_documents(
-        {"photo_url": {"$exists": True, "$ne": None, "$ne": ""}}
+        {"photo_url": {"$exists": True, "$nin": [None, ""]}}
     )
     
     return {"total_with_photos": total_with_photos}
@@ -7928,7 +7925,7 @@ async def surveyor_report(
                 else:
                     day = int(str(sub_at)[8:10])
                 emp_daily[eid][day] = emp_daily[eid].get(day, 0) + 1
-            except:
+            except (ValueError, TypeError):
                 pass
         
         # Condition count

@@ -115,7 +115,7 @@ class TestThreeBugFixes:
         
         # Ensure it's NOT using the old incorrect URL
         # Search specifically in the export section
-        export_section_match = re.search(
+        _export_section_match = re.search(
             r'@api_router\.get\("/admin/export"\).*?def.*?export',
             content,
             re.DOTALL

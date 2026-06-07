@@ -126,7 +126,7 @@ class TestApproveRejectSubmissions:
         assert response.status_code == 200
         user = response.json()
         assert user["role"] == "SUPERVISOR", f"Expected SUPERVISOR role, got {user['role']}"
-        print(f"✅ User 'a' has SUPERVISOR role - can approve/reject submissions")
+        print("✅ User 'a' has SUPERVISOR role - can approve/reject submissions")
     
     def test_mc_officer_role_check(self):
         """Verify MC Officer has correct role for approve/reject"""
@@ -143,7 +143,7 @@ class TestApproveRejectSubmissions:
         assert response.status_code == 200
         user = response.json()
         assert user["role"] == "MC_OFFICER", f"Expected MC_OFFICER role, got {user['role']}"
-        print(f"✅ User '1234567890' has MC_OFFICER role - can approve/reject submissions")
+        print("✅ User '1234567890' has MC_OFFICER role - can approve/reject submissions")
     
     def test_supervisor_can_access_submissions(self):
         """Supervisor should be able to access submissions page"""
@@ -157,7 +157,7 @@ class TestApproveRejectSubmissions:
         )
         
         assert response.status_code == 200, f"Supervisor failed to access submissions: {response.text}"
-        print(f"✅ Supervisor can access submissions page - FIX #2 VERIFIED")
+        print("✅ Supervisor can access submissions page - FIX #2 VERIFIED")
     
     def test_mc_officer_can_access_submissions(self):
         """MC Officer should be able to access submissions page"""
@@ -171,7 +171,7 @@ class TestApproveRejectSubmissions:
         )
         
         assert response.status_code == 200, f"MC Officer failed to access submissions: {response.text}"
-        print(f"✅ MC Officer can access submissions page - FIX #2 VERIFIED")
+        print("✅ MC Officer can access submissions page - FIX #2 VERIFIED")
 
 
 class TestBulkPDFUpload:

@@ -118,7 +118,7 @@ class TestAutoCompleteRemarks:
         for field in expected_fields:
             assert field in sub, f"Missing field: {field}"
         
-        print(f"✅ Submission structure verified with all expected fields")
+        print("✅ Submission structure verified with all expected fields")
 
 
 class TestPropertyLatLongFromBills:
@@ -171,7 +171,7 @@ class TestPropertyLatLongFromBills:
         # We expect some submissions to have property coordinates
         # (These come from the original bills/properties data)
         assert subs_with_property_coords >= 0, "Test passed - property coordinates field is being returned"
-        print(f"✅ Property coordinates are being returned in submissions response")
+        print("✅ Property coordinates are being returned in submissions response")
 
 
 class TestPhotoURLHandling:
@@ -296,7 +296,7 @@ class TestEmployeeUnassignment:
         
         # Should return 404 because no properties found
         assert response.status_code in [200, 404], f"Unexpected status: {response.status_code}"
-        print(f"✅ Remove-from-colony endpoint works correctly")
+        print("✅ Remove-from-colony endpoint works correctly")
 
 
 class TestGPSLocationDisplay:

@@ -83,11 +83,11 @@ async def migrate_files():
             print(f"  ERROR: {filename} - {str(e)}")
             errors += 1
     
-    print(f"\n=== Migration Complete ===")
+    print("\n=== Migration Complete ===")
     print(f"Migrated: {migrated}")
     print(f"Skipped (already exists): {skipped}")
     print(f"Errors: {errors}")
-    print(f"\nNote: Original files in uploads folder are NOT deleted.")
+    print("\nNote: Original files in uploads folder are NOT deleted.")
     print("You can delete them manually after verifying everything works.")
 
 if __name__ == "__main__":

@@ -171,7 +171,7 @@ class TestEmployeeProgress:
         for field in required_fields:
             assert field in emp, f"Missing field: {field}"
         
-        print(f"All required fields present including overall_completed")
+        print("All required fields present including overall_completed")
         
     def test_employee_progress_sorted_by_overall(self):
         """Employee progress should be sortable by overall_completed descending"""

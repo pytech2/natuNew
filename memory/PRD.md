@@ -42,20 +42,24 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Auto-complete All Colonies** (Mar 2026): Added "All Colonies" option in auto-complete dialog
 - [x] **Surveyor Report Excel** (Mar 2026): Date-wise progress + Refusal progress 2-sheet Excel download from Dashboard (fixed 404 route placement bug)
 - [x] **Report Download Filters** (Mar 2026): Added filter dialog with Month/Year, Date Range, Surveyor, Colony, Category, Status filters for report download
-- [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info (receiver, house status, property use, surveyed by, condition)
-- [x] **Logo & Name Update** (Mar 2026): Changed logo to new NSTU badge and company name to "National Services Technical Unit" across Login, Sidebar, SelectTown, PDFs, manifest, page title
-- [x] **Dashboard Dark Theme Redesign** (Mar 2026): Complete dark navy blue theme with glassmorphism cards, glowing cyan/pink borders, neon accents, dark-themed charts and tables
-- [x] **Login & SelectTown Dark Theme** (Mar 2026): Login page and Town selection page redesigned with matching dark navy theme, glassmorphism, glowing orbs, neon accents
-- [x] **Employee Dashboard Redesign** (Mar 2026): Dark theme with date-wise calendar view, Hindi labels ("Ram Ram", "Aaj Ka Kaam"), survey conditions breakdown, month navigation
-- [x] **Full App Dark Theme** (Mar 2026): AdminLayout sidebar, EmployeeLayout header/bottom-nav, scrollbar, all matching dark navy theme with cyan accents
+- [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info
+- [x] **Logo & Name Update** (Mar 2026): Changed logo to new NSTU badge and company name
+- [x] **Dashboard Dark Theme Redesign** (Mar 2026): Complete dark navy blue theme with glassmorphism
+- [x] **Login & SelectTown Dark Theme** (Mar 2026): Dark navy theme with glassmorphism
+- [x] **Employee Dashboard Redesign** (Mar 2026): Dark theme with date-wise calendar view
+- [x] **Full App Dark Theme** (Mar 2026): AdminLayout sidebar, EmployeeLayout header/bottom-nav
+- [x] **Admin Password Reset** (Jun 2026): Reset to Raghav2026
+- [x] **Map Properties Fix** (Jun 2026): Fixed ALL_AREAS colony selection bug that prevented properties from loading
+- [x] **Employee Progress Report Overall Column** (Jun 2026): Added "Overall" column with all-time submission count, sorted max to min
 
-## Credentials (Dev)
-- Admin: admin / nastu123
+## Credentials
+- Admin: admin / Raghav2026
 - Surveyor: surveyor1 / test123
+- Supervisor: a / test123
 
 ## Prioritized Backlog
 ### P0
-- VPS deployment workflow (user-side GitHub auth fix needed)
+- VPS deployment on Hostinger (app.nstu.in) - step-by-step guide needed
 
 ### P1
 - Offline support for surveyor mobile interface

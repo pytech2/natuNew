@@ -126,7 +126,7 @@ async def create_town_indexes(db):
         await db.employees.create_index("id", unique=True, background=True)
         await db.employees.create_index("user_id", background=True)
         
-        print(f"✅ Town DB indexes created successfully")
+        print("✅ Town DB indexes created successfully")
     except Exception as e:
         print(f"⚠️ Error creating town indexes: {e}")
 

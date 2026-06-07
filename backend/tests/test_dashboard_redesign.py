@@ -153,7 +153,7 @@ class TestDashboardAPI:
         data = response.json()
         
         # Print full response for debugging
-        print(f"\n=== Full Dashboard Response ===")
+        print("\n=== Full Dashboard Response ===")
         print(f"Total: {data.get('total')}")
         print(f"Approved: {data.get('approved')}")
         print(f"Pending: {data.get('pending')}")
@@ -163,7 +163,7 @@ class TestDashboardAPI:
         print(f"Category: {data.get('category')}")
         print(f"Owner NA: {data.get('owner_na')}")
         print(f"Mobile NA: {data.get('mobile_na')}")
-        print(f"==============================\n")
+        print("==============================\n")
         
         # Verify all expected fields
         required_fields = ["total", "approved", "pending", "rejected", "employees", "colonies", "category", "owner_na", "mobile_na"]
@@ -188,7 +188,7 @@ class TestSubmissionStats:
         assert "approved" in data, "Missing approved"
         assert "rejected" in data, "Missing rejected"
         
-        print(f"✓ Bill Distribution Status:")
+        print("✓ Bill Distribution Status:")
         print(f"  - Total: {data.get('total')}")
         print(f"  - Pending: {data.get('pending')}")
         print(f"  - Approved: {data.get('approved')}")
