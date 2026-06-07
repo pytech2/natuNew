@@ -6149,6 +6149,27 @@ async def generate_arranged_pdf(
     
     included_count = 0
     
+    # Build comprehensive self-certified property ID set
+    self_certified_set = set()
+    # From self_certified_pids collection
+    try:
+        sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+        for doc in sc_docs:
+            if doc.get("pid"):
+                self_certified_set.add(str(doc["pid"]).upper())
+    except Exception:
+        pass
+    # From properties collection
+    async for prop in get_db().properties.find({"self_certified": True}, {"property_id": 1}):
+        if prop.get("property_id"):
+            self_certified_set.add(str(prop["property_id"]).upper())
+    # From properties with string "Yes"
+    async for prop in get_db().properties.find({"self_certified": "Yes"}, {"property_id": 1}):
+        if prop.get("property_id"):
+            self_certified_set.add(str(prop["property_id"]).upper())
+    
+    logger.info(f"PDF generation: {len(self_certified_set)} self-certified property IDs found")
+    
     if bills_per_page == 1:
         # ONE BILL PER PAGE - Copy original page directly, add serial overlay
         for bill in bills:
@@ -6167,9 +6188,9 @@ async def generate_arranged_pdf(
             rotation = new_page.rotation
             rect = new_page.rect
             
-            # Add Hindi message FIRST (left side), then serial number (right side)
-            # Both at top with 50px padding
-            is_self_certified = bill.get("self_certified", False)
+            # Check self-certification from bill data AND properties set
+            bill_prop_id = str(bill.get("property_id", "")).upper()
+            is_self_certified = bill.get("self_certified", False) or (bill_prop_id in self_certified_set)
             
             # Load font for Hindi + English support
             # Try Gargi font for proper Hindi rendering
@@ -6338,16 +6359,8 @@ async def generate_arranged_pdf(
             current_page.insert_image(rect, stream=img_bytes)
             
             # Add custom note for non-self-certified bills
-            is_self_certified = bill.get("self_certified", False)
             bill_prop_id = str(bill.get("property_id", "")).upper()
-            if not is_self_certified:
-                # Check if self-certified from properties
-                prop = await town_db.properties.find_one(
-                    {"property_id": {"$regex": f"^{re.escape(bill_prop_id)}$", "$options": "i"}},
-                    {"self_certified": 1}
-                )
-                if prop and prop.get("self_certified"):
-                    is_self_certified = True
+            is_self_certified = bill.get("self_certified", False) or (bill_prop_id in self_certified_set)
             
             if not is_self_certified and custom_note and custom_note.strip():
                 try:
@@ -7154,6 +7167,22 @@ async def split_bills_by_specific_employees(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     generated_files = []
     
+    # Build comprehensive self-certified property ID set
+    self_certified_set = set()
+    try:
+        sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+        for doc in sc_docs:
+            if doc.get("pid"):
+                self_certified_set.add(str(doc["pid"]).upper())
+    except Exception:
+        pass
+    async for prop in get_db().properties.find({"self_certified": True}, {"property_id": 1}):
+        if prop.get("property_id"):
+            self_certified_set.add(str(prop["property_id"]).upper())
+    async for prop in get_db().properties.find({"self_certified": "Yes"}, {"property_id": 1}):
+        if prop.get("property_id"):
+            self_certified_set.add(str(prop["property_id"]).upper())
+    
     # Color mapping
     color_map = {
         "red": (1, 0, 0),
@@ -7240,9 +7269,9 @@ async def split_bills_by_specific_employees(
             # Get the serial number text
             sn_text = get_display_serial(bill)
             
-            # Add Hindi message FIRST (left side), then serial number (right side)
-            # Both at top with 50px padding
-            is_self_certified = bill.get("self_certified", False)
+            # Check self-certification from bill data AND properties set
+            bill_prop_id = str(bill.get("property_id", "")).upper()
+            is_self_certified = bill.get("self_certified", False) or (bill_prop_id in self_certified_set)
             
             # Load font for Hindi + English support
             # Try Gargi font for proper Hindi rendering
