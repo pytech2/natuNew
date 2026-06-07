@@ -6337,6 +6337,58 @@ async def generate_arranged_pdf(
             # Insert the JPEG image
             current_page.insert_image(rect, stream=img_bytes)
             
+            # Add custom note for non-self-certified bills
+            is_self_certified = bill.get("self_certified", False)
+            bill_prop_id = str(bill.get("property_id", "")).upper()
+            if not is_self_certified:
+                # Check if self-certified from properties
+                prop = await town_db.properties.find_one(
+                    {"property_id": {"$regex": f"^{re.escape(bill_prop_id)}$", "$options": "i"}},
+                    {"self_certified": 1}
+                )
+                if prop and prop.get("self_certified"):
+                    is_self_certified = True
+            
+            if not is_self_certified and custom_note and custom_note.strip():
+                try:
+                    from PIL import Image as PILImage, ImageDraw, ImageFont
+                    note_text = custom_note.strip()
+                    note_img_path = "/tmp/custom_note_compact.png"
+                    
+                    font_paths = [
+                        '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
+                        '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
+                        '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
+                        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+                    ]
+                    pil_font = None
+                    font_size_px = 11 if num_bills == 3 else 13
+                    for fp in font_paths:
+                        if os.path.exists(fp):
+                            try:
+                                pil_font = ImageFont.truetype(fp, font_size_px)
+                                break
+                            except Exception:
+                                continue
+                    if not pil_font:
+                        pil_font = ImageFont.load_default()
+                    
+                    tmp_img = PILImage.new('RGBA', (1, 1))
+                    tmp_draw = ImageDraw.Draw(tmp_img)
+                    bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
+                    text_w = bbox[2] - bbox[0] + 10
+                    text_h = bbox[3] - bbox[1] + 6
+                    
+                    note_img = PILImage.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
+                    note_draw = ImageDraw.Draw(note_img)
+                    note_draw.text((5, 1), note_text, fill=(204, 0, 0), font=pil_font)
+                    note_img.save(note_img_path, 'PNG')
+                    
+                    note_rect = fitz.Rect(rect.x0 + 5, rect.y0 + 2, rect.x1 - 5, rect.y0 + 20)
+                    current_page.insert_image(note_rect, filename=note_img_path)
+                except Exception as e:
+                    logger.warning(f"Could not add note to compact PDF: {e}")
+            
             # Add serial number overlay if enabled
             if should_print_serial:
                 serial_text = get_display_serial(bill)
