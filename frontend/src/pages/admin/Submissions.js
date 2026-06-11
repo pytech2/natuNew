@@ -20,6 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { Calendar as CalendarComponent } from '../../components/ui/calendar';
+import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -645,23 +648,55 @@ export default function Submissions() {
               {/* Date From Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">From Date</label>
-                <Input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="h-10"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={`w-full h-10 justify-start text-left font-normal ${!dateFilter ? 'text-muted-foreground' : ''}`}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {dateFilter ? format(new Date(dateFilter + 'T00:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFilter ? new Date(dateFilter + 'T00:00:00') : undefined}
+                      onSelect={(date) => setDateFilter(date ? format(date, 'yyyy-MM-dd') : '')}
+                    />
+                    {dateFilter && (
+                      <div className="p-2 border-t">
+                        <Button variant="ghost" size="sm" className="w-full text-red-500" onClick={() => setDateFilter('')}>
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
               
               {/* Date To Filter */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">To Date</label>
-                <Input
-                  type="date"
-                  value={dateToFilter}
-                  onChange={(e) => setDateToFilter(e.target.value)}
-                  className="h-10"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={`w-full h-10 justify-start text-left font-normal ${!dateToFilter ? 'text-muted-foreground' : ''}`}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {dateToFilter ? format(new Date(dateToFilter + 'T00:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateToFilter ? new Date(dateToFilter + 'T00:00:00') : undefined}
+                      onSelect={(date) => setDateToFilter(date ? format(date, 'yyyy-MM-dd') : '')}
+                    />
+                    {dateToFilter && (
+                      <div className="p-2 border-t">
+                        <Button variant="ghost" size="sm" className="w-full text-red-500" onClick={() => setDateToFilter('')}>
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
