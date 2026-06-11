@@ -245,9 +245,7 @@ export default function Survey() {
 
   // File input refs
   const houseCameraRef = useRef(null);
-  const houseGalleryRef = useRef(null);
   const receiverCameraRef = useRef(null);
-  const receiverGalleryRef = useRef(null);
 
   // Check if special condition allows skipping required fields (but NOT photo)
   const canSkipRequiredFields = specialCondition === 'property_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot' || specialCondition === 'wrong_location';
@@ -1343,12 +1341,12 @@ export default function Survey() {
             </Card>
             )}
 
-            {/* Property Photo - Optional if special condition */}
+            {/* Property Photo */}
             <Card className={canSkipRequiredFields ? 'opacity-60' : ''}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Camera className="w-4 h-4" />
-                  <span className="text-emerald-700">NEW Property Photo</span> {!canSkipRequiredFields && '*'}
+                  <span className="text-emerald-700">Property Photo</span> {!canSkipRequiredFields && '*'}
                   {canSkipRequiredFields && <span className="text-xs text-amber-600 font-normal">(Optional)</span>}
                 </CardTitle>
                 <p className="text-xs text-slate-500">Take current photo of the property</p>
@@ -1362,13 +1360,6 @@ export default function Survey() {
                   className="hidden"
                   onChange={(e) => handlePhotoCapture(e, 'house')}
                 />
-                <input
-                  ref={houseGalleryRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handlePhotoCapture(e, 'house')}
-                />
 
                 {housePhotoPreview ? (
                   <div className="relative">
@@ -1377,7 +1368,6 @@ export default function Survey() {
                       alt="Property"
                       className="w-full h-48 object-cover rounded-lg"
                     />
-                    {/* Show file size badge */}
                     {housePhoto && (
                       <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                         📷 {(housePhoto.size / 1024).toFixed(0)} KB
@@ -1397,36 +1387,27 @@ export default function Survey() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-24"
-                      onClick={() => houseCameraRef.current?.click()}
-                      disabled={processingPhoto === 'house'}
-                    >
-                      {processingPhoto === 'house' ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <Camera className="w-5 h-5 mr-2" />
-                          Take Photo
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-24"
-                      onClick={() => houseGalleryRef.current?.click()}
-                      disabled={processingPhoto === 'house'}
-                    >
-                      Gallery
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full h-24"
+                    onClick={() => houseCameraRef.current?.click()}
+                    disabled={processingPhoto === 'house'}
+                    data-testid="take-property-photo-btn"
+                  >
+                    {processingPhoto === 'house' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="w-5 h-5 mr-2" />
+                        Take Property Photo
+                      </>
+                    )}
+                  </Button>
                 )}
               </CardContent>
             </Card>
 
-            {/* Receiver Photo - Optional */}
+            {/* Receiver Photo */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -1445,14 +1426,6 @@ export default function Survey() {
                   className="hidden"
                   onChange={(e) => handlePhotoCapture(e, 'receiver')}
                   data-testid="receiver-camera-input"
-                />
-                <input
-                  ref={receiverGalleryRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handlePhotoCapture(e, 'receiver')}
-                  data-testid="receiver-gallery-input"
                 />
 
                 {receiverPhotoPreview ? (
@@ -1482,33 +1455,22 @@ export default function Survey() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-24"
-                      onClick={() => receiverCameraRef.current?.click()}
-                      disabled={processingPhoto === 'receiver'}
-                      data-testid="receiver-take-photo-btn"
-                    >
-                      {processingPhoto === 'receiver' ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <Camera className="w-5 h-5 mr-2" />
-                          Take Photo
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-24"
-                      onClick={() => receiverGalleryRef.current?.click()}
-                      disabled={processingPhoto === 'receiver'}
-                      data-testid="receiver-gallery-btn"
-                    >
-                      Gallery
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full h-24"
+                    onClick={() => receiverCameraRef.current?.click()}
+                    disabled={processingPhoto === 'receiver'}
+                    data-testid="take-receiver-photo-btn"
+                  >
+                    {processingPhoto === 'receiver' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="w-5 h-5 mr-2" />
+                        Take Receiver Photo
+                      </>
+                    )}
+                  </Button>
                 )}
               </CardContent>
             </Card>
