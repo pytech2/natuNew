@@ -1692,14 +1692,14 @@ export default function BillsPage() {
 
         {/* Generate PDF Dialog - with bills per page option */}
         <Dialog open={generateDialog} onOpenChange={setGenerateDialog}>
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Generate PDF</DialogTitle>
               <DialogDescription>
                 Generate PDF in original sequence.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-600">
                   PDF will keep original sequence from uploaded file.
@@ -1819,7 +1819,7 @@ export default function BillsPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0 border-t pt-4 mt-2">
               <Button variant="outline" onClick={() => setGenerateDialog(false)}>
                 Cancel
               </Button>
