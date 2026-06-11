@@ -4259,6 +4259,7 @@ async def submit_survey(
     latitude: float = Form(...),
     longitude: float = Form(...),
     house_photo: UploadFile = File(None),  # Now optional
+    receiver_photo: UploadFile = File(None),  # Receiver photo - optional
     gate_photo: UploadFile = File(None),   # Now optional
     signature: UploadFile = File(None),    # Now optional
     extra_photos: List[UploadFile] = File(default=[]),
@@ -4326,6 +4327,12 @@ async def submit_survey(
         content = await house_photo.read()
         house_filename = f"{property_id}_house_{timestamp}.jpg"
         upload_tasks.append(save_photo_fast("HOUSE", content, house_filename))
+    
+    # Receiver photo
+    if receiver_photo and receiver_photo.filename:
+        content = await receiver_photo.read()
+        receiver_filename = f"{property_id}_receiver_{timestamp}.jpg"
+        upload_tasks.append(save_photo_fast("RECEIVER", content, receiver_filename))
     
     # Gate photo
     if gate_photo and gate_photo.filename:

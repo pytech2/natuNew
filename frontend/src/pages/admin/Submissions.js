@@ -1307,10 +1307,11 @@ export default function Submissions() {
                           />
                           <span className={`absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-semibold ${
                             type === 'HOUSE' ? 'bg-blue-100 text-blue-700' :
+                            type === 'RECEIVER' ? 'bg-green-100 text-green-700' :
                             type === 'GATE' ? 'bg-amber-100 text-amber-700' :
                             'bg-slate-100 text-slate-700'
                           }`}>
-                            {type === 'HOUSE' ? 'PROP' : type}
+                            {type === 'HOUSE' ? 'PROP' : type === 'RECEIVER' ? 'RECV' : type}
                           </span>
                         </div>
                       );
@@ -1766,6 +1767,7 @@ export default function Submissions() {
                             />
                             <span className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold shadow ${
                               type === 'HOUSE' ? 'bg-blue-500 text-white' :
+                              type === 'RECEIVER' ? 'bg-green-500 text-white' :
                               type === 'GATE' ? 'bg-amber-500 text-white' :
                               'bg-slate-500 text-white'
                             }`}>

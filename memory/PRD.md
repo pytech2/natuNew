@@ -51,6 +51,8 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Admin Password Reset** (Jun 2026): Reset to Raghav2026
 - [x] **Map Properties Fix** (Jun 2026): Fixed ALL_AREAS colony selection bug that prevented properties from loading
 - [x] **Employee Progress Report Overall Column** (Jun 2026): Added "Overall" column with all-time submission count, sorted max to min
+- [x] **Receiver Photo in Survey** (Jun 2026): Added second photo option for receiver's photo alongside property photo in survey form
+- [x] **Photo Quality Improvement** (Jun 2026): Increased photo resolution from 600px to 1280px max, quality from 0.5 to 0.75 JPEG compression
 
 ## Credentials
 - Admin: admin / Raghav2026

@@ -39,7 +39,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Function to add watermark to image with GPS, Date, Time
 // Fixed for mobile camera images with EXIF orientation handling
-// AGGRESSIVE COMPRESSION - Target: Under 100KB file size
+// BALANCED COMPRESSION - Good quality with reasonable file size
 const addWatermarkToImage = (file, latitude, longitude) => {
   return new Promise((resolve, reject) => {
     // Create an image element to load the file
@@ -51,8 +51,8 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // COMPRESS: Limit max dimension to 600px for fast mobile upload
-        const MAX_SIZE = 600;
+        // BALANCED: Limit max dimension to 1280px for good quality photos
+        const MAX_SIZE = 1280;
         let width = img.width;
         let height = img.height;
         
@@ -115,15 +115,15 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         ctx.fillStyle = '#00ff00';
         ctx.fillText(topText, 16, 8 + smallFontSize + 2);
         
-        // Convert canvas to blob with AGGRESSIVE COMPRESSION (0.5 quality = ~50-80KB typical)
+        // Convert canvas to blob with BALANCED COMPRESSION (0.75 quality = ~150-300KB typical)
         canvas.toBlob((blob) => {
           if (blob) {
             const watermarkedFile = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
             const sizeKB = (watermarkedFile.size / 1024).toFixed(0);
             console.log(`📸 Compressed: ${watermarkedFile.name} - ${sizeKB}KB`);
             
-            // If still too large, try more compression
-            if (watermarkedFile.size > 150 * 1024) {
+            // If still too large (over 500KB), try more compression
+            if (watermarkedFile.size > 500 * 1024) {
               canvas.toBlob((smallerBlob) => {
                 if (smallerBlob) {
                   const smallerFile = new File([smallerBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -132,7 +132,7 @@ const addWatermarkToImage = (file, latitude, longitude) => {
                 } else {
                   resolve(watermarkedFile);
                 }
-              }, 'image/jpeg', 0.4); // Even more compression if needed
+              }, 'image/jpeg', 0.6); // Slightly more compression if needed
             } else {
               resolve(watermarkedFile);
             }
@@ -140,7 +140,7 @@ const addWatermarkToImage = (file, latitude, longitude) => {
             console.warn('Canvas toBlob returned null, using original file');
             resolve(file);
           }
-        }, 'image/jpeg', 0.5); // 0.5 quality for aggressive compression (~50-100KB)
+        }, 'image/jpeg', 0.75); // 0.75 quality for good balance of quality and size
       } catch (err) {
         console.error('Error applying watermark:', err);
         resolve(file);
@@ -237,13 +237,17 @@ export default function Survey() {
   const [withinRange, setWithinRange] = useState(null);
   const [distanceFromProperty, setDistanceFromProperty] = useState(null);
 
-  // Photo State - Only house photo now (COMPULSORY in all situations)
+  // Photo State - House photo + Receiver photo
   const [housePhoto, setHousePhoto] = useState(null);
   const [housePhotoPreview, setHousePhotoPreview] = useState(null);
+  const [receiverPhoto, setReceiverPhoto] = useState(null);
+  const [receiverPhotoPreview, setReceiverPhotoPreview] = useState(null);
 
   // File input refs
   const houseCameraRef = useRef(null);
   const houseGalleryRef = useRef(null);
+  const receiverCameraRef = useRef(null);
+  const receiverGalleryRef = useRef(null);
 
   // Check if special condition allows skipping required fields (but NOT photo)
   const canSkipRequiredFields = specialCondition === 'property_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot' || specialCondition === 'wrong_location';
@@ -379,6 +383,10 @@ export default function Survey() {
           setHousePhoto(watermarkedFile);
           const previewUrl = URL.createObjectURL(watermarkedFile);
           setHousePhotoPreview(previewUrl);
+        } else if (type === 'receiver') {
+          setReceiverPhoto(watermarkedFile);
+          const previewUrl = URL.createObjectURL(watermarkedFile);
+          setReceiverPhotoPreview(previewUrl);
         }
         toast.success('Photo captured with GPS & timestamp watermark!');
       } else {
@@ -386,6 +394,9 @@ export default function Survey() {
         if (type === 'house') {
           setHousePhoto(file);
           setHousePhotoPreview(URL.createObjectURL(file));
+        } else if (type === 'receiver') {
+          setReceiverPhoto(file);
+          setReceiverPhotoPreview(URL.createObjectURL(file));
         }
         toast.warning('Photo captured (no GPS watermark - location not available)');
       }
@@ -523,6 +534,11 @@ export default function Survey() {
       
       // Photo is compulsory - always append
       formDataObj.append('house_photo', housePhoto);
+      
+      // Receiver photo - optional
+      if (receiverPhoto) {
+        formDataObj.append('receiver_photo', receiverPhoto);
+      }
       
       formDataObj.append('authorization', `Bearer ${token}`);
 
@@ -1402,6 +1418,93 @@ export default function Survey() {
                       className="flex-1 h-24"
                       onClick={() => houseGalleryRef.current?.click()}
                       disabled={processingPhoto === 'house'}
+                    >
+                      Gallery
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Receiver Photo - Optional */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="text-blue-700">Receiver Photo</span>
+                  <span className="text-xs text-slate-500 font-normal">(Optional)</span>
+                </CardTitle>
+                <p className="text-xs text-slate-500">Take photo of the person receiving the notice</p>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={receiverCameraRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={(e) => handlePhotoCapture(e, 'receiver')}
+                  data-testid="receiver-camera-input"
+                />
+                <input
+                  ref={receiverGalleryRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handlePhotoCapture(e, 'receiver')}
+                  data-testid="receiver-gallery-input"
+                />
+
+                {receiverPhotoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={receiverPhotoPreview}
+                      alt="Receiver"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    {receiverPhoto && (
+                      <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        📷 {(receiverPhoto.size / 1024).toFixed(0)} KB
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setReceiverPhoto(null);
+                        setReceiverPhotoPreview(null);
+                      }}
+                      data-testid="receiver-retake-btn"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Retake
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-24"
+                      onClick={() => receiverCameraRef.current?.click()}
+                      disabled={processingPhoto === 'receiver'}
+                      data-testid="receiver-take-photo-btn"
+                    >
+                      {processingPhoto === 'receiver' ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5 mr-2" />
+                          Take Photo
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-24"
+                      onClick={() => receiverGalleryRef.current?.click()}
+                      disabled={processingPhoto === 'receiver'}
+                      data-testid="receiver-gallery-btn"
                     >
                       Gallery
                     </Button>
