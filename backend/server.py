@@ -6033,6 +6033,8 @@ async def generate_arranged_pdf(
     skip_na_names: str = Form("true"),
     skip_vacant: str = Form("true"),
     custom_note: str = Form(""),
+    note_color: str = Form("#cc0000"),
+    note_target: str = Form("not_self_certified"),
     current_user: dict = Depends(get_current_user)
 ):
     """Generate PDF with invoices. 3 per page = landscape bills scaled & stacked vertically on A4."""
@@ -6189,6 +6191,15 @@ async def generate_arranged_pdf(
     
     logger.info(f"PDF generation: {len(self_certified_set)} self-certified property IDs found")
     
+    # Parse note color from hex to RGB tuple
+    def hex_to_rgb(hex_color):
+        hex_color = hex_color.lstrip('#')
+        if len(hex_color) == 6:
+            return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        return (204, 0, 0)  # fallback red
+    
+    note_rgb = hex_to_rgb(note_color)
+    
     # Pre-generate custom note image ONCE (reuse for all pages)
     note_img_path = None
     if custom_note and custom_note.strip():
@@ -6204,27 +6215,42 @@ async def generate_arranged_pdf(
                 '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
             ]
             pil_font = None
+            # Font size 14 (reduced from 22 - ~50% less)
+            FONT_SIZE = 14
             for fp in font_paths:
                 if os.path.exists(fp):
                     try:
-                        pil_font = ImageFont.truetype(fp, 22)
+                        pil_font = ImageFont.truetype(fp, FONT_SIZE)
                         break
                     except Exception:
                         continue
             if not pil_font:
                 pil_font = ImageFont.load_default()
             
+            # Use 2x scale for better quality rendering, then save at higher DPI
+            SCALE = 2
+            scaled_font = None
+            for fp in font_paths:
+                if os.path.exists(fp):
+                    try:
+                        scaled_font = ImageFont.truetype(fp, FONT_SIZE * SCALE)
+                        break
+                    except Exception:
+                        continue
+            if not scaled_font:
+                scaled_font = pil_font
+            
             tmp_img = Image.new('RGBA', (1, 1))
             tmp_draw = ImageDraw.Draw(tmp_img)
-            bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
-            text_w = bbox[2] - bbox[0] + 20
-            text_h = bbox[3] - bbox[1] + 10
+            bbox = tmp_draw.textbbox((0, 0), note_text, font=scaled_font)
+            text_w = bbox[2] - bbox[0] + 20 * SCALE
+            text_h = bbox[3] - bbox[1] + 10 * SCALE
             
             note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
             note_draw = ImageDraw.Draw(note_img)
-            note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
-            note_img.save(note_img_path, 'PNG')
-            logger.info(f"Pre-generated note image: {text_w}x{text_h}")
+            note_draw.text((10 * SCALE, 2 * SCALE), note_text, fill=note_rgb, font=scaled_font)
+            note_img.save(note_img_path, 'PNG', dpi=(300, 300))
+            logger.info(f"Pre-generated note image: {text_w}x{text_h} color={note_rgb}")
         except Exception as e:
             logger.warning(f"Could not pre-generate note image: {e}")
             note_img_path = None
@@ -6295,8 +6321,17 @@ async def generate_arranged_pdf(
                     rotate=text_rotate
                 )
             
-            # Add custom note for non-self-certified properties
-            if not is_self_certified and note_img_path and os.path.exists(note_img_path):
+            # Add custom note based on note_target filter
+            should_add_note = False
+            if note_img_path and os.path.exists(note_img_path):
+                if note_target == 'all':
+                    should_add_note = True
+                elif note_target == 'self_certified':
+                    should_add_note = is_self_certified
+                else:  # not_self_certified (default)
+                    should_add_note = not is_self_certified
+            
+            if should_add_note:
                 try:
                     if rotation == 90:
                         img_rect = fitz.Rect(10, 100, 60, rect.height - 10)
@@ -6380,11 +6415,20 @@ async def generate_arranged_pdf(
             # Insert the JPEG image
             current_page.insert_image(rect, stream=img_bytes)
             
-            # Add custom note for non-self-certified bills
+            # Add custom note based on note_target filter
             bill_prop_id = str(bill.get("property_id", "")).upper()
             is_self_certified = bill.get("self_certified", False) or (bill_prop_id in self_certified_set)
             
-            if not is_self_certified and note_img_path and os.path.exists(note_img_path):
+            should_add_note = False
+            if note_img_path and os.path.exists(note_img_path):
+                if note_target == 'all':
+                    should_add_note = True
+                elif note_target == 'self_certified':
+                    should_add_note = is_self_certified
+                else:
+                    should_add_note = not is_self_certified
+            
+            if should_add_note:
                 try:
                     note_rect = fitz.Rect(rect.x0 + 5, rect.y0 + 2, rect.x1 - 5, rect.y0 + 20)
                     current_page.insert_image(note_rect, filename=note_img_path)
@@ -6453,6 +6497,8 @@ async def split_bills_by_employee(
     skip_na_names: str = Form("true"),
     skip_vacant: str = Form("true"),
     custom_note: str = Form(""),
+    note_color: str = Form("#cc0000"),
+    note_target: str = Form("not_self_certified"),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills into separate PDFs for each employee"""
@@ -7112,6 +7158,8 @@ async def split_bills_by_specific_employees(
     sn_font_size: int = Form(48),
     sn_color: str = Form("red"),
     custom_note: str = Form(""),
+    note_color: str = Form("#cc0000"),
+    note_target: str = Form("not_self_certified"),
     current_user: dict = Depends(get_current_user)
 ):
     """Split bills among specific employees and generate separate PDFs"""
@@ -7307,38 +7355,58 @@ async def split_bills_by_specific_employees(
                 rotate=text_rotate
             )
             
-            # Add custom note for non-self-certified properties
-            if not is_self_certified and custom_note and custom_note.strip():
+            # Add custom note based on note_target filter
+            should_add_note = False
+            if custom_note and custom_note.strip():
+                if note_target == 'all':
+                    should_add_note = True
+                elif note_target == 'self_certified':
+                    should_add_note = is_self_certified
+                else:
+                    should_add_note = not is_self_certified
+            
+            if should_add_note:
                 try:
                     note_img_path_split = f"/tmp/custom_note_split_{timestamp}.png"
                     if not os.path.exists(note_img_path_split):
                         from PIL import Image, ImageDraw, ImageFont
                         note_text = custom_note.strip()
+                        
+                        # Parse note color
+                        hex_c = note_color.lstrip('#')
+                        if len(hex_c) == 6:
+                            n_rgb = tuple(int(hex_c[i:i+2], 16) for i in (0, 2, 4))
+                        else:
+                            n_rgb = (204, 0, 0)
+                        
                         font_paths = [
                             '/usr/share/fonts/truetype/Gargi/Gargi.ttf',
                             '/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf',
                             '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf',
                             '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
                         ]
-                        pil_font = None
+                        # Use 2x scale for better quality
+                        FONT_SIZE = 14
+                        SCALE = 2
+                        scaled_font = None
                         for fp in font_paths:
                             if os.path.exists(fp):
                                 try:
-                                    pil_font = ImageFont.truetype(fp, 28)
+                                    scaled_font = ImageFont.truetype(fp, FONT_SIZE * SCALE)
                                     break
                                 except Exception:
                                     continue
-                        if not pil_font:
-                            pil_font = ImageFont.load_default()
+                        if not scaled_font:
+                            scaled_font = ImageFont.load_default()
                         tmp_img = Image.new('RGBA', (1, 1))
                         tmp_draw = ImageDraw.Draw(tmp_img)
-                        bbox = tmp_draw.textbbox((0, 0), note_text, font=pil_font)
-                        text_w = bbox[2] - bbox[0] + 20
-                        text_h = bbox[3] - bbox[1] + 10
+                        bbox = tmp_draw.textbbox((0, 0), note_text, font=scaled_font)
+                        text_w = bbox[2] - bbox[0] + 20 * SCALE
+                        text_h = bbox[3] - bbox[1] + 10 * SCALE
                         note_img = Image.new('RGBA', (text_w, text_h), (255, 255, 255, 0))
                         note_draw = ImageDraw.Draw(note_img)
-                        note_draw.text((10, 2), note_text, fill=(204, 0, 0), font=pil_font)
-                        note_img.save(note_img_path_split, 'PNG')
+                        note_draw.text((10 * SCALE, 2 * SCALE), note_text, fill=n_rgb, font=scaled_font)
+                        note_img.save(note_img_path_split, 'PNG', dpi=(300, 300))
                     
                     if rotation == 90:
                         img_rect = fitz.Rect(477, 5, 542, 590)

@@ -102,7 +102,9 @@ export default function BillsPage() {
     self_certified_filter: 'all',
     skip_na_names: true,
     skip_vacant: true,
-    custom_note: 'Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।'
+    custom_note: 'Note : आप अपनी प्रॉपर्टी ID को सेल्फ सर्टिफाइड करवाए, जिससे कि आपकी प्रॉपर्टी ID के साथ कोई छेड़ -छाड़ ना कर सके।',
+    note_color: '#cc0000',
+    note_target: 'not_self_certified'
   });
   
   // Split by employee state
@@ -604,6 +606,8 @@ export default function BillsPage() {
       formData.append('skip_na_names', pdfOptions.skip_na_names ? 'true' : 'false');
       formData.append('skip_vacant', pdfOptions.skip_vacant ? 'true' : 'false');
       formData.append('custom_note', pdfOptions.custom_note || '');
+      formData.append('note_color', pdfOptions.note_color || '#cc0000');
+      formData.append('note_target', pdfOptions.note_target || 'not_self_certified');
 
       const response = await axios.post(`${API_URL}/admin/bills/generate-pdf`, formData, {
         headers: { 
@@ -1771,21 +1775,72 @@ export default function BillsPage() {
                 </p>
               </div>
 
-              {/* Custom Note for Non-Self-Certified Bills */}
+              {/* Custom Note for Bills */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Non-Self-Certified Note (PDF पर लिखा जाएगा)</Label>
+                <Label className="text-sm font-medium">Custom Note (PDF पर लिखा जाएगा)</Label>
                 <textarea
                   value={pdfOptions.custom_note}
                   onChange={(e) => setPdfOptions({...pdfOptions, custom_note: e.target.value})}
-                  placeholder="यहाँ Hindi/English note लिखें जो non-self-certified bills पर print होगा"
+                  placeholder="यहाँ Hindi/English note लिखें जो bills पर print होगा"
                   rows={3}
                   className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   data-testid="custom-note-input"
                 />
-                <p className="text-xs text-slate-500">
-                  यह text non-self-certified bills के ऊपर red color में print होगा। खाली छोड़ने पर note नहीं आएगा।
-                </p>
               </div>
+
+              {/* Note Color & Target Row */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Note Color Picker */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Note Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={pdfOptions.note_color}
+                      onChange={(e) => setPdfOptions({...pdfOptions, note_color: e.target.value})}
+                      className="w-10 h-10 rounded border border-slate-300 cursor-pointer p-0.5"
+                      data-testid="note-color-picker"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { color: '#cc0000', label: 'Red' },
+                        { color: '#0000cc', label: 'Blue' },
+                        { color: '#006600', label: 'Green' },
+                        { color: '#000000', label: 'Black' },
+                      ].map(c => (
+                        <button
+                          key={c.color}
+                          onClick={() => setPdfOptions({...pdfOptions, note_color: c.color})}
+                          className={`w-6 h-6 rounded-full border-2 ${pdfOptions.note_color === c.color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-300'}`}
+                          style={{ backgroundColor: c.color }}
+                          title={c.label}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Note Target Filter */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Note किन Bills पर</Label>
+                  <Select 
+                    value={pdfOptions.note_target || 'not_self_certified'} 
+                    onValueChange={(val) => setPdfOptions({...pdfOptions, note_target: val})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Bills</SelectItem>
+                      <SelectItem value="self_certified">Self Certified Only</SelectItem>
+                      <SelectItem value="not_self_certified">Not Self Certified Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 -mt-2">
+                खाली छोड़ने पर note नहीं आएगा। Selected color में chosen bills पर print होगा।
+              </p>
 
               {/* Skip Filter Checkboxes */}
               <div className="space-y-3">
