@@ -84,8 +84,18 @@ export function AuthProvider({ children }) {
     const { token: newToken, user: userData } = response.data;
     localStorage.setItem('token', newToken);
     setToken(newToken);
-    setUser(userData);
-    resetIdleTimer(); // Reset timer on login
+    
+    // Fetch computed permissions from /auth/me
+    try {
+      const meResponse = await axios.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${newToken}` }
+      });
+      setUser(meResponse.data);
+    } catch {
+      setUser(userData);
+    }
+    
+    resetIdleTimer();
     return userData;
   };
 

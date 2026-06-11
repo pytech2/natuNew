@@ -55,6 +55,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **Photo Quality Improvement** (Jun 2026): Increased photo resolution from 600px to 1280px max, quality from 0.5 to 0.75 JPEG compression
 - [x] **Generate PDF Dialog Scroll Fix** (Jun 2026): Made dialog scrollable with max-height 90vh, footer always visible
 - [x] **PDF Note Enhancements** (Jun 2026): Font size reduced 50% (22→14 with 2x quality rendering), color picker added (Red/Blue/Green/Black + custom), note target filter (All Bills / Self Certified / Not Self Certified)
+- [x] **Supervisor Approve/Reject Permission** (Jun 2026): Fixed Submissions page to check user.permissions.can_approve_reject instead of only ADMIN role. AuthContext updated to fetch computed permissions after login.
 
 ## Credentials
 - Admin: admin / Raghav2026

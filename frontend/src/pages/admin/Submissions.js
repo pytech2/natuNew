@@ -115,10 +115,10 @@ export default function Submissions() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkApproving, setBulkApproving] = useState(false);
 
-  // Check permissions based on role
-  const canEdit = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role);
-  const canApproveReject = ['ADMIN'].includes(user?.role);
-  const canExport = ['ADMIN'].includes(user?.role);
+  // Check permissions based on role AND custom permissions
+  const canEdit = ['ADMIN', 'SUPERVISOR', 'MC_OFFICER'].includes(user?.role) || user?.permissions?.can_edit_submissions;
+  const canApproveReject = ['ADMIN'].includes(user?.role) || user?.permissions?.can_approve_reject;
+  const canExport = ['ADMIN'].includes(user?.role) || user?.permissions?.can_export;
 
   const employeeIdFilter = searchParams.get('employee_id') || '';
 
