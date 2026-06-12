@@ -7667,12 +7667,52 @@ async def upload_self_certification(
         # Create index for fast lookups
         await get_db().self_certified_pids.create_index("pid")
         
+        # AUTO-SYNC: Automatically update bills with self_certified status
+        all_sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
+        all_sc_pids = set(doc["pid"].upper() for doc in all_sc_docs if doc.get("pid"))
+        
+        # Also from properties collection
+        async for prop in get_db().properties.find(
+            {"$or": [{"self_certified": True}, {"self_certified": "Yes"}]},
+            {"property_id": 1}
+        ):
+            if prop.get("property_id"):
+                all_sc_pids.add(str(prop["property_id"]).upper())
+        
+        # Bulk update bills
+        synced_true = 0
+        synced_false = 0
+        async for bill in get_db().bills.find({}, {"_id": 1, "property_id": 1, "self_certified": 1}):
+            pid = str(bill.get("property_id", "")).upper()
+            is_certified = pid in all_sc_pids if pid else False
+            current = bill.get("self_certified", False)
+            if is_certified != current:
+                await get_db().bills.update_one(
+                    {"_id": bill["_id"]},
+                    {"$set": {"self_certified": is_certified}}
+                )
+                if is_certified:
+                    synced_true += 1
+                else:
+                    synced_false += 1
+        
+        # Also update properties collection
+        for pid in all_sc_pids:
+            await get_db().properties.update_many(
+                {"property_id": {"$regex": f"^{pid}$", "$options": "i"}, "self_certified": {"$ne": True}},
+                {"$set": {"self_certified": True}}
+            )
+        
+        logger.info(f"Auto-sync after upload: {synced_true} bills marked certified, {synced_false} unmarked")
+        
         return {
-            "message": f"Uploaded {len(new_pids)} new self-certified PIDs. {len(existing_pids)} already existed.",
+            "message": f"Uploaded {len(new_pids)} new PIDs. Auto-synced: {synced_true} bills marked self-certified.",
             "total_in_file": len(pids),
             "new_added": len(new_pids),
             "already_existed": len(pids) - len(new_pids),
-            "total_in_database": len(existing_pids) + len(new_pids)
+            "total_in_database": len(existing_pids) + len(new_pids),
+            "bills_synced_to_true": synced_true,
+            "bills_synced_to_false": synced_false
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
