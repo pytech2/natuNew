@@ -294,6 +294,8 @@ async def create_indexes():
         await get_db().submissions.create_index("submitted_at", background=True)
         await get_db().submissions.create_index("town", background=True)
         await get_db().submissions.create_index([("employee_id", 1), ("submitted_at", -1)], background=True)
+        await get_db().submissions.create_index([("status", 1), ("submitted_at", -1)], background=True)
+        await get_db().submissions.create_index([("submitted_at", -1)], background=True)
         
         # Bills collection indexes
         await get_db().bills.create_index("id", unique=True, background=True)
@@ -2945,15 +2947,21 @@ async def list_submissions(
             }
     
     skip = (page - 1) * limit
-    total = await get_db().submissions.count_documents(query)
+    
+    # Use estimated count for unfiltered queries (much faster)
+    if not query:
+        total = await get_db().submissions.estimated_document_count()
+    else:
+        total = await get_db().submissions.count_documents(query)
+    
     submissions = await get_db().submissions.find(query, {"_id": 0}).sort("submitted_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    # OPTIMIZED: Batch fetch property details instead of N+1 queries
+    # OPTIMIZED: Batch fetch property details - only essential fields
     prop_ids = [s["property_record_id"] for s in submissions if s.get("property_record_id")]
     if prop_ids:
         props_cursor = await get_db().properties.find(
             {"id": {"$in": prop_ids}},
-            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "address": 1, "amount": 1, "colony": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "photo_url": 1, "total_area": 1, "category": 1, "serial_na": 1, "latitude": 1, "longitude": 1}
+            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "colony": 1, "serial_na": 1, "latitude": 1, "longitude": 1}
         ).to_list(None)
         props_map = {p["id"]: p for p in props_cursor}
     else:

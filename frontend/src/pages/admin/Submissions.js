@@ -98,6 +98,7 @@ export default function Submissions() {
   const [dateFilter, setDateFilter] = useState('');
   const [dateToFilter, setDateToFilter] = useState('');  // Date range end
   const [searchFilter, setSearchFilter] = useState('');  // Search by serial, property ID, owner name
+  const [debouncedSearch, setDebouncedSearch] = useState('');  // Debounced search
   const [specialConditionFilter, setSpecialConditionFilter] = useState('');
   const [selfCertifiedFilter, setSelfCertifiedFilter] = useState('');
   const [photoStatusFilter, setPhotoStatusFilter] = useState('');
@@ -129,9 +130,15 @@ export default function Submissions() {
     fetchFilters();
   }, []);
 
+  // Debounce search input - wait 500ms after typing stops
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchFilter), 500);
+    return () => clearTimeout(timer);
+  }, [searchFilter]);
+
   useEffect(() => {
     fetchSubmissions();
-  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter, employeeIdFilter, searchFilter, specialConditionFilter, selfCertifiedFilter, photoStatusFilter, duplicateFilter]);
+  }, [pagination.page, statusFilter, employeeFilter, colonyFilter, dateFilter, dateToFilter, employeeIdFilter, debouncedSearch, specialConditionFilter, selfCertifiedFilter, photoStatusFilter, duplicateFilter]);
 
   const fetchFilters = async () => {
     try {
@@ -151,13 +158,13 @@ export default function Submissions() {
     try {
       const params = new URLSearchParams();
       params.append('page', pagination.page);
-      params.append('limit', 100);
+      params.append('limit', 50);
       if (statusFilter) params.append('status', statusFilter);
       if (employeeIdFilter || employeeFilter) params.append('employee_id', employeeIdFilter || employeeFilter);
       if (colonyFilter) params.append('colony', colonyFilter);
       if (dateFilter) params.append('date_from', dateFilter);
       if (dateToFilter) params.append('date_to', dateToFilter);
-      if (searchFilter) params.append('search', searchFilter);
+      if (debouncedSearch) params.append('search', debouncedSearch);
       if (specialConditionFilter) params.append('special_condition', specialConditionFilter);
       if (selfCertifiedFilter) params.append('self_certified', selfCertifiedFilter);
       if (photoStatusFilter) params.append('photo_status', photoStatusFilter);
