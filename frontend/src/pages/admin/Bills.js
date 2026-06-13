@@ -484,7 +484,8 @@ export default function BillsPage() {
     try {
       const response = await axios.get(`${API_URL}/admin/colony-progress/export-excel`, {
         headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+        responseType: 'blob',
+        timeout: 120000  // 2 min timeout for large data
       });
       const blob = new Blob([response.data], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
@@ -499,7 +500,20 @@ export default function BillsPage() {
       window.URL.revokeObjectURL(url);
       toast.success('Colony Progress Excel downloaded!');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to download colony progress');
+      // For blob responseType, error.response.data is a Blob, parse it
+      let errorMsg = 'Failed to download colony progress';
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.detail || errorMsg;
+        } catch {}
+      } else if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.code === 'ECONNABORTED') {
+        errorMsg = 'Request timeout - data is too large, please try again';
+      }
+      toast.error(errorMsg);
     } finally {
       setDownloadingProgress(false);
     }
