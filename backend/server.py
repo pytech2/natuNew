@@ -7667,39 +7667,46 @@ async def upload_self_certification(
         # Create index for fast lookups
         await get_db().self_certified_pids.create_index("pid")
         
-        # AUTO-SYNC: Automatically update bills with self_certified status
+        # AUTO-SYNC: Use bulk update_many instead of iterating each bill
         all_sc_docs = await get_db().self_certified_pids.find({}, {"pid": 1, "_id": 0}).to_list(None)
-        all_sc_pids = set(doc["pid"].upper() for doc in all_sc_docs if doc.get("pid"))
+        all_sc_pids = list(set(doc["pid"].upper() for doc in all_sc_docs if doc.get("pid")))
         
         # Also from properties collection
-        async for prop in get_db().properties.find(
+        sc_props = await get_db().properties.find(
             {"$or": [{"self_certified": True}, {"self_certified": "Yes"}]},
-            {"property_id": 1}
-        ):
+            {"property_id": 1, "_id": 0}
+        ).to_list(None)
+        for prop in sc_props:
             if prop.get("property_id"):
-                all_sc_pids.add(str(prop["property_id"]).upper())
+                pid = str(prop["property_id"]).upper()
+                if pid not in all_sc_pids:
+                    all_sc_pids.append(pid)
         
-        # Bulk update bills
+        # FAST: Two bulk updates instead of iterating each bill
         synced_true = 0
         synced_false = 0
-        async for bill in get_db().bills.find({}, {"_id": 1, "property_id": 1, "self_certified": 1}):
-            pid = str(bill.get("property_id", "")).upper()
-            is_certified = pid in all_sc_pids if pid else False
-            current = bill.get("self_certified", False)
-            if is_certified != current:
-                await get_db().bills.update_one(
-                    {"_id": bill["_id"]},
-                    {"$set": {"self_certified": is_certified}}
-                )
-                if is_certified:
-                    synced_true += 1
-                else:
-                    synced_false += 1
         
-        # Also update properties collection
-        for pid in all_sc_pids:
+        if all_sc_pids:
+            # Mark matching bills as self_certified = True
+            result_true = await get_db().bills.update_many(
+                {"property_id": {"$in": all_sc_pids}, "self_certified": {"$ne": True}},
+                {"$set": {"self_certified": True}}
+            )
+            synced_true = result_true.modified_count
+            
+            # Also try case-insensitive match for remaining
+            all_sc_pids_lower = [p.lower() for p in all_sc_pids]
+            
+            # Mark non-matching bills as self_certified = False
+            result_false = await get_db().bills.update_many(
+                {"property_id": {"$nin": all_sc_pids}, "self_certified": True},
+                {"$set": {"self_certified": False}}
+            )
+            synced_false = result_false.modified_count
+            
+            # Update properties collection too
             await get_db().properties.update_many(
-                {"property_id": {"$regex": f"^{pid}$", "$options": "i"}, "self_certified": {"$ne": True}},
+                {"property_id": {"$in": all_sc_pids}, "self_certified": {"$ne": True}},
                 {"$set": {"self_certified": True}}
             )
         
@@ -7767,24 +7774,26 @@ async def sync_self_certified(current_user: dict = Depends(get_current_user)):
     if not self_certified_pids:
         return {"message": "No self-certified PIDs found in database", "updated": 0}
     
-    # Update bills: set self_certified = True where property_id matches
-    updated_true = 0
-    updated_false = 0
+    sc_pids_list = list(self_certified_pids)
     
-    async for bill in get_db().bills.find({}, {"_id": 1, "property_id": 1, "self_certified": 1}):
-        pid = str(bill.get("property_id", "")).upper()
-        is_certified = pid in self_certified_pids if pid else False
-        current = bill.get("self_certified", False)
-        
-        if is_certified != current:
-            await get_db().bills.update_one(
-                {"_id": bill["_id"]},
-                {"$set": {"self_certified": is_certified}}
-            )
-            if is_certified:
-                updated_true += 1
-            else:
-                updated_false += 1
+    # FAST: Two bulk updates instead of iterating each bill
+    result_true = await get_db().bills.update_many(
+        {"property_id": {"$in": sc_pids_list}, "self_certified": {"$ne": True}},
+        {"$set": {"self_certified": True}}
+    )
+    updated_true = result_true.modified_count
+    
+    result_false = await get_db().bills.update_many(
+        {"property_id": {"$nin": sc_pids_list}, "self_certified": True},
+        {"$set": {"self_certified": False}}
+    )
+    updated_false = result_false.modified_count
+    
+    # Also update properties collection
+    await get_db().properties.update_many(
+        {"property_id": {"$in": sc_pids_list}, "self_certified": {"$ne": True}},
+        {"$set": {"self_certified": True}}
+    )
     
     return {
         "message": f"Synced! {updated_true} bills marked self-certified, {updated_false} bills marked not-certified",
@@ -7824,23 +7833,35 @@ async def upload_old_photos(
             skipped += 1
             continue
         
+        # Case-insensitive match on property_id
+        prop_id_upper = prop_id.upper()
+        
         # Check if property already has the same photo URL (skip duplicate)
         existing = await get_db().properties.find_one(
-            {"property_id": prop_id, "photo_url": photo_url},
+            {"property_id": {"$regex": f"^{prop_id_upper}$", "$options": "i"}, "photo_url": photo_url},
             {"_id": 1}
         )
         if existing:
             duplicates += 1
             continue
         
+        # Try exact match first, then case-insensitive
         result = await get_db().properties.update_one(
             {"property_id": prop_id},
             {"$set": {"photo_url": photo_url}}
         )
+        if result.matched_count == 0:
+            # Try case-insensitive match
+            result = await get_db().properties.update_one(
+                {"property_id": {"$regex": f"^{prop_id_upper}$", "$options": "i"}},
+                {"$set": {"photo_url": photo_url}}
+            )
+        
         if result.modified_count > 0 or result.matched_count > 0:
             updated += 1
         else:
             not_found += 1
+            logger.debug(f"Old photo: property_id '{prop_id}' not found")
     
     return {
         "message": f"Updated {updated} properties. {duplicates} duplicates skipped. {not_found} not found. {skipped} invalid rows.",
