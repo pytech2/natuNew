@@ -7821,89 +7821,128 @@ async def upload_old_photos(
     df = pd.read_excel(io.BytesIO(contents), header=None)
     
     total_rows = len(df)
-    logger.info(f"Old photos upload: {total_rows} rows, {len(df.columns)} columns")
+    num_cols = len(df.columns)
+    logger.info(f"Old photos upload: {total_rows} rows, {num_cols} columns")
     
-    # Auto-detect columns: find which column has property IDs and which has URLs
     # Log first 3 rows for debugging
     for i in range(min(3, total_rows)):
-        row_data = [str(df.iloc[i, c]) if pd.notna(df.iloc[i, c]) else "NaN" for c in range(min(5, len(df.columns)))]
+        row_data = [str(df.iloc[i, c])[:60] if pd.notna(df.iloc[i, c]) else "NaN" for c in range(min(5, num_cols))]
         logger.info(f"  Row {i}: {row_data}")
     
-    # Try to detect property_id and photo_url columns
-    pid_col = 0  # Default: Column A
-    url_col = 1  # Default: Column B
-    header_rows = 1  # Default: 1 header row
+    # Auto-detect columns from header row
+    pid_col = None
+    url_col = None
+    header_rows = 0
     
-    # Check if first row is header
-    first_val = str(df.iloc[0, 0]) if pd.notna(df.iloc[0, 0]) else ""
-    if first_val.lower() in ['property_id', 'property id', 'pid', 'sr', 'sr no', 'serial', 'id', 'prop id', 'propertyid', 'sr.no', 's.no']:
-        header_rows = 1
-        # Scan header row to find correct columns
-        for col_idx in range(len(df.columns)):
-            header_val = str(df.iloc[0, col_idx]).lower().strip() if pd.notna(df.iloc[0, col_idx]) else ""
-            if header_val in ['property_id', 'property id', 'pid', 'prop id', 'propertyid', 'id']:
-                pid_col = col_idx
-            elif header_val in ['photo_url', 'photo url', 'url', 'photo', 'image', 'image_url', 'link', 'photo link', 'image link']:
+    # Check first row for headers
+    for col_idx in range(num_cols):
+        header_val = str(df.iloc[0, col_idx]).lower().strip() if pd.notna(df.iloc[0, col_idx]) else ""
+        if header_val in ['property_id', 'property id', 'pid', 'prop id', 'propertyid', 'id', 'prop_id']:
+            pid_col = col_idx
+            header_rows = 1
+        elif header_val in ['photo_url', 'photo url', 'url', 'photo', 'image', 'image_url', 'link', 'photo link', 'image link', 'img', 'image url']:
+            url_col = col_idx
+            header_rows = 1
+    
+    # If no header found, guess from data
+    if pid_col is None or url_col is None:
+        for col_idx in range(num_cols):
+            sample_val = str(df.iloc[min(1, total_rows-1), col_idx]) if pd.notna(df.iloc[min(1, total_rows-1), col_idx]) else ""
+            if sample_val.startswith("http") and url_col is None:
                 url_col = col_idx
-        logger.info(f"  Detected header. pid_col={pid_col}, url_col={url_col}")
-    else:
-        # No header - try to detect from data patterns
-        # If first data value looks like a URL, columns might be swapped
-        if first_val.startswith("http") or first_val.startswith("drive.google"):
-            pid_col = 1
-            url_col = 0
-            logger.info(f"  Auto-swapped columns: pid_col={pid_col}, url_col={url_col}")
-        header_rows = 0  # No header row to skip
+            elif not sample_val.startswith("http") and not sample_val.isdigit() and len(sample_val) > 3 and pid_col is None:
+                pid_col = col_idx
+        # If still not found, use defaults based on column count
+        if pid_col is None:
+            pid_col = 0 if num_cols == 2 else 1
+        if url_col is None:
+            url_col = 1 if num_cols == 2 else (2 if num_cols >= 3 else 1)
     
-    updated = 0
-    not_found = 0
+    logger.info(f"  Detected: pid_col={pid_col}, url_col={url_col}, header_rows={header_rows}")
+    
+    # FAST BULK: Read all data first, then batch update
+    updates = {}  # pid -> photo_url
     skipped = 0
-    duplicates = 0
     sample_skipped = []
     
-    for idx in range(header_rows, len(df)):
-        prop_id = str(df.iloc[idx, pid_col] if pid_col < len(df.columns) and pd.notna(df.iloc[idx, pid_col]) else "").strip()
-        photo_url = str(df.iloc[idx, url_col] if url_col < len(df.columns) and pd.notna(df.iloc[idx, url_col]) else "").strip()
+    for idx in range(header_rows, total_rows):
+        prop_id = str(df.iloc[idx, pid_col] if pid_col < num_cols and pd.notna(df.iloc[idx, pid_col]) else "").strip()
+        photo_url = str(df.iloc[idx, url_col] if url_col < num_cols and pd.notna(df.iloc[idx, url_col]) else "").strip()
         
-        # Clean up prop_id - remove .0 suffix from numeric IDs
+        # Clean up prop_id
         if prop_id.endswith('.0'):
             prop_id = prop_id[:-2]
         
-        if not prop_id or not photo_url:
+        if not prop_id or not photo_url or photo_url == 'nan' or photo_url == 'NaN':
             skipped += 1
             if len(sample_skipped) < 3:
-                sample_skipped.append(f"Row {idx}: pid='{prop_id}', url='{photo_url[:50]}...'")
+                sample_skipped.append(f"Row {idx}: pid='{prop_id[:30]}', url='{photo_url[:50]}'")
             continue
         
-        # Case-insensitive match on property_id
-        prop_id_upper = prop_id.upper()
+        updates[prop_id.upper()] = photo_url
+    
+    logger.info(f"  Parsed {len(updates)} valid entries, {skipped} skipped")
+    
+    # Batch update using bulk_write for speed
+    from pymongo import UpdateOne
+    updated = 0
+    not_found = 0
+    duplicates = 0
+    
+    if updates:
+        # FAST: Pre-fetch all existing property IDs from DB to filter
+        all_update_pids = list(updates.keys())
         
-        # Check if property already has the same photo URL (skip duplicate)
-        existing = await get_db().properties.find_one(
-            {"property_id": {"$regex": f"^{prop_id_upper}$", "$options": "i"}, "photo_url": photo_url},
-            {"_id": 1}
-        )
-        if existing:
-            duplicates += 1
-            continue
+        # Fetch existing properties in batches to build a lookup
+        existing_props_map = {}  # db_pid_upper -> db_pid_original
+        batch_size = 5000
+        for i in range(0, len(all_update_pids), batch_size):
+            batch = all_update_pids[i:i+batch_size]
+            props = await get_db().properties.find(
+                {"property_id": {"$in": batch}},
+                {"property_id": 1, "photo_url": 1, "_id": 0}
+            ).to_list(None)
+            for p in props:
+                pid = str(p.get("property_id", ""))
+                existing_props_map[pid.upper()] = {
+                    "original_pid": pid,
+                    "current_photo": p.get("photo_url", "")
+                }
         
-        # Try exact match first, then case-insensitive
-        result = await get_db().properties.update_one(
-            {"property_id": prop_id},
-            {"$set": {"photo_url": photo_url}}
-        )
-        if result.matched_count == 0:
-            # Try case-insensitive match
-            result = await get_db().properties.update_one(
-                {"property_id": {"$regex": f"^{prop_id_upper}$", "$options": "i"}},
-                {"$set": {"photo_url": photo_url}}
-            )
+        logger.info(f"  Found {len(existing_props_map)} matching properties in DB out of {len(all_update_pids)} in file")
         
-        if result.modified_count > 0 or result.matched_count > 0:
-            updated += 1
-        else:
-            not_found += 1
-            logger.debug(f"Old photo: property_id '{prop_id}' not found")
+        # Filter: only update properties that exist and need updating
+        to_update = {}
+        for pid, url in updates.items():
+            if pid in existing_props_map:
+                if existing_props_map[pid]["current_photo"] != url:
+                    to_update[existing_props_map[pid]["original_pid"]] = url
+                else:
+                    duplicates += 1
+            else:
+                not_found += 1
+        
+        logger.info(f"  To update: {len(to_update)}, duplicates: {duplicates}, not_found: {not_found}")
+        
+        # Bulk update in batches using exact match (FAST)
+        update_batch_size = 2000
+        update_pids = list(to_update.keys())
+        
+        for batch_start in range(0, len(update_pids), update_batch_size):
+            batch_pids = update_pids[batch_start:batch_start + update_batch_size]
+            operations = []
+            for pid in batch_pids:
+                operations.append(UpdateOne(
+                    {"property_id": pid},
+                    {"$set": {"photo_url": to_update[pid]}}
+                ))
+            
+            if operations:
+                result = await get_db().properties.bulk_write(operations, ordered=False)
+                updated += result.modified_count
+                logger.info(f"  Batch {batch_start//update_batch_size + 1}: modified={result.modified_count}")
+    
+    logger.info(f"  Final: updated={updated}, not_found={not_found}, duplicates={duplicates}, skipped={skipped}")
     
     return {
         "message": f"Updated {updated} properties. {duplicates} duplicates skipped. {not_found} not found. {skipped} invalid rows.",

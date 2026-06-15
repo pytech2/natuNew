@@ -926,7 +926,8 @@ export default function BillsPage() {
       const formData = new FormData();
       formData.append('file', oldPhotoFile);
       const res = await axios.post(`${API_URL}/admin/upload-old-photos`, formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        timeout: 300000  // 5 min timeout for large files (86k+ rows)
       });
       setOldPhotoResult(res.data);
       toast.success(res.data.message);
