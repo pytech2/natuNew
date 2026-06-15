@@ -39,7 +39,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Function to add watermark to image with GPS, Date, Time
 // Fixed for mobile camera images with EXIF orientation handling
-// BALANCED COMPRESSION - Good quality with reasonable file size
+// OPTIMIZED COMPRESSION - Fast upload with decent quality
 const addWatermarkToImage = (file, latitude, longitude) => {
   return new Promise((resolve, reject) => {
     // Create an image element to load the file
@@ -51,8 +51,8 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // BALANCED: Limit max dimension to 1280px for good quality photos
-        const MAX_SIZE = 1280;
+        // OPTIMIZED: Limit max dimension to 800px for fast upload
+        const MAX_SIZE = 800;
         let width = img.width;
         let height = img.height;
         
@@ -115,15 +115,15 @@ const addWatermarkToImage = (file, latitude, longitude) => {
         ctx.fillStyle = '#00ff00';
         ctx.fillText(topText, 16, 8 + smallFontSize + 2);
         
-        // Convert canvas to blob with BALANCED COMPRESSION (0.75 quality = ~150-300KB typical)
+        // Convert canvas to blob with OPTIMIZED COMPRESSION (0.55 quality = ~80-150KB typical)
         canvas.toBlob((blob) => {
           if (blob) {
             const watermarkedFile = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
             const sizeKB = (watermarkedFile.size / 1024).toFixed(0);
             console.log(`📸 Compressed: ${watermarkedFile.name} - ${sizeKB}KB`);
             
-            // If still too large (over 500KB), try more compression
-            if (watermarkedFile.size > 500 * 1024) {
+            // If still too large (over 200KB), try more compression
+            if (watermarkedFile.size > 200 * 1024) {
               canvas.toBlob((smallerBlob) => {
                 if (smallerBlob) {
                   const smallerFile = new File([smallerBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -132,7 +132,7 @@ const addWatermarkToImage = (file, latitude, longitude) => {
                 } else {
                   resolve(watermarkedFile);
                 }
-              }, 'image/jpeg', 0.6); // Slightly more compression if needed
+              }, 'image/jpeg', 0.4); // More aggressive if still too big
             } else {
               resolve(watermarkedFile);
             }
@@ -140,7 +140,7 @@ const addWatermarkToImage = (file, latitude, longitude) => {
             console.warn('Canvas toBlob returned null, using original file');
             resolve(file);
           }
-        }, 'image/jpeg', 0.75); // 0.75 quality for good balance of quality and size
+        }, 'image/jpeg', 0.55); // 0.55 quality - good enough for survey, fast upload
       } catch (err) {
         console.error('Error applying watermark:', err);
         resolve(file);
