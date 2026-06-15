@@ -7820,17 +7820,59 @@ async def upload_old_photos(
     contents = await file.read()
     df = pd.read_excel(io.BytesIO(contents), header=None)
     
+    total_rows = len(df)
+    logger.info(f"Old photos upload: {total_rows} rows, {len(df.columns)} columns")
+    
+    # Auto-detect columns: find which column has property IDs and which has URLs
+    # Log first 3 rows for debugging
+    for i in range(min(3, total_rows)):
+        row_data = [str(df.iloc[i, c]) if pd.notna(df.iloc[i, c]) else "NaN" for c in range(min(5, len(df.columns)))]
+        logger.info(f"  Row {i}: {row_data}")
+    
+    # Try to detect property_id and photo_url columns
+    pid_col = 0  # Default: Column A
+    url_col = 1  # Default: Column B
+    header_rows = 1  # Default: 1 header row
+    
+    # Check if first row is header
+    first_val = str(df.iloc[0, 0]) if pd.notna(df.iloc[0, 0]) else ""
+    if first_val.lower() in ['property_id', 'property id', 'pid', 'sr', 'sr no', 'serial', 'id', 'prop id', 'propertyid', 'sr.no', 's.no']:
+        header_rows = 1
+        # Scan header row to find correct columns
+        for col_idx in range(len(df.columns)):
+            header_val = str(df.iloc[0, col_idx]).lower().strip() if pd.notna(df.iloc[0, col_idx]) else ""
+            if header_val in ['property_id', 'property id', 'pid', 'prop id', 'propertyid', 'id']:
+                pid_col = col_idx
+            elif header_val in ['photo_url', 'photo url', 'url', 'photo', 'image', 'image_url', 'link', 'photo link', 'image link']:
+                url_col = col_idx
+        logger.info(f"  Detected header. pid_col={pid_col}, url_col={url_col}")
+    else:
+        # No header - try to detect from data patterns
+        # If first data value looks like a URL, columns might be swapped
+        if first_val.startswith("http") or first_val.startswith("drive.google"):
+            pid_col = 1
+            url_col = 0
+            logger.info(f"  Auto-swapped columns: pid_col={pid_col}, url_col={url_col}")
+        header_rows = 0  # No header row to skip
+    
     updated = 0
     not_found = 0
     skipped = 0
     duplicates = 0
+    sample_skipped = []
     
-    for idx in range(1, len(df)):  # Skip 1 header row (row 0)
-        prop_id = str(df.iloc[idx, 0] if pd.notna(df.iloc[idx, 0]) else "").strip()
-        photo_url = str(df.iloc[idx, 1] if pd.notna(df.iloc[idx, 1]) else "").strip()
+    for idx in range(header_rows, len(df)):
+        prop_id = str(df.iloc[idx, pid_col] if pid_col < len(df.columns) and pd.notna(df.iloc[idx, pid_col]) else "").strip()
+        photo_url = str(df.iloc[idx, url_col] if url_col < len(df.columns) and pd.notna(df.iloc[idx, url_col]) else "").strip()
         
-        if not prop_id or not photo_url or not photo_url.startswith("http"):
+        # Clean up prop_id - remove .0 suffix from numeric IDs
+        if prop_id.endswith('.0'):
+            prop_id = prop_id[:-2]
+        
+        if not prop_id or not photo_url:
             skipped += 1
+            if len(sample_skipped) < 3:
+                sample_skipped.append(f"Row {idx}: pid='{prop_id}', url='{photo_url[:50]}...'")
             continue
         
         # Case-insensitive match on property_id
@@ -7868,7 +7910,12 @@ async def upload_old_photos(
         "updated": updated,
         "not_found": not_found,
         "skipped": skipped,
-        "duplicates": duplicates
+        "duplicates": duplicates,
+        "total_rows": total_rows,
+        "detected_pid_col": pid_col,
+        "detected_url_col": url_col,
+        "header_rows_skipped": header_rows,
+        "sample_skipped_rows": sample_skipped if sample_skipped else []
     }
 
 @api_router.get("/admin/missing-photos-report")

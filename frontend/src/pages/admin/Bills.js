@@ -2632,6 +2632,15 @@ export default function BillsPage() {
                     <span>Not found: {oldPhotoResult.not_found}</span>
                     <span>Skipped: {oldPhotoResult.skipped}</span>
                   </div>
+                  {oldPhotoResult.skipped > 0 && oldPhotoResult.sample_skipped_rows?.length > 0 && (
+                    <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+                      <p className="font-semibold">Sample skipped rows:</p>
+                      {oldPhotoResult.sample_skipped_rows.map((row, i) => (
+                        <p key={i}>{row}</p>
+                      ))}
+                      <p className="mt-1 text-slate-500">Detected: PID col={oldPhotoResult.detected_pid_col}, URL col={oldPhotoResult.detected_url_col}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
