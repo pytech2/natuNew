@@ -749,15 +749,29 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "can_view_submissions": role == "ADMIN" or "submissions" in user_permissions,
     }
     
+    # Get user's accessible towns
+    user_towns = []
+    if role == "ADMIN":
+        towns = await master_db.towns.find({"is_active": True}, {"_id": 0}).to_list(None)
+        user_towns = towns
+    else:
+        assigned_town = current_user.get("assigned_town")
+        if assigned_town:
+            town = await master_db.towns.find_one({"id": assigned_town, "is_active": True}, {"_id": 0})
+            if town:
+                user_towns = [town]
+    
     return {
         "id": current_user["id"],
         "username": current_user["username"],
         "name": current_user["name"],
         "role": current_user["role"],
         "assigned_area": current_user.get("assigned_area"),
+        "assigned_town": current_user.get("assigned_town"),
         "authority": current_user.get("authority"),
         "permissions": permissions,
         "raw_permissions": user_permissions,
+        "accessible_towns": user_towns,
         "created_at": current_user["created_at"]
     }
 

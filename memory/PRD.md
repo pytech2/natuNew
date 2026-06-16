@@ -57,6 +57,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - [x] **PDF Note Enhancements** (Jun 2026): Font size reduced 50% (22→14 with 2x quality rendering), color picker added (Red/Blue/Green/Black + custom), note target filter (All Bills / Self Certified / Not Self Certified)
 - [x] **Supervisor Approve/Reject Permission** (Jun 2026): Fixed Submissions page to check user.permissions.can_approve_reject instead of only ADMIN role. AuthContext updated to fetch computed permissions after login.
 - [x] **All Dialogs Scrollable Fix** (Jun 2026): Added max-h-[90vh] overflow-y-auto to Dialog and AlertDialog components globally. All popups now fit within viewport with scroll.
+- [x] **Town Access Restriction** (Jun 2026): Surveyor/MC Officer now only see their assigned town on login. Admin sees all towns. Uses accessible_towns from /auth/me instead of public /towns endpoint.
 
 ## Credentials
 - Admin: admin / Raghav2026
