@@ -2426,24 +2426,68 @@ async def admin_dashboard(
         date_start = f"{date}T00:00:00"
         date_end = f"{date}T23:59:59"
         date_filter = {"submitted_at": {"$gte": date_start, "$lte": date_end}}
-        pipeline = [
+        
+        # Today's submissions stats
+        sub_pipeline = [
             {"$match": date_filter},
             {"$group": {
                 "_id": None,
                 "total": {"$sum": 1},
                 "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
-                "pending": {"$sum": {"$cond": [{"$in": ["$status", ["Pending", "Completed"]]}, 1, 0]}},
+                "pending": {"$sum": {"$cond": [{"$in": ["$status", ["Pending"]]}, 1, 0]}},
                 "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}}
             }}
         ]
-        result = await town_db.submissions.aggregate(pipeline).to_list(1)
-        stats = result[0] if result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0}
-        total, approved, pending, rejected = stats["total"], stats["approved"], stats["pending"], stats["rejected"]
-        # Category and NA counts not available in date mode from submissions
-        category_counts = {}
-        owner_na = 0
-        mobile_na = 0
-        colonies_count = 0
+        sub_result = await town_db.submissions.aggregate(sub_pipeline).to_list(1)
+        sub_stats = sub_result[0] if sub_result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0}
+        
+        # Always get property totals from properties collection
+        prop_pipeline = [
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "approved": {"$sum": {"$cond": [{"$in": ["$status", ["Approved", "Completed"]]}, 1, 0]}},
+                "pending": {"$sum": {"$cond": [{"$eq": ["$status", "Pending"]}, 1, 0]}},
+                "rejected": {"$sum": {"$cond": [{"$eq": ["$status", "Rejected"]}, 1, 0]}},
+                "colonies": {"$addToSet": "$colony"},
+                "residential": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "residential", "options": "i"}}, 1, 0]}},
+                "commercial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "commercial", "options": "i"}}, 1, 0]}},
+                "vacant_plot": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "vacant|plot", "options": "i"}}, 1, 0]}},
+                "agriculture": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "agri", "options": "i"}}, 1, 0]}},
+                "mix_use": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "mix", "options": "i"}}, 1, 0]}},
+                "industrial": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "^Industrial$", "options": "i"}}, 1, 0]}},
+                "institutional": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "institutional", "options": "i"}}, 1, 0]}},
+                "special_category": {"$sum": {"$cond": [{"$regexMatch": {"input": {"$ifNull": ["$category", ""]}, "regex": "special", "options": "i"}}, 1, 0]}},
+                "owner_na": {"$sum": {"$cond": [{"$in": ["$owner_name", na_values]}, 1, 0]}},
+                "mobile_na": {"$sum": {"$cond": [{"$in": ["$mobile", na_values]}, 1, 0]}}
+            }}
+        ]
+        prop_result = await town_db.properties.aggregate(prop_pipeline).to_list(1)
+        prop_stats = prop_result[0] if prop_result else {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "colonies": []}
+        
+        total = prop_stats["total"]
+        pending = prop_stats["pending"]
+        approved = prop_stats["approved"]
+        rejected = prop_stats["rejected"]
+        colonies_count = len([c for c in prop_stats.get("colonies", []) if c])
+        category_counts = {
+            "residential": prop_stats.get("residential", 0),
+            "commercial": prop_stats.get("commercial", 0),
+            "vacant_plot": prop_stats.get("vacant_plot", 0),
+            "agriculture": prop_stats.get("agriculture", 0),
+            "mix_use": prop_stats.get("mix_use", 0),
+            "industrial": prop_stats.get("industrial", 0),
+            "institutional": prop_stats.get("institutional", 0),
+            "special_category": prop_stats.get("special_category", 0)
+        }
+        owner_na = prop_stats.get("owner_na", 0)
+        mobile_na = prop_stats.get("mobile_na", 0)
+        
+        # Store today's submission counts separately
+        today_surveys = sub_stats["total"]
+        today_approved = sub_stats["approved"]
+        today_pending = sub_stats["pending"]
+        today_rejected = sub_stats["rejected"]
     else:
         # All time: single aggregation for property counts with categories and NA
         pipeline = [
@@ -2500,10 +2544,6 @@ async def admin_dashboard(
     else:
         employees = await master_db.users.count_documents({"role": {"$ne": "ADMIN"}})
     
-    if date and not colonies_count:
-        colonies = await town_db.properties.distinct("colony")
-        colonies_count = len([c for c in colonies if c])
-    
     return {
         "total": total,
         "approved": approved,
@@ -2513,7 +2553,11 @@ async def admin_dashboard(
         "colonies": colonies_count,
         "category": category_counts,
         "owner_na": owner_na,
-        "mobile_na": mobile_na
+        "mobile_na": mobile_na,
+        "today_surveys": today_surveys if date else 0,
+        "today_approved": today_approved if date else 0,
+        "today_pending": today_pending if date else 0,
+        "today_rejected": today_rejected if date else 0
     }
 
 @api_router.get("/admin/employee-progress")
