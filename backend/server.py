@@ -1640,9 +1640,9 @@ async def bulk_assign_by_ward(data: BulkAssignmentRequest, current_user: dict = 
                     "address": bill.get("address", ""),
                     "ward": bill.get("colony", ""),
                     "colony": bill.get("colony", ""),
-                    "category": bill.get("category", "Residential"),
-                    "total_area": bill.get("total_area", ""),
-                    "amount": bill.get("amount", ""),
+                    "category": bill.get("category") or "Residential",
+                    "total_area": bill.get("total_area") or "",
+                    "amount": bill.get("total_outstanding") or bill.get("amount") or "0",
                     "serial_number": bill.get("serial_number", 0),
                     "bill_sr_no": bill.get("bill_sr_no", ""),
                     "latitude": bill.get("latitude"),
@@ -3019,23 +3019,45 @@ async def list_submissions(
     if prop_ids:
         props_cursor = await get_db().properties.find(
             {"id": {"$in": prop_ids}},
-            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "colony": 1, "serial_na": 1, "latitude": 1, "longitude": 1}
+            {"_id": 0, "id": 1, "owner_name": 1, "mobile": 1, "ward": 1, "serial_number": 1, "bill_sr_no": 1, "property_id": 1, "colony": 1, "serial_na": 1, "latitude": 1, "longitude": 1, "amount": 1, "total_area": 1, "category": 1, "photo_url": 1}
         ).to_list(None)
         props_map = {p["id"]: p for p in props_cursor}
+        
+        # Also fetch from bills collection for missing data (amount, category, total_area)
+        prop_pids = [p.get("property_id") for p in props_cursor if p.get("property_id")]
+        bills_data = {}
+        if prop_pids:
+            bills_cursor = await get_db().bills.find(
+                {"property_id": {"$in": prop_pids}},
+                {"_id": 0, "property_id": 1, "total_outstanding": 1, "category": 1, "total_area": 1, "amount": 1}
+            ).to_list(None)
+            for b in bills_cursor:
+                pid = b.get("property_id", "")
+                if pid and pid not in bills_data:
+                    bills_data[pid] = b
     else:
         props_map = {}
+        bills_data = {}
     
     for sub in submissions:
         prop = props_map.get(sub.get("property_record_id"))
         if prop:
+            pid = prop.get("property_id", "")
+            bill = bills_data.get(pid, {})
+            
             sub["property_owner_name"] = prop.get("owner_name", "")
             sub["property_mobile"] = prop.get("mobile", "")
             sub["property_address"] = prop.get("address", "")
-            sub["property_amount"] = prop.get("amount", "")
+            # Amount: prefer bill's total_outstanding > property amount
+            prop_amount = prop.get("amount") or "0"
+            bill_amount = bill.get("total_outstanding") or bill.get("amount") or ""
+            sub["property_amount"] = bill_amount if bill_amount and bill_amount != "0" else prop_amount
             sub["property_ward"] = prop.get("ward", "")
             sub["colony"] = prop.get("colony") or prop.get("ward", "")
-            sub["total_area"] = prop.get("total_area", "")
-            sub["category"] = prop.get("category", "")
+            # Area: prefer bill's total_area > property total_area
+            sub["total_area"] = bill.get("total_area") or prop.get("total_area", "")
+            # Category: prefer bill's category > property category
+            sub["category"] = bill.get("category") or prop.get("category", "")
             sub["serial_number"] = prop.get("serial_number", 0)
             sub["bill_sr_no"] = prop.get("bill_sr_no", "")
             sub["property_serial_number"] = prop.get("serial_number", 0)
@@ -7858,6 +7880,62 @@ async def sync_self_certified(current_user: dict = Depends(get_current_user)):
         "total_certified_pids": len(self_certified_pids),
         "updated_to_true": updated_true,
         "updated_to_false": updated_false
+    }
+
+
+@api_router.post("/admin/sync-property-data")
+async def sync_property_data_from_bills(current_user: dict = Depends(get_current_user)):
+    """Sync amount, category, total_area from bills to properties collection"""
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    from pymongo import UpdateOne
+    
+    # Fetch all bills with relevant fields
+    bills = await get_db().bills.find(
+        {},
+        {"_id": 0, "property_id": 1, "total_outstanding": 1, "amount": 1, "category": 1, "total_area": 1}
+    ).to_list(None)
+    
+    bills_map = {}
+    for b in bills:
+        pid = b.get("property_id", "")
+        if pid and pid not in bills_map:
+            bills_map[pid] = b
+    
+    # Build bulk updates
+    operations = []
+    for pid, bill in bills_map.items():
+        update_fields = {}
+        amount = bill.get("total_outstanding") or bill.get("amount")
+        if amount and str(amount) != "0":
+            update_fields["amount"] = str(amount)
+        category = bill.get("category")
+        if category:
+            update_fields["category"] = category
+        total_area = bill.get("total_area")
+        if total_area:
+            update_fields["total_area"] = total_area
+        
+        if update_fields:
+            operations.append(UpdateOne(
+                {"property_id": pid},
+                {"$set": update_fields}
+            ))
+    
+    updated = 0
+    if operations:
+        # Process in batches
+        batch_size = 2000
+        for i in range(0, len(operations), batch_size):
+            batch = operations[i:i+batch_size]
+            result = await get_db().properties.bulk_write(batch, ordered=False)
+            updated += result.modified_count
+    
+    return {
+        "message": f"Synced {updated} properties with bill data (amount, category, total_area)",
+        "total_bills": len(bills_map),
+        "updated_properties": updated
     }
 
 

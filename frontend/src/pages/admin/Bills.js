@@ -908,6 +908,22 @@ export default function BillsPage() {
     }
   };
 
+  const [syncingPropData, setSyncingPropData] = useState(false);
+  const handleSyncPropertyData = async () => {
+    setSyncingPropData(true);
+    try {
+      const response = await axios.post(`${API_URL}/admin/sync-property-data`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 120000
+      });
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to sync property data');
+    } finally {
+      setSyncingPropData(false);
+    }
+  };
+
   // Old Photos functions
   const fetchOldPhotoStats = async () => {
     try {
@@ -2418,6 +2434,21 @@ export default function BillsPage() {
                       <RefreshCw className="w-3 h-3 mr-1" />
                     )}
                     Sync Bills
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSyncPropertyData}
+                    disabled={syncingPropData}
+                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                    data-testid="sync-property-data-btn"
+                  >
+                    {syncingPropData ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Sync Amount/Category
                   </Button>
                 </div>
               )}
