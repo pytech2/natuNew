@@ -250,8 +250,14 @@ export default function Survey() {
   // Check if special condition allows skipping required fields (but NOT photo)
   const canSkipRequiredFields = specialCondition === 'property_locked' || specialCondition === 'owner_denied' || specialCondition === 'vacant_plot' || specialCondition === 'wrong_location';
 
+  // Use ref to track if property was already loaded (prevents re-fetch on camera return)
+  const propertyLoadedRef = useRef(false);
+
   useEffect(() => {
-    fetchProperty();
+    if (!propertyLoadedRef.current) {
+      fetchProperty();
+      propertyLoadedRef.current = true;
+    }
     getLocation();
     checkTodayAttendance();
   }, [propertyId]);
@@ -311,8 +317,11 @@ export default function Survey() {
         setFormData(prev => ({ ...prev, self_satisfied: 'yes' }));
       }
     } catch (error) {
-      toast.error('Failed to load property');
-      navigate('/employee/properties');
+      // Don't navigate away on error - user might be returning from camera
+      // Only show error if property was never loaded before
+      if (!property) {
+        toast.error('Failed to load property. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -346,6 +355,10 @@ export default function Survey() {
   const handlePhotoCapture = async (e, type) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Prevent any form submission or navigation during photo processing
+    e.preventDefault?.();
+    e.stopPropagation?.();
 
     setProcessingPhoto(type);
     console.log('Photo captured, file:', file.name, file.size, file.type);
@@ -1374,6 +1387,7 @@ export default function Survey() {
                       </div>
                     )}
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       className="absolute top-2 right-2"
@@ -1388,9 +1402,10 @@ export default function Survey() {
                   </div>
                 ) : (
                   <Button
+                    type="button"
                     variant="outline"
                     className="w-full h-24"
-                    onClick={() => houseCameraRef.current?.click()}
+                    onClick={(e) => { e.preventDefault(); houseCameraRef.current?.click(); }}
                     disabled={processingPhoto === 'house'}
                     data-testid="take-property-photo-btn"
                   >
@@ -1441,6 +1456,7 @@ export default function Survey() {
                       </div>
                     )}
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       className="absolute top-2 right-2"
@@ -1456,9 +1472,10 @@ export default function Survey() {
                   </div>
                 ) : (
                   <Button
+                    type="button"
                     variant="outline"
                     className="w-full h-24"
-                    onClick={() => receiverCameraRef.current?.click()}
+                    onClick={(e) => { e.preventDefault(); receiverCameraRef.current?.click(); }}
                     disabled={processingPhoto === 'receiver'}
                     data-testid="take-receiver-photo-btn"
                   >
