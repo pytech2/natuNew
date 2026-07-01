@@ -36,6 +36,7 @@ Full-stack web application for NSTU India Private Limited to manage property tax
 - "Today Report" Dashboard fix
 - Submission Details UI enrichment with bills fallback
 - **[July 2026] Mobile Camera Auto-Back Bug FIX** - Auth persistence + Survey form state recovery
+- **[July 2026] Rejected Submissions Visibility FIX** - Stopped deleting rejected submissions, now persist as audit trail
 
 ## Recent Fix: Mobile Camera Bug (P0 - July 2026)
 **Problem**: Surveyor's mobile browser killed the React app when opening native camera. On return, AuthContext lost user state, ProtectedRoute redirected to login.
