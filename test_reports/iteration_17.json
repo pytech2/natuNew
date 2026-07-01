@@ -1,0 +1,62 @@
+{
+  "summary": "Tested bug fix for rejected submissions not showing on Submissions page. The fix correctly keeps rejected submissions in MongoDB (removed delete_one call) and displays them with red 'Rejected' badge. All 6 test scenarios passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend API /api/admin/submissions?status=Rejected returns rejected submissions (1 found)",
+    "Specific test submission (Property ID: 3UVE25B1, Receiver: Test Speed) exists with status='Rejected'",
+    "Rejected submission contains review_remarks='Testing rejection visibility fix'",
+    "Status filter dropdown includes 'Rejected' option and API accepts it",
+    "Employee property detail endpoint excludes rejected submissions (allows re-submission)",
+    "Rejected submissions persist in database (not deleted)",
+    "Frontend displays rejected submission with red badge styling (bg-red-100 text-red-700)",
+    "Submission detail dialog shows 'Rejection Remarks' section with the rejection reason",
+    "Total count correctly shows '1 submissions' when filtered by Rejected status"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_rejected_submissions.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix verified: Line 3426 in server.py has comment 'Keep the rejected submission for audit trail (do NOT delete)' - delete_one was removed",
+    "Property status correctly reset to 'Pending' (line 3425) allowing surveyors to re-submit",
+    "Employee endpoints (lines 4321, 4501-4505) correctly exclude rejected submissions with status: {$ne: 'Rejected'}",
+    "Frontend Submissions.js has proper red styling for Rejected badge (line 558: bg-red-100 text-red-700)",
+    "Rejection remarks display correctly in detail dialog (lines 1290-1295)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_rejected_submissions.py"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+  "test_credentials": {
+    "admin": "admin / Raghav2026",
+    "surveyor": "surveyor1 / test123",
+    "town_code": "THS (Thanesar)"
+  },
+  "seed_data_creation": "Used existing test rejection: submission_id=fcd5da5e-222d-45fb-abf1-72bd8474b8fe, property_id=3UVE25B1",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix verified: Rejected submissions now persist in MongoDB with status='Rejected'. The test submission (Property ID: 3UVE25B1, Receiver: Test Speed) is visible on Submissions page when filtered by 'Rejected' status. The property is reset to 'Pending' status allowing surveyors to re-submit. All backend and frontend functionality working correctly.",
+  "verified_fixes": {
+    "bug_description": "Rejected submissions were being deleted from MongoDB when admin rejected them, causing them to not appear on Submissions page",
+    "root_cause": "Line 3427 in server.py had delete_one() call that removed the submission document",
+    "fix_applied": "Removed delete_one call, submission now stays with status='Rejected' for audit trail",
+    "additional_changes": [
+      "Property status reset to 'Pending' (not 'Rejected') so surveyor can re-submit",
+      "Employee property detail excludes rejected submissions (line 4321)",
+      "Employee submit excludes rejected submissions when finding existing (lines 4499-4506)"
+    ],
+    "verification_status": "VERIFIED - All tests passed"
+  }
+}

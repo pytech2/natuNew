@@ -3421,10 +3421,9 @@ async def approve_reject_submission(data: SubmissionApproval, current_user: dict
         if data.remarks:
             prop_update["reject_remarks"] = data.remarks
         prop_update["locked"] = False
-        # Reset property to Pending so it's available for re-submission and auto-complete
+        # Reset property to Pending so it's available for re-submission
         prop_update["status"] = "Pending"
-        # Delete the rejected submission so property is clean for new submission
-        await get_db().submissions.delete_one({"id": data.submission_id})
+        # Keep the rejected submission for audit trail (do NOT delete)
     elif data.action == "PENDING":
         prop_update["locked"] = False
     
@@ -4318,7 +4317,9 @@ async def get_property_detail(property_id: str, current_user: dict = Depends(get
     if current_user["role"] != "ADMIN" and not is_assigned:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    submission = await get_db().submissions.find_one({"property_record_id": property_id}, {"_id": 0})
+    submission = await get_db().submissions.find_one(
+        {"property_record_id": property_id, "status": {"$ne": "Rejected"}}, {"_id": 0}
+    )
     
     return {
         "property": prop,
@@ -4495,11 +4496,13 @@ async def submit_survey(
         "ward_number": ward_number
     }
     
-    # Check if submission already exists and update/insert + update property status in parallel
-    existing = await get_db().submissions.find_one({"property_record_id": property_id}, {"_id": 1})
+    # Check if a non-rejected submission already exists (rejected ones are kept as audit trail)
+    existing = await get_db().submissions.find_one(
+        {"property_record_id": property_id, "status": {"$ne": "Rejected"}}, {"_id": 1}
+    )
     if existing:
         sub_task = get_db().submissions.update_one(
-            {"property_record_id": property_id},
+            {"property_record_id": property_id, "status": {"$ne": "Rejected"}},
             {"$set": submission_doc}
         )
     else:
