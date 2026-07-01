@@ -191,6 +191,41 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
+// Helper: sessionStorage keys for survey state persistence (survives mobile camera return)
+const SURVEY_STORAGE_KEY = (pid) => `survey_state_${pid}`;
+const SURVEY_PHOTO_KEY = (pid, type) => `survey_photo_${pid}_${type}`;
+
+// Save survey form state to sessionStorage
+const saveSurveyState = (pid, state) => {
+  try { sessionStorage.setItem(SURVEY_STORAGE_KEY(pid), JSON.stringify(state)); } catch(e) { /* quota */ }
+};
+
+// Load survey form state from sessionStorage
+const loadSurveyState = (pid) => {
+  try {
+    const saved = sessionStorage.getItem(SURVEY_STORAGE_KEY(pid));
+    return saved ? JSON.parse(saved) : null;
+  } catch(e) { return null; }
+};
+
+// Save photo preview as dataURL to sessionStorage (compressed photos are small enough)
+const savePhotoPreview = (pid, type, dataUrl) => {
+  try { sessionStorage.setItem(SURVEY_PHOTO_KEY(pid, type), dataUrl); } catch(e) { /* quota */ }
+};
+
+// Load photo preview from sessionStorage
+const loadPhotoPreview = (pid, type) => {
+  try { return sessionStorage.getItem(SURVEY_PHOTO_KEY(pid, type)); } catch(e) { return null; }
+};
+
+// Convert a base64 dataURL back to a File object
+const dataURLtoFile = (dataUrl, filename) => {
+  try {
+    const blob = dataURLtoBlob(dataUrl);
+    return new File([blob], filename, { type: blob.type });
+  } catch(e) { return null; }
+};
+
 export default function Survey() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
@@ -211,37 +246,46 @@ export default function Survey() {
   const [attendanceMarked, setAttendanceMarked] = useState(false);
   const [checkingAttendance, setCheckingAttendance] = useState(true);
 
+  // Restore form state from sessionStorage on mount (survives mobile camera return)
+  const savedState = loadSurveyState(propertyId);
+
   // Form State - Simplified (removed correct_colony_name)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => savedState?.formData || {
     receiver_name: '',
-    receiver_mobile: '',  // Receiver mobile with 10-digit validation
+    receiver_mobile: '',
     relation: '',
     remarks: '',
-    self_satisfied: 'yes'  // Default to Yes
+    self_satisfied: 'yes'
   });
 
   // Self Certification status for non-self-certified properties
-  const [selfCertStatus, setSelfCertStatus] = useState(''); // 'done', 'later', 'deny'
+  const [selfCertStatus, setSelfCertStatus] = useState(() => savedState?.selfCertStatus || '');
   
   // Self Certification OTP state (when selfCertStatus = 'done')
   const [selfCertOtp, setSelfCertOtp] = useState('');
-  const [selfCertMobile, setSelfCertMobile] = useState(''); // Mobile used for OTP
+  const [selfCertMobile, setSelfCertMobile] = useState('');
 
   // Special submission conditions - allows bypassing required fields
-  const [specialCondition, setSpecialCondition] = useState(''); // 'property_locked', 'owner_denied', 'vacant_plot', or 'wrong_location'
-  const [houseStatus, setHouseStatus] = useState(''); // 'kachha', 'pakka', 'vacant_plot'
-  const [propertyUse, setPropertyUse] = useState(''); // 'residential', 'commercial', 'mix_use', 'other'
-  const [propertyUseRemarks, setPropertyUseRemarks] = useState(''); // remarks for 'other' option
+  const [specialCondition, setSpecialCondition] = useState(() => savedState?.specialCondition || '');
+  const [houseStatus, setHouseStatus] = useState(() => savedState?.houseStatus || '');
+  const [propertyUse, setPropertyUse] = useState(() => savedState?.propertyUse || '');
+  const [propertyUseRemarks, setPropertyUseRemarks] = useState(() => savedState?.propertyUseRemarks || '');
   
   // 50m radius check
   const [withinRange, setWithinRange] = useState(null);
   const [distanceFromProperty, setDistanceFromProperty] = useState(null);
 
-  // Photo State - House photo + Receiver photo
-  const [housePhoto, setHousePhoto] = useState(null);
-  const [housePhotoPreview, setHousePhotoPreview] = useState(null);
-  const [receiverPhoto, setReceiverPhoto] = useState(null);
-  const [receiverPhotoPreview, setReceiverPhotoPreview] = useState(null);
+  // Photo State - Restore preview from sessionStorage if available
+  const [housePhoto, setHousePhoto] = useState(() => {
+    const saved = loadPhotoPreview(propertyId, 'house');
+    return saved ? dataURLtoFile(saved, 'restored_house.jpg') : null;
+  });
+  const [housePhotoPreview, setHousePhotoPreview] = useState(() => loadPhotoPreview(propertyId, 'house'));
+  const [receiverPhoto, setReceiverPhoto] = useState(() => {
+    const saved = loadPhotoPreview(propertyId, 'receiver');
+    return saved ? dataURLtoFile(saved, 'restored_receiver.jpg') : null;
+  });
+  const [receiverPhotoPreview, setReceiverPhotoPreview] = useState(() => loadPhotoPreview(propertyId, 'receiver'));
 
   // File input refs
   const houseCameraRef = useRef(null);
@@ -252,6 +296,13 @@ export default function Survey() {
 
   // Use ref to track if property was already loaded (prevents re-fetch on camera return)
   const propertyLoadedRef = useRef(false);
+
+  // Persist form state to sessionStorage whenever it changes
+  useEffect(() => {
+    saveSurveyState(propertyId, {
+      formData, selfCertStatus, specialCondition, houseStatus, propertyUse, propertyUseRemarks
+    });
+  }, [formData, selfCertStatus, specialCondition, houseStatus, propertyUse, propertyUseRemarks, propertyId]);
 
   useEffect(() => {
     if (!propertyLoadedRef.current) {
@@ -394,20 +445,35 @@ export default function Survey() {
           setHousePhoto(watermarkedFile);
           const previewUrl = URL.createObjectURL(watermarkedFile);
           setHousePhotoPreview(previewUrl);
+          // Save photo preview as dataURL to sessionStorage for camera-return recovery
+          const reader = new FileReader();
+          reader.onload = () => savePhotoPreview(propertyId, 'house', reader.result);
+          reader.readAsDataURL(watermarkedFile);
         } else if (type === 'receiver') {
           setReceiverPhoto(watermarkedFile);
           const previewUrl = URL.createObjectURL(watermarkedFile);
           setReceiverPhotoPreview(previewUrl);
+          const reader = new FileReader();
+          reader.onload = () => savePhotoPreview(propertyId, 'receiver', reader.result);
+          reader.readAsDataURL(watermarkedFile);
         }
         toast.success('Photo captured with GPS & timestamp watermark!');
       } else {
         console.warn('No GPS available for watermark');
         if (type === 'house') {
           setHousePhoto(file);
-          setHousePhotoPreview(URL.createObjectURL(file));
+          const previewUrl = URL.createObjectURL(file);
+          setHousePhotoPreview(previewUrl);
+          const reader = new FileReader();
+          reader.onload = () => savePhotoPreview(propertyId, 'house', reader.result);
+          reader.readAsDataURL(file);
         } else if (type === 'receiver') {
           setReceiverPhoto(file);
-          setReceiverPhotoPreview(URL.createObjectURL(file));
+          const previewUrl = URL.createObjectURL(file);
+          setReceiverPhotoPreview(previewUrl);
+          const reader = new FileReader();
+          reader.onload = () => savePhotoPreview(propertyId, 'receiver', reader.result);
+          reader.readAsDataURL(file);
         }
         toast.warning('Photo captured (no GPS watermark - location not available)');
       }
@@ -563,6 +629,12 @@ export default function Survey() {
       });
 
       toast.success('Survey submitted successfully!');
+      // Clear sessionStorage after successful submission
+      try {
+        sessionStorage.removeItem(SURVEY_STORAGE_KEY(propertyId));
+        sessionStorage.removeItem(SURVEY_PHOTO_KEY(propertyId, 'house'));
+        sessionStorage.removeItem(SURVEY_PHOTO_KEY(propertyId, 'receiver'));
+      } catch(e) { /* ignore */ }
       navigate('/employee/properties');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to submit survey');
@@ -1394,6 +1466,7 @@ export default function Survey() {
                       onClick={() => {
                         setHousePhoto(null);
                         setHousePhotoPreview(null);
+                        try { sessionStorage.removeItem(SURVEY_PHOTO_KEY(propertyId, 'house')); } catch(e) { /* ignore */ }
                       }}
                     >
                       <RotateCcw className="w-4 h-4 mr-1" />
@@ -1463,6 +1536,7 @@ export default function Survey() {
                       onClick={() => {
                         setReceiverPhoto(null);
                         setReceiverPhotoPreview(null);
+                        try { sessionStorage.removeItem(SURVEY_PHOTO_KEY(propertyId, 'receiver')); } catch(e) { /* ignore */ }
                       }}
                       data-testid="receiver-retake-btn"
                     >

@@ -9,10 +9,26 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // Instantly restore cached user to prevent flash-redirect on mobile camera return
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cachedUser');
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const idleTimerRef = useRef(null);
+
+  // Helper to update user + cache
+  const setUserAndCache = useCallback((userData) => {
+    setUser(userData);
+    if (userData) {
+      localStorage.setItem('cachedUser', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('cachedUser');
+    }
+  }, []);
 
   // Reset idle timer
   const resetIdleTimer = useCallback(() => {
@@ -62,16 +78,31 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       const savedToken = localStorage.getItem('token');
       if (savedToken) {
+        // If we already have cached user, stop loading immediately
+        // This prevents redirect flash on mobile camera return
+        const hasCachedUser = !!localStorage.getItem('cachedUser');
+        if (hasCachedUser) {
+          setLoading(false);
+        }
+        
         try {
           const response = await axios.get(`${API_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${savedToken}` }
           });
-          setUser(response.data);
+          setUserAndCache(response.data);
           setToken(savedToken);
         } catch (error) {
-          localStorage.removeItem('token');
-          setToken(null);
-          setUser(null);
+          // CRITICAL: Only clear auth on explicit 401/403 rejection from server
+          // Network errors (timeout, offline) should NOT log user out
+          // This prevents mobile camera return from killing the session
+          const status = error?.response?.status;
+          if (status === 401 || status === 403) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('cachedUser');
+            setToken(null);
+            setUser(null);
+          }
+          // On network error: keep cached user & token intact
         }
       }
       setLoading(false);
@@ -90,9 +121,9 @@ export function AuthProvider({ children }) {
       const meResponse = await axios.get(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${newToken}` }
       });
-      setUser(meResponse.data);
+      setUserAndCache(meResponse.data);
     } catch {
-      setUser(userData);
+      setUserAndCache(userData);
     }
     
     resetIdleTimer();
@@ -101,6 +132,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('cachedUser');
     setToken(null);
     setUser(null);
     if (idleTimerRef.current) {
