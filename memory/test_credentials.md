@@ -1,17 +1,16 @@
 # Test Credentials
 
-## Admin
+## Admin Account
 - Username: admin
 - Password: Raghav2026
 
-## Surveyor
+## Surveyor Account
 - Username: surveyor1
 - Password: test123
 
-## Supervisor
+## Supervisor Account
 - Username: a
 - Password: test123
 
-## Town Code
-- Thanesar: THS
-- xyz: XYV
+## Town for Testing
+- Town: Thanesar (code: THS)

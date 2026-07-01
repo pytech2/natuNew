@@ -1,77 +1,67 @@
-# NSTU India Private Limited - Property Tax Management System
+# NSTU Property Tax Management - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack web application for NSTU India Private Limited to manage property tax notice distribution and surveys. Multi-town (multi-tenant) platform where each town has isolated data. Roles: Super Admin, Admin, Surveyor, Supervisor, MC Officer.
+Full-stack web application for NSTU India Private Limited to manage property tax notice distribution and surveys. Multi-tenant database architecture (one DB per town). Features: complex dashboards, surveyor assignments, mobile survey submissions, PDF/Excel exports, strict role-based access.
 
-## Architecture
-- **Backend**: FastAPI (Python) on port 8001
-- **Frontend**: React on port 3000
-- **Database**: MongoDB with hybrid multi-tenant model
-  - `nstu_master`: Global DB for users, towns, auth
-  - Per-town DBs: Uses `DB_NAME` from `.env` for Thanesar (THS), `nstu_town_xxx` for new towns
-- **Multi-Tenant**: ContextVar middleware + axios interceptor for X-Town-Code header
-- **File Storage**: Filesystem `/app/uploads` for survey photos, GridFS for legacy
+## Tech Stack
+- **Frontend**: React + Tailwind CSS + Shadcn UI (dark navy glassmorphism theme)
+- **Backend**: FastAPI (monolithic server.py ~8600 lines)
+- **Database**: MongoDB (multi-tenant: master_db + dynamic town DBs)
+- **Maps**: MapLibre GL + React-Map-GL
+- **PDF**: PyMuPDF (fitz) + Pillow (PIL)
+- **Additional**: date-fns, react-day-picker
 
-## What's Been Implemented
-- [x] All core features (multi-tenant, town management, surveyor workflow, PDF generation, etc.)
-- [x] Bills to Properties duplicate check
-- [x] Old photos display and upload
-- [x] Cleanup Duplicates with submission reassignment
-- [x] Colony Progress Excel with Category, Self Certified, Survey Done By columns
-- [x] Comprehensive 37-column Excel export
-- [x] Same Mobile / Same Owner duplicate filters in submissions
-- [x] Edit submissions after approve/reject
-- [x] Original + Survey location display with distance
-- [x] Property Map filters, stats, edit, old photo display
-- [x] Auto-complete system remarks cleaned (Mar 2026)
-- [x] Photo URL external handling - handles http URLs correctly (Mar 2026)
-- [x] Original Lat/Lon for auto-submitted (Mar 2026)
-- [x] Employee un-assign from colony - handles both single/multi-employee (Mar 2026)
-- [x] **Dashboard Redesign** (Mar 2026): Total/Pending top row, category blocks, bill distribution, progress reports
-- [x] **Auto-submit category mapping** (Mar 2026): property_use now maps from bill's category (not hardcoded "residential")
-- [x] **Export photo URL fix** (Mar 2026): base_url changed to https://app.nstuindia.com
-- [x] **PDF export enhanced** (Mar 2026): Added Category, Total Area, Serial No, Bill Sr No, House Status, Property Use, Special Condition, Self Satisfied, Lat/Lon, Aadhar, Family ID, Review Remarks, formatted dates
-- [x] **Employee Management** (Mar 2026): Separated Login ID (text) from Mobile Number (10-digit), added validation
-- [x] **Submissions Bulk Actions** (Mar 2026): Select All, Approve All, Reject (delete + revert to Pending), Pending Review
-- [x] **Rejection Logic** (Mar 2026): Rejected submission deleted, property reverts to Pending for re-survey/auto-complete
-- [x] **RBAC on Submissions** (Mar 2026): Export, Bulk Actions, Advanced Filters restricted to ADMIN only
-- [x] **Auto-sync Bills** (Mar 2026): Automatically copy bills to properties when employee assigned to colony
-- [x] **External Image Proxy** (Mar 2026): /api/proxy-image endpoint for legacy external photos
-- [x] **PDF Size Optimization** (Mar 2026): Compressed to <1MB with 800px max width, 45% JPEG quality
-- [x] **Dashboard categories** (Mar 2026): All 7 categories (Agriculture, Institutional, Special) visible
-- [x] **Auto-complete All Colonies** (Mar 2026): Added "All Colonies" option in auto-complete dialog
-- [x] **Surveyor Report Excel** (Mar 2026): Date-wise progress + Refusal progress 2-sheet Excel download from Dashboard (fixed 404 route placement bug)
-- [x] **Report Download Filters** (Mar 2026): Added filter dialog with Month/Year, Date Range, Surveyor, Colony, Category, Status filters for report download
-- [x] **Property Detail Photos** (Mar 2026): Property view dialog now fetches and displays submission photos, survey info
-- [x] **Logo & Name Update** (Mar 2026): Changed logo to new NSTU badge and company name
-- [x] **Dashboard Dark Theme Redesign** (Mar 2026): Complete dark navy blue theme with glassmorphism
-- [x] **Login & SelectTown Dark Theme** (Mar 2026): Dark navy theme with glassmorphism
-- [x] **Employee Dashboard Redesign** (Mar 2026): Dark theme with date-wise calendar view
-- [x] **Full App Dark Theme** (Mar 2026): AdminLayout sidebar, EmployeeLayout header/bottom-nav
-- [x] **Admin Password Reset** (Jun 2026): Reset to Raghav2026
-- [x] **Map Properties Fix** (Jun 2026): Fixed ALL_AREAS colony selection bug that prevented properties from loading
-- [x] **Employee Progress Report Overall Column** (Jun 2026): Added "Overall" column with all-time submission count, sorted max to min
-- [x] **Receiver Photo in Survey** (Jun 2026): Added second photo option for receiver's photo alongside property photo in survey form
-- [x] **Photo Quality Improvement** (Jun 2026): Increased photo resolution from 600px to 1280px max, quality from 0.5 to 0.75 JPEG compression
-- [x] **Generate PDF Dialog Scroll Fix** (Jun 2026): Made dialog scrollable with max-height 90vh, footer always visible
-- [x] **PDF Note Enhancements** (Jun 2026): Font size reduced 50% (22→14 with 2x quality rendering), color picker added (Red/Blue/Green/Black + custom), note target filter (All Bills / Self Certified / Not Self Certified)
-- [x] **Supervisor Approve/Reject Permission** (Jun 2026): Fixed Submissions page to check user.permissions.can_approve_reject instead of only ADMIN role. AuthContext updated to fetch computed permissions after login.
-- [x] **All Dialogs Scrollable Fix** (Jun 2026): Added max-h-[90vh] overflow-y-auto to Dialog and AlertDialog components globally. All popups now fit within viewport with scroll.
-- [x] **Town Access Restriction** (Jun 2026): Surveyor/MC Officer now only see their assigned town on login. Admin sees all towns. Uses accessible_towns from /auth/me instead of public /towns endpoint.
+## Key Architecture
+- FastAPI ContextVar-based Multi-tenancy (`X-Town-Code` header)
+- Bulk MongoDB Operations (`update_many`, `$in`) for performance
+- Town-scoped access control (users only see assigned towns)
+- Compressed survey photos (800px max, 0.55 JPEG quality)
 
-## Credentials
+## Completed Features (All DONE)
+- Multi-tenant town database switching
+- Role-based access: ADMIN, SUPERVISOR, MC_OFFICER, EMPLOYEE/SURVEYOR
+- Property survey mobile interface with GPS, photo watermarking, 50m radius check
+- Receiver Photo capture in survey form
+- PDF Custom Notes (50% smaller font, color picker, target filtering)
+- Survey Photo buttons UI refinement
+- Supervisor configurable Approve/Reject permissions
+- Global Dialog/AlertDialog overflow fixes
+- Shadcn Calendar date picker for Submissions
+- Submissions page performance optimization (0.17s load, compound indexes, debounce)
+- Auto "Sync Self-Certified" during bulk uploads
+- Colony Progress Excel Export fix for large towns
+- Optimized Survey Photo Upload Size
+- "Old Photos" Excel upload pipeline (86k rows in 7 seconds)
+- Town Access restriction for MC Officers/Supervisors
+- "Today Report" Dashboard fix
+- Submission Details UI enrichment with bills fallback
+- **[July 2026] Mobile Camera Auto-Back Bug FIX** - Auth persistence + Survey form state recovery
+
+## Recent Fix: Mobile Camera Bug (P0 - July 2026)
+**Problem**: Surveyor's mobile browser killed the React app when opening native camera. On return, AuthContext lost user state, ProtectedRoute redirected to login.
+
+**Root Cause**: 
+1. AuthContext cleared token on ANY `/auth/me` error (including network timeouts)
+2. No cached user data in localStorage - had to wait for API
+3. Survey form state was ephemeral (only useState, no persistence)
+
+**Fix Applied**:
+1. **AuthContext**: User cached in localStorage (`cachedUser`), restored instantly on mount. Token only cleared on 401/403, not network errors.
+2. **Survey.js**: Form state + photo previews persisted to sessionStorage. Restored on remount.
+
+## Pending Issues
+- (None critical - mobile camera fix verified)
+
+## Upcoming Tasks (Priority Order)
+- P1: Offline support for surveyor mobile interface
+- P2: ZIP download for split-employee PDFs
+- P2: Refactor server.py into modular APIRouters
+- P2: Map marker click opens survey form shortcut
+
+## Key Credentials
 - Admin: admin / Raghav2026
 - Surveyor: surveyor1 / test123
 - Supervisor: a / test123
 
-## Prioritized Backlog
-### P0
-- VPS deployment on Hostinger (app.nstu.in) - step-by-step guide needed
-
-### P1
-- Offline support for surveyor mobile interface
-
-### P2
-- ZIP download for split-employee PDFs
-- server.py refactoring into APIRouter modules
-- Map marker shortcut to survey form
+## VPS Deployment Note
+User runs on Hostinger VPS. Frontend changes require `npm run build` on VPS after git pull. This is a recurring issue - always remind in Hinglish.
